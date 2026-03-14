@@ -24,6 +24,7 @@ import appeng.server.services.compass.TestCompassCommand;
 import appeng.server.subcommands.ChannelModeCommand;
 import appeng.server.subcommands.ChunkLogger;
 import appeng.server.subcommands.GridsCommand;
+import appeng.server.subcommands.IdleCurrencyCommand;
 import appeng.server.subcommands.SetupTestWorldCommand;
 import appeng.server.subcommands.SpatialStorageCommand;
 import appeng.server.subcommands.TestMeteoritesCommand;
@@ -36,6 +37,7 @@ public enum Commands {
     CHANNEL_MODE(4, "channelmode", new ChannelModeCommand()),
     TICK_MONITORING(4, "tickmonitor", new TickMonitoring()),
     GRIDS(4, "grids", new GridsCommand()),
+    IDLE_CURRENCY(4, "idlecurrency", new IdleCurrencyCommand()),
 
     // Testing
     COMPASS(4, "compass", new TestCompassCommand(), true),
