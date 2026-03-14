@@ -14,7 +14,6 @@ import appeng.idle.player.GenerationContext;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
-import appeng.idle.upgrade.MultiplierBundle;
 
 /**
  * Applies periodic idle generation accrual for online players.
@@ -42,12 +41,13 @@ public final class IdleGenerationTicker {
 
     private static void accrueForPlayer(ServerPlayer player, int intervalTicks) {
         var data = PlayerIdleDataManager.get(player);
-        var context = new GenerationContext(player.getUUID(), true, MultiplierBundle.IDENTITY);
 
         var currencies = currenciesToGenerate(data);
         var generatedAmounts = new HashMap<CurrencyId, Long>();
 
         for (var currency : currencies) {
+            var multipliers = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency);
+            var context = new GenerationContext(player.getUUID(), true, multipliers);
             var generatedPerTick = GENERATION_RULE.generatePerTick(context, currency).units();
             if (generatedPerTick <= 0L) {
                 continue;
@@ -70,7 +70,6 @@ public final class IdleGenerationTicker {
         }
 
         var data = PlayerIdleDataManager.get(player);
-        var context = new GenerationContext(player.getUUID(), true, MultiplierBundle.IDENTITY);
 
         var offlineBasePercent = AEConfig.instance().getIdleOfflineBasePercent();
         var offlinePercentMultiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(data);
@@ -80,6 +79,8 @@ public final class IdleGenerationTicker {
         var generatedAmounts = new HashMap<CurrencyId, Long>();
 
         for (var currency : currencies) {
+            var multipliers = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency);
+            var context = new GenerationContext(player.getUUID(), true, multipliers);
             var generatedPerTick = GENERATION_RULE.generatePerTick(context, currency).units();
             if (generatedPerTick <= 0L) {
                 continue;
