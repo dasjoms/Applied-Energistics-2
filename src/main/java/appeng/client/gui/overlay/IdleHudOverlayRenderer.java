@@ -46,13 +46,24 @@ public class IdleHudOverlayRenderer {
             var value = entry.getValue();
             var balance = ReadableNumberConverter.format(Math.max(0L, value.balance()), 7);
             var gainPerSecond = ReadableNumberConverter.format(Math.max(0L, value.gainPerSecond()), 6);
+            var progressTicks = ReadableNumberConverter.format(Math.max(0L, value.progressTicks()), 6);
+            var ticksPerUnit = ReadableNumberConverter.format(Math.max(0L, value.ticksPerUnit()), 6);
+
+            var progressSegment = Component.translatable("gui.ae2.idle.hud.progress",
+                    Component.literal(progressTicks),
+                    Component.literal(ticksPerUnit));
+            var etaSegment = value.secondsToNext() == null ? Component.empty()
+                    : Component.translatable("gui.ae2.idle.hud.eta",
+                            Component.literal(Long.toString(Math.max(0L, value.secondsToNext()))));
 
             var line = Component.translatable(
                     "gui.ae2.idle.hud.line",
                     currencyName,
                     Component.literal(balance),
                     Component.translatable("gui.ae2.idle.hud.rate", gainPerSecond,
-                            Component.translatable("gui.ae2.idle.hud.per_second_suffix")));
+                            Component.translatable("gui.ae2.idle.hud.per_second_suffix")),
+                    progressSegment,
+                    etaSegment);
 
             guiGraphics.drawString(font, line, x, y, COLOR_LINE, true);
             y += font.lineHeight;
