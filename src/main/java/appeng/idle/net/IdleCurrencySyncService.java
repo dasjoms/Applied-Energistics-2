@@ -15,6 +15,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.currency.IdleCurrencyManager;
+import appeng.idle.generation.IdleGenerationCapService;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
@@ -127,7 +128,7 @@ public final class IdleCurrencySyncService {
         }
 
         var generatedPerSecond = totalMultiplier * TICKS_PER_SECOND / baseTicksPerUnit;
-        return clampOnlineGenerationCap(currency, generatedPerSecond);
+        return IdleGenerationCapService.clampOnlineGenerationCap(currency, generatedPerSecond);
     }
 
     private static long ticksPerUnit(long baseTicksPerUnit, double totalMultiplier) {
@@ -163,19 +164,8 @@ public final class IdleCurrencySyncService {
     }
 
     private static long toRatePerSecond(CurrencyId currency, double generatedPerSecond) {
-        return (long) Math.floor(clampOnlineGenerationCap(currency, generatedPerSecond));
+        return (long) Math.floor(IdleGenerationCapService.clampOnlineGenerationCap(currency, generatedPerSecond));
     }
 
-    private static double clampOnlineGenerationCap(CurrencyId currency, double generatedAmount) {
-        if (generatedAmount <= 0.0 || !Double.isFinite(generatedAmount)) {
-            return 0.0;
-        }
-
-        var definition = IdleCurrencyManager.get(currency);
-        var caps = definition == null ? null : definition.caps();
-        var onlineGenerationCap = caps == null ? null : caps.onlineGenerationCap();
-
-        return onlineGenerationCap == null ? generatedAmount : Math.min(generatedAmount, onlineGenerationCap);
-    }
 
 }

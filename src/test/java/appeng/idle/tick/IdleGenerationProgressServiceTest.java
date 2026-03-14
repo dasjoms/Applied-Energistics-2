@@ -74,6 +74,46 @@ class IdleGenerationProgressServiceTest {
         });
     }
 
+
+    @Test
+    void onlineAccrualAppliesOnlineGenerationCapBeforeAwardingUnits() throws Exception {
+        var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "online_cap_progress_currency"));
+        var definition = new CurrencyDefinition(
+                currency,
+                "gui.ae2.idle.currency.online_cap_progress_currency",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                1,
+                true,
+                new CurrencyDefinition.CurrencyCaps(2L, null));
+
+        withInjectedCurrency(definition, () -> {
+            var data = new PlayerIdleData();
+
+            var generated = IdleGenerationProgressService.accrueOnlineProgress(data, 3, java.util.Set.of(currency));
+            assertThat(generated).containsEntry(currency, 2L);
+        });
+    }
+
+    @Test
+    void onlineAccrualUsesProgressTicksForFractionalGenerationInsteadOfPerTickFlooring() throws Exception {
+        var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "fractional_progress_currency"));
+        var definition = new CurrencyDefinition(
+                currency,
+                "gui.ae2.idle.currency.fractional_progress_currency",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                2,
+                true,
+                null);
+
+        withInjectedCurrency(definition, () -> {
+            var data = new PlayerIdleData();
+
+            var generated = IdleGenerationProgressService.accrueOnlineProgress(data, 20, java.util.Set.of(currency));
+            assertThat(generated).containsEntry(currency, 10L);
+            assertThat(data.getGenerationProgressTicks(currency)).isZero();
+        });
+    }
+
     @Test
     void appliesGenerationAndBalanceCapsBeforeAwardingUnits() throws Exception {
         var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "capped_progress_test_currency"));
