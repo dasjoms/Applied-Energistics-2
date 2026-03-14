@@ -61,6 +61,17 @@ class PlayerIdleDataTest {
         assertThat(restored.ownedUpgradeLevelsView()).isEmpty();
     }
 
+    @Test
+    void unlockFlagCanBeSetOnceAndPersistsWithoutEquipmentState() {
+        var data = new PlayerIdleData();
+
+        data.setIdleVisorUnlocked(true);
+        assertThat(data.isIdleVisorUnlocked()).isTrue();
+
+        var restored = PlayerIdleData.fromTag(data.toTag());
+        assertThat(restored.isIdleVisorUnlocked()).isTrue();
+    }
+
     private static net.minecraft.nbt.CompoundTag dataWithInvalidEntries() {
         var root = new net.minecraft.nbt.CompoundTag();
 

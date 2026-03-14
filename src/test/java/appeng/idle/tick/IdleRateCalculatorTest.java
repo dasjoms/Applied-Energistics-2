@@ -24,9 +24,9 @@ class IdleRateCalculatorTest {
                 cappedCurrency,
                 "gui.ae2.idle.currency.capped_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
-                7.0,
+                1L,
                 true,
-                new CurrencyDefinition.CurrencyCaps(10L, null));
+                new CurrencyDefinition.CurrencyCaps(2L, null));
 
         withInjectedCurrency(definition, () -> {
             var generated = IdleRateCalculator.calculateGeneratedForInterval(
@@ -35,7 +35,7 @@ class IdleRateCalculatorTest {
                     3,
                     Set.of(cappedCurrency));
 
-            assertThat(generated).containsEntry(cappedCurrency, 10L);
+            assertThat(generated).containsEntry(cappedCurrency, 2L);
         });
     }
 
@@ -46,7 +46,7 @@ class IdleRateCalculatorTest {
                 currency,
                 "gui.ae2.idle.currency.fractional_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
-                1.9,
+                2L,
                 true,
                 null);
 
@@ -57,7 +57,7 @@ class IdleRateCalculatorTest {
                     20,
                     Set.of(currency));
 
-            assertThat(generated).containsEntry(currency, 20L);
+            assertThat(generated).isEmpty();
         });
     }
 

@@ -92,4 +92,26 @@ class RequestSpendUpgradePacketTest {
         assertThat(decoded.refreshedRates()).containsExactlyEntriesOf(original.refreshedRates());
     }
 
+    @Test
+    void hudSnapshotCodecRoundTripRetainsProgressFields() {
+        var original = new IdleCurrencyHudSnapshotPacket(Map.of(
+                IDLE,
+                new IdleCurrencyHudValue(100L, 4L, 37L, 120L, 21L),
+                MATTER,
+                new IdleCurrencyHudValue(8L, 0L, 5L, 200L, null)));
+
+        CodecTestUtil.testRoundtrip(IdleCurrencyHudSnapshotPacket.STREAM_CODEC, original);
+
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
+                RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
+        IdleCurrencyHudSnapshotPacket.STREAM_CODEC.encode(buffer, original);
+        var decoded = IdleCurrencyHudSnapshotPacket.STREAM_CODEC.decode(buffer);
+
+        assertThat(decoded.values()).containsExactlyEntriesOf(original.values());
+        assertThat(decoded.values().get(IDLE).progressTicks()).isEqualTo(37L);
+        assertThat(decoded.values().get(IDLE).ticksPerUnit()).isEqualTo(120L);
+        assertThat(decoded.values().get(IDLE).secondsToNext()).isEqualTo(21L);
+        assertThat(decoded.values().get(MATTER).secondsToNext()).isNull();
+    }
+
 }
