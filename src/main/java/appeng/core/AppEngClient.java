@@ -78,6 +78,7 @@ import appeng.client.Hotkeys;
 import appeng.client.commands.ClientCommands;
 import appeng.client.gui.me.common.PendingCraftingJobs;
 import appeng.client.gui.me.common.PinnedKeys;
+import appeng.client.gui.overlay.IdleHudOverlayRenderer;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.guidebook.ConfigValueTagExtension;
 import appeng.client.guidebook.PartAnnotationStrategy;
@@ -134,6 +135,7 @@ public class AppEngClient extends AppEngBase {
     private static final Logger LOG = LoggerFactory.getLogger(AppEngClient.class);
 
     private static AppEngClient INSTANCE;
+    private final IdleHudOverlayRenderer idleHudOverlayRenderer = new IdleHudOverlayRenderer();
 
     /**
      * Last known cable render mode. Used to update all rendered blocks once at the end of the tick when the mode is
@@ -295,6 +297,7 @@ public class AppEngClient extends AppEngBase {
 
         NeoForge.EVENT_BUS.addListener(this::wheelEvent);
         NeoForge.EVENT_BUS.addListener(this::ctrlEvent);
+        NeoForge.EVENT_BUS.addListener(idleHudOverlayRenderer::onRenderGui);
         NeoForge.EVENT_BUS.register(OverlayManager.getInstance());
     }
 
