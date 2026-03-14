@@ -11,7 +11,7 @@ public record CurrencyDefinition(
         CurrencyId id,
         String displayNameKey,
         ResourceLocation iconItem,
-        double baseOnlineRate,
+        long baseTicksPerUnit,
         boolean visibleByDefault,
         @Nullable CurrencyCaps caps) {
 
@@ -22,8 +22,8 @@ public record CurrencyDefinition(
         if (iconItem == null) {
             throw new IllegalArgumentException("iconItem must not be null");
         }
-        if (!Double.isFinite(baseOnlineRate) || baseOnlineRate < 0) {
-            throw new IllegalArgumentException("baseOnlineRate must be finite and >= 0");
+        if (baseTicksPerUnit < 1L) {
+            throw new IllegalArgumentException("baseTicksPerUnit must be >= 1");
         }
     }
 
