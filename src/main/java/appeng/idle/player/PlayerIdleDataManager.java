@@ -1,0 +1,120 @@
+package appeng.idle.player;
+
+import java.time.Instant;
+import java.util.Objects;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+
+import appeng.idle.currency.CurrencyAmount;
+import appeng.idle.currency.CurrencyId;
+
+/**
+ * Handles loading/saving player idle data into persistent player NBT and enforces server-authoritative mutations.
+ */
+public final class PlayerIdleDataManager {
+    private static final String IDLE_ROOT_TAG = "appengIdleData";
+
+    private PlayerIdleDataManager() {
+    }
+
+    public static PlayerIdleData get(ServerPlayer player) {
+        Objects.requireNonNull(player, "player");
+
+        var persistedTag = getPersistedTag(player);
+        if (!persistedTag.contains(IDLE_ROOT_TAG, Tag.TAG_COMPOUND)) {
+            var created = new PlayerIdleData();
+            save(player, created);
+            return created;
+        }
+
+        return PlayerIdleData.fromTag(persistedTag.getCompound(IDLE_ROOT_TAG));
+    }
+
+    public static void save(ServerPlayer player, PlayerIdleData data) {
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(data, "data");
+
+        var persistedTag = getPersistedTag(player);
+        persistedTag.put(IDLE_ROOT_TAG, data.toTag());
+        player.getPersistentData().put(Player.PERSISTED_NBT_TAG, persistedTag);
+    }
+
+    public static long addBalance(ServerPlayer player, CurrencyId currencyId, CurrencyAmount amount) {
+        ensureServerPlayer(player);
+        if (amount.units() < 0) {
+            throw new IllegalArgumentException("Cannot add a negative amount.");
+        }
+
+        var data = get(player);
+        var updatedBalance = Math.addExact(data.getBalance(currencyId), amount.units());
+        data.setBalance(currencyId, updatedBalance);
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+        return updatedBalance;
+    }
+
+    public static boolean trySpend(ServerPlayer player, CurrencyId currencyId, CurrencyAmount amount) {
+        ensureServerPlayer(player);
+        if (amount.units() < 0) {
+            throw new IllegalArgumentException("Cannot spend a negative amount.");
+        }
+
+        var data = get(player);
+        var currentBalance = data.getBalance(currencyId);
+        if (currentBalance < amount.units()) {
+            return false;
+        }
+
+        data.setBalance(currencyId, currentBalance - amount.units());
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+        return true;
+    }
+
+    public static void setUpgradeLevel(ServerPlayer player, ResourceLocation upgradeId, int level) {
+        ensureServerPlayer(player);
+
+        var data = get(player);
+        data.setUpgradeLevel(upgradeId, level);
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+    }
+
+    public static void handlePlayerClone(PlayerEvent.Clone event) {
+        if (!(event.getEntity() instanceof ServerPlayer newPlayer)
+                || !(event.getOriginal() instanceof ServerPlayer oldPlayer)) {
+            return;
+        }
+
+        var oldPersistedTag = oldPlayer.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
+        if (!oldPersistedTag.contains(IDLE_ROOT_TAG, Tag.TAG_COMPOUND)) {
+            return;
+        }
+
+        var newPersistedTag = newPlayer.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
+        newPersistedTag.put(IDLE_ROOT_TAG, oldPersistedTag.getCompound(IDLE_ROOT_TAG).copy());
+        newPlayer.getPersistentData().put(Player.PERSISTED_NBT_TAG, newPersistedTag);
+    }
+
+    private static void ensureServerPlayer(ServerPlayer player) {
+        if (player.level().isClientSide()) {
+            throw new IllegalStateException("Idle player data may only be mutated on the server.");
+        }
+    }
+
+    private static CompoundTag getPersistedTag(ServerPlayer player) {
+        var persistentData = player.getPersistentData();
+        if (!persistentData.contains(Player.PERSISTED_NBT_TAG, Tag.TAG_COMPOUND)) {
+            persistentData.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
+        }
+        return persistentData.getCompound(Player.PERSISTED_NBT_TAG);
+    }
+}
