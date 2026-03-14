@@ -16,6 +16,7 @@ import appeng.idle.player.PlayerIdleDataManager;
  */
 public record RequestSpendUpgradePacket(ResourceLocation upgradeId, CurrencyId currencyId,
         long amount) implements ServerboundPacket {
+
     public static final StreamCodec<RegistryFriendlyByteBuf, RequestSpendUpgradePacket> STREAM_CODEC = StreamCodec
             .ofMember(RequestSpendUpgradePacket::write, RequestSpendUpgradePacket::decode);
 

@@ -4,7 +4,6 @@ import java.util.Map;
 
 import net.minecraft.resources.ResourceLocation;
 
-import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 
 /**
