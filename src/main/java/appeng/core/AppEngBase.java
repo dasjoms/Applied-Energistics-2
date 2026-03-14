@@ -66,6 +66,7 @@ import appeng.hooks.SkyStoneBreakSpeed;
 import appeng.hooks.WrenchHook;
 import appeng.hooks.ticking.TickHandler;
 import appeng.hotkeys.HotkeyActions;
+import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.tick.IdleGenerationTicker;
 import appeng.init.InitAdvancementTriggers;
@@ -185,6 +186,7 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerClone);
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerLoggedIn);
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerLoggedOut);
+        NeoForge.EVENT_BUS.addListener(IdleCurrencyManager::onAddReloadListener);
         NeoForge.EVENT_BUS.addListener(IdleGenerationTicker::onServerTickEnd);
 
         HotkeyActions.init();

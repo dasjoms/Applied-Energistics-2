@@ -1,19 +1,23 @@
 package appeng.idle.tick;
 
-import appeng.core.AppEng;
 import appeng.idle.currency.CurrencyAmount;
 import appeng.idle.currency.CurrencyId;
+import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.GenerationContext;
 
 /**
- * Basic implementation that generates 1 unit per tick while the player is online.
+ * Basic implementation that uses the loaded currency definition base rate while the player is online.
  */
 public class BasicGenerationRule implements GenerationRule {
-    private static final CurrencyId DEFAULT_CURRENCY = new CurrencyId(AppEng.makeId("idle"));
 
     @Override
     public CurrencyAmount generatePerTick(GenerationContext ctx, CurrencyId currency) {
-        if (!ctx.online() || !DEFAULT_CURRENCY.equals(currency)) {
+        if (!ctx.online()) {
+            return CurrencyAmount.ZERO;
+        }
+
+        var definition = IdleCurrencyManager.get(currency);
+        if (definition == null) {
             return CurrencyAmount.ZERO;
         }
 
@@ -22,7 +26,7 @@ public class BasicGenerationRule implements GenerationRule {
             return CurrencyAmount.ZERO;
         }
 
-        var generated = (long) Math.floor(multiplier);
+        var generated = (long) Math.floor(definition.baseOnlineRate() * multiplier);
         if (generated <= 0L) {
             return CurrencyAmount.ZERO;
         }
