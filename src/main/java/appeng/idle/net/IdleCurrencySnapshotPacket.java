@@ -16,7 +16,8 @@ public record IdleCurrencySnapshotPacket(Map<CurrencyId, Long> balances) impleme
     public static final StreamCodec<RegistryFriendlyByteBuf, IdleCurrencySnapshotPacket> STREAM_CODEC = StreamCodec
             .ofMember(IdleCurrencySnapshotPacket::write, IdleCurrencySnapshotPacket::decode);
 
-    public static final Type<IdleCurrencySnapshotPacket> TYPE = CustomAppEngPayload.createType("idle_currency_snapshot");
+    public static final Type<IdleCurrencySnapshotPacket> TYPE = CustomAppEngPayload
+            .createType("idle_currency_snapshot");
 
     @Override
     public Type<IdleCurrencySnapshotPacket> type() {
