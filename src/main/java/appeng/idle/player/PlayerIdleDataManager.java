@@ -1,6 +1,7 @@
 package appeng.idle.player;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -16,6 +17,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEve
 import appeng.core.AEConfig;
 import appeng.idle.currency.CurrencyAmount;
 import appeng.idle.currency.CurrencyId;
+import appeng.idle.net.IdleCurrencySyncService;
 import appeng.idle.tick.IdleGenerationTicker;
 
 /**
@@ -61,6 +63,7 @@ public final class PlayerIdleDataManager {
         data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
+        IdleCurrencySyncService.sendDelta(player, Map.of(currencyId, updatedBalance));
         return updatedBalance;
     }
 
@@ -80,6 +83,7 @@ public final class PlayerIdleDataManager {
         data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
+        IdleCurrencySyncService.sendDelta(player, Map.of(currencyId, currentBalance - amount.units()));
         return true;
     }
 
@@ -104,7 +108,7 @@ public final class PlayerIdleDataManager {
         }
 
         var data = get(player);
-        var changed = false;
+        var changedBalances = new LinkedHashMap<CurrencyId, Long>();
 
         for (var entry : generatedAmounts.entrySet()) {
             var currencyId = Objects.requireNonNull(entry.getKey(), "currencyId");
@@ -120,17 +124,18 @@ public final class PlayerIdleDataManager {
 
             if (updatedBalance != currentBalance) {
                 data.setBalance(currencyId, updatedBalance);
-                changed = true;
+                changedBalances.put(currencyId, updatedBalance);
             }
         }
 
-        if (!changed) {
+        if (changedBalances.isEmpty()) {
             return false;
         }
 
         data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
+        IdleCurrencySyncService.sendDelta(player, changedBalances);
         return true;
     }
 
