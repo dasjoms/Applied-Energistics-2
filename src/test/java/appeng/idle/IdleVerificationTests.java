@@ -91,6 +91,33 @@ class IdleVerificationTests {
         assertThat(generated).isEqualTo(65L);
     }
 
+
+    @Test
+    void upgradeLevelChangesScaleOfflineGainRateAsExpected() {
+        var levelOne = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.OFFLINE_EFFICIENCY_1.id(), 1));
+        var levelThree = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.OFFLINE_EFFICIENCY_1.id(), 3));
+
+        var multiplierOne = IdleUpgradeHooks.getOfflinePercentMultiplier(levelOne);
+        var multiplierThree = IdleUpgradeHooks.getOfflinePercentMultiplier(levelThree);
+
+        var generatedOne = computeOfflineGenerated(2L, 20L, 100L, 0.5, multiplierOne);
+        var generatedThree = computeOfflineGenerated(2L, 20L, 100L, 0.5, multiplierThree);
+
+        assertThat(multiplierOne).isEqualTo(1.1);
+        assertThat(multiplierThree).isEqualTo(1.3);
+        assertThat(generatedOne).isEqualTo(440L);
+        assertThat(generatedThree).isEqualTo(520L);
+        assertThat(generatedThree).isGreaterThan(generatedOne);
+    }
+
     @Test
     void integrationStyleTwoPlayerLedgersMutateIndependently() {
         var playerOne = new PlayerIdleData(Map.of(IDLE, 100L), 0L, PlayerIdleData.CURRENT_DATA_VERSION, Map.of());

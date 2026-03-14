@@ -3,7 +3,9 @@ package appeng.idle.net;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
+import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import io.netty.buffer.Unpooled;
@@ -18,11 +20,19 @@ import appeng.util.CodecTestUtil;
 
 class RequestSpendUpgradePacketTest {
 
+    private static final CurrencyId IDLE = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "idle"));
+    private static final CurrencyId MATTER = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "matter"));
+
+    @AfterEach
+    void resetClientCache() {
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of());
+    }
+
     @Test
     void streamCodecRoundTripRetainsAllFields() {
         var original = new RequestSpendUpgradePacket(
                 ResourceLocation.fromNamespaceAndPath("ae2", "speed"),
-                new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "idle")),
+                IDLE,
                 15);
 
         CodecTestUtil.testRoundtrip(RequestSpendUpgradePacket.STREAM_CODEC, original);
@@ -47,4 +57,40 @@ class RequestSpendUpgradePacketTest {
                 .containsExactly("upgradeId", "currencyId", "amount")
                 .doesNotContain("currency");
     }
+
+    @Test
+    void snapshotPacketCodecRoundTripRetainsBalancesAndRates() {
+        var original = new IdleCurrencySnapshotPacket(
+                Map.of(IDLE, 42L, MATTER, 13L),
+                Map.of(IDLE, 5L, MATTER, 8L));
+
+        CodecTestUtil.testRoundtrip(IdleCurrencySnapshotPacket.STREAM_CODEC, original);
+
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
+                RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
+        IdleCurrencySnapshotPacket.STREAM_CODEC.encode(buffer, original);
+        var decoded = IdleCurrencySnapshotPacket.STREAM_CODEC.decode(buffer);
+
+        assertThat(decoded.balances()).containsExactlyEntriesOf(original.balances());
+        assertThat(decoded.rates()).containsExactlyEntriesOf(original.rates());
+    }
+
+    @Test
+    void deltaPacketCodecRoundTripRetainsChangedBalancesAndRefreshedRates() {
+        var original = new IdleCurrencyDeltaPacket(
+                Map.of(IDLE, 100L, MATTER, 0L),
+                Map.of(IDLE, 17L));
+
+        CodecTestUtil.testRoundtrip(IdleCurrencyDeltaPacket.STREAM_CODEC, original);
+
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
+                RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
+        IdleCurrencyDeltaPacket.STREAM_CODEC.encode(buffer, original);
+        var decoded = IdleCurrencyDeltaPacket.STREAM_CODEC.decode(buffer);
+
+        assertThat(decoded.changedBalances()).containsExactlyEntriesOf(original.changedBalances());
+        assertThat(decoded.refreshedRates()).containsExactlyEntriesOf(original.refreshedRates());
+    }
+
+
 }
