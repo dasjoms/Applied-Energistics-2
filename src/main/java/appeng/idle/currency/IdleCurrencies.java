@@ -15,7 +15,7 @@ public final class IdleCurrencies {
                     IDLE,
                     "gui.ae2.idle.currency.idle",
                     AppEng.makeId("certus_quartz_crystal"),
-                    1.0,
+                    200L,
                     true,
                     null));
 

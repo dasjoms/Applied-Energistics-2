@@ -6,7 +6,7 @@ import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.GenerationContext;
 
 /**
- * Basic implementation that uses the loaded currency definition base rate while the player is online.
+ * Basic implementation that grants one unit after each configured baseTicksPerUnit interval while online.
  */
 public class BasicGenerationRule implements GenerationRule {
 
@@ -26,7 +26,7 @@ public class BasicGenerationRule implements GenerationRule {
             return CurrencyAmount.ZERO;
         }
 
-        var generated = (long) Math.floor(definition.baseOnlineRate() * multiplier);
+        var generated = (long) Math.floor(multiplier / definition.baseTicksPerUnit());
         if (generated <= 0L) {
             return CurrencyAmount.ZERO;
         }

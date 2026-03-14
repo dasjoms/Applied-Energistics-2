@@ -107,7 +107,7 @@ public final class IdleCurrencyManager extends SimpleJsonResourceReloadListener 
             throw new JsonParseException("Invalid iconItem resource location: " + iconItemString);
         }
 
-        var baseOnlineRate = GsonHelper.getAsDouble(json, "baseOnlineRate");
+        var baseTicksPerUnit = parseBaseTicksPerUnit(sourceFile, json);
         var visibleByDefault = GsonHelper.getAsBoolean(json, "visibleByDefault", true);
 
         CurrencyDefinition.CurrencyCaps caps = null;
@@ -121,10 +121,35 @@ public final class IdleCurrencyManager extends SimpleJsonResourceReloadListener 
         }
 
         try {
-            return new CurrencyDefinition(id, displayNameKey, iconItem, baseOnlineRate, visibleByDefault, caps);
+            return new CurrencyDefinition(id, displayNameKey, iconItem, baseTicksPerUnit, visibleByDefault, caps);
         } catch (IllegalArgumentException ex) {
             throw new JsonParseException(ex.getMessage());
         }
+    }
+
+    private static long parseBaseTicksPerUnit(ResourceLocation sourceFile, JsonObject json) {
+        if (json.has("baseTicksPerUnit")) {
+            return GsonHelper.getAsLong(json, "baseTicksPerUnit");
+        }
+
+        if (json.has("baseOnlineRate")) {
+            var baseOnlineRate = GsonHelper.getAsDouble(json, "baseOnlineRate");
+            if (!Double.isFinite(baseOnlineRate) || baseOnlineRate <= 0.0) {
+                throw new JsonParseException("baseOnlineRate must be finite and > 0 when used as fallback");
+            }
+
+            var baseTicksPerUnit = Math.round(1.0 / baseOnlineRate);
+            if (baseTicksPerUnit < 1L) {
+                baseTicksPerUnit = 1L;
+            }
+
+            AELog.warn(
+                    "Idle currency {} uses deprecated field 'baseOnlineRate'; converted to baseTicksPerUnit={} (remove baseOnlineRate and set baseTicksPerUnit explicitly)",
+                    sourceFile, baseTicksPerUnit);
+            return baseTicksPerUnit;
+        }
+
+        throw new JsonParseException("Missing required field 'baseTicksPerUnit' (or deprecated fallback 'baseOnlineRate')");
     }
 
     private static CurrencyId parseCurrencyId(ResourceLocation sourceFile, JsonObject json) {
