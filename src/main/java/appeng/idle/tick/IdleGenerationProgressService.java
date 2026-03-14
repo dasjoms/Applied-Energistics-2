@@ -8,6 +8,7 @@ import java.util.Set;
 import net.minecraft.server.level.ServerPlayer;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencyManager;
+import appeng.idle.generation.IdleGenerationCapService;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
@@ -118,7 +119,7 @@ public final class IdleGenerationProgressService {
             return 0L;
         }
 
-        var cappedByGeneration = IdleRateCalculator.clampOnlineGenerationCap(currency, wholeUnits);
+        var cappedByGeneration = IdleGenerationCapService.clampOnlineGenerationCap(currency, wholeUnits);
         if (cappedByGeneration <= 0L) {
             return 0L;
         }
