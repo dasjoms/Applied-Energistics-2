@@ -16,7 +16,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEve
 
 import appeng.core.AEConfig;
 import appeng.idle.currency.CurrencyAmount;
+import appeng.idle.currency.CurrencyDefinition;
 import appeng.idle.currency.CurrencyId;
+import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.net.IdleCurrencySyncService;
 import appeng.idle.tick.IdleGenerationTicker;
 
@@ -140,9 +142,11 @@ public final class PlayerIdleDataManager {
             }
 
             var currentBalance = data.getBalance(currencyId);
-            var updatedBalance = currentBalance > Long.MAX_VALUE - generated
+            // Clamp order: generation cap -> addition -> balance cap (with Long.MAX_VALUE as final safety).
+            var postAdditionBalance = currentBalance > Long.MAX_VALUE - generated
                     ? Long.MAX_VALUE
                     : currentBalance + generated;
+            var updatedBalance = clampBalanceCap(currencyId, postAdditionBalance);
 
             if (updatedBalance != currentBalance) {
                 data.setBalance(currencyId, updatedBalance);
@@ -159,6 +163,18 @@ public final class PlayerIdleDataManager {
         save(player, data);
         IdleCurrencySyncService.sendDelta(player, changedBalances);
         return true;
+    }
+
+    private static long clampBalanceCap(CurrencyId currencyId, long balanceAfterAddition) {
+        if (balanceAfterAddition <= 0L) {
+            return 0L;
+        }
+
+        var definition = IdleCurrencyManager.get(currencyId);
+        CurrencyDefinition.CurrencyCaps caps = definition == null ? null : definition.caps();
+        var balanceCap = caps == null ? null : caps.balanceCap();
+
+        return balanceCap == null ? balanceAfterAddition : Math.min(balanceAfterAddition, balanceCap);
     }
 
     public static void handlePlayerLoggedIn(PlayerLoggedInEvent event) {
