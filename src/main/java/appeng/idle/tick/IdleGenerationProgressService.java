@@ -5,9 +5,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+
+import appeng.core.definitions.AEItems;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.PlayerIdleData;
+import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
 /**
@@ -46,6 +51,32 @@ public final class IdleGenerationProgressService {
         }
 
         return accrueProgressTicks(data, progressTicks, currencies);
+    }
+
+    public static boolean grantActiveProgressTicks(ServerPlayer player, CurrencyId currency, long progressTicks,
+            String source) {
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(currency, "currency");
+        Objects.requireNonNull(source, "source");
+
+        if (progressTicks <= 0L) {
+            throw new IllegalArgumentException("progressTicks must be > 0.");
+        }
+
+        if (!AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD))) {
+            return false;
+        }
+
+        if (!PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
+            return false;
+        }
+
+        var data = PlayerIdleDataManager.get(player);
+        var generatedAmounts = accrueProgressTicks(data, progressTicks, Set.of(currency));
+        PlayerIdleDataManager.save(player, data);
+
+        return !generatedAmounts.isEmpty() && PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts,
+                source);
     }
 
     private static Map<CurrencyId, Long> accrueProgressTicks(PlayerIdleData data, double progressTicks,
