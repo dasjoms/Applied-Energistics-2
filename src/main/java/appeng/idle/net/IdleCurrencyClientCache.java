@@ -11,6 +11,7 @@ import appeng.idle.currency.CurrencyId;
  */
 public final class IdleCurrencyClientCache {
     private static volatile Map<CurrencyId, Long> balances = Map.of();
+    private static volatile Map<CurrencyId, Long> rates = Map.of();
     private static volatile Map<CurrencyId, IdleCurrencyHudValue> hudValues = Map.of();
 
     private IdleCurrencyClientCache() {
@@ -20,8 +21,21 @@ public final class IdleCurrencyClientCache {
         return balances;
     }
 
-    public static void applySnapshot(Map<CurrencyId, Long> snapshot) {
+    public static Map<CurrencyId, Long> getBalanceMap() {
+        return balances;
+    }
+
+    public static Map<CurrencyId, Long> getRates() {
+        return rates;
+    }
+
+    public static Map<CurrencyId, Long> getRateMap() {
+        return rates;
+    }
+
+    public static void applySnapshot(Map<CurrencyId, Long> snapshot, Map<CurrencyId, Long> rateSnapshot) {
         balances = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
+        rates = Collections.unmodifiableMap(new LinkedHashMap<>(rateSnapshot));
     }
 
     public static Map<CurrencyId, IdleCurrencyHudValue> getHudValues() {
@@ -32,8 +46,8 @@ public final class IdleCurrencyClientCache {
         hudValues = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
     }
 
-    public static void applyDelta(Map<CurrencyId, Long> delta) {
-        if (delta.isEmpty()) {
+    public static void applyDelta(Map<CurrencyId, Long> delta, Map<CurrencyId, Long> refreshedRates) {
+        if (delta.isEmpty() && refreshedRates.isEmpty()) {
             return;
         }
 
@@ -47,5 +61,9 @@ public final class IdleCurrencyClientCache {
         }
 
         balances = Collections.unmodifiableMap(merged);
+
+        if (!refreshedRates.isEmpty()) {
+            rates = Collections.unmodifiableMap(new LinkedHashMap<>(refreshedRates));
+        }
     }
 }

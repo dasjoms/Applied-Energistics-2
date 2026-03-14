@@ -61,7 +61,7 @@ public final class IdleCurrencySyncService {
 
     public static void sendSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
-        PacketDistributor.sendToPlayer(player, new IdleCurrencySnapshotPacket(snapshotBalances(player)));
+        PacketDistributor.sendToPlayer(player, new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
         sendHudSnapshot(player);
     }
 
@@ -71,20 +71,36 @@ public final class IdleCurrencySyncService {
     }
 
     public static void sendDelta(ServerPlayer player, Map<CurrencyId, Long> changedBalances) {
+        sendDelta(player, changedBalances, false);
+    }
+
+    public static void sendDelta(ServerPlayer player, Map<CurrencyId, Long> changedBalances, boolean refreshRates) {
         Objects.requireNonNull(player, "player");
         Objects.requireNonNull(changedBalances, "changedBalances");
 
-        if (changedBalances.isEmpty()) {
+        var rates = refreshRates ? snapshotRates(player) : Map.<CurrencyId, Long>of();
+        if (changedBalances.isEmpty() && rates.isEmpty()) {
             return;
         }
 
-        PacketDistributor.sendToPlayer(player, new IdleCurrencyDeltaPacket(new LinkedHashMap<>(changedBalances)));
+        PacketDistributor.sendToPlayer(player,
+                new IdleCurrencyDeltaPacket(new LinkedHashMap<>(changedBalances), new LinkedHashMap<>(rates)));
     }
 
     private static Map<CurrencyId, Long> snapshotBalances(ServerPlayer player) {
         return new LinkedHashMap<>(PlayerIdleDataManager.get(player).balancesView());
     }
 
+
+
+    private static Map<CurrencyId, Long> snapshotRates(ServerPlayer player) {
+        var hudValues = snapshotHudValues(player);
+        var rates = new LinkedHashMap<CurrencyId, Long>(hudValues.size());
+        for (var entry : hudValues.entrySet()) {
+            rates.put(entry.getKey(), entry.getValue().gainPerSecond());
+        }
+        return rates;
+    }
 
     private static Map<CurrencyId, IdleCurrencyHudValue> snapshotHudValues(ServerPlayer player) {
         var data = PlayerIdleDataManager.get(player);
