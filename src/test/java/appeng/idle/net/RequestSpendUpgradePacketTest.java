@@ -4,8 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 
-import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
+
+import io.netty.buffer.Unpooled;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
