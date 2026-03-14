@@ -1,6 +1,5 @@
 package appeng.idle.tick;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,7 +20,6 @@ public final class IdleGenerationTicker {
     private static final CurrencyId DEFAULT_CURRENCY = IdleCurrencies.IDLE;
     private static final String REASON_ONLINE_TICK = "ONLINE_TICK";
     private static final String REASON_OFFLINE_CATCHUP = "OFFLINE_CATCHUP";
-    private static final int TICKS_PER_SECOND = 20;
 
     private IdleGenerationTicker() {
     }
@@ -38,9 +36,19 @@ public final class IdleGenerationTicker {
     }
 
     private static void accrueForPlayer(ServerPlayer player, int intervalTicks) {
-        var generatedAmounts = IdleRateCalculator.calculateGeneratedForInterval(player, intervalTicks);
+        if (!PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
+            return;
+        }
 
-        PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_ONLINE_TICK);
+        var data = PlayerIdleDataManager.get(player);
+        var generatedAmounts = IdleGenerationProgressService.accrueOnlineProgress(
+                data,
+                intervalTicks,
+                currenciesToGenerate());
+        PlayerIdleDataManager.save(player, data);
+        if (!generatedAmounts.isEmpty()) {
+            PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_ONLINE_TICK);
+        }
     }
 
     public static void accrueOfflineCatchup(ServerPlayer player, long elapsedSeconds) {
@@ -54,27 +62,17 @@ public final class IdleGenerationTicker {
         var offlinePercentMultiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(data);
         var maxOfflineSeconds = AEConfig.instance().getIdleOfflineMaxSeconds();
 
-        var currencies = currenciesToGenerate();
-        var generatedAmounts = new HashMap<CurrencyId, Long>();
-
-        for (var currency : currencies) {
-            var generatedPerTick = IdleRateCalculator.generatedPerTick(player.getUUID(), data, currency);
-            if (generatedPerTick <= 0L) {
-                continue;
-            }
-
-            var generatedOffline = computeOfflineGenerated(generatedPerTick, elapsedSeconds, maxOfflineSeconds,
-                    offlineBasePercent, offlinePercentMultiplier);
-            // Clamp order starts here: generation cap -> addition -> balance cap.
-            generatedOffline = IdleRateCalculator.clampOnlineGenerationCap(currency, generatedOffline);
-            if (generatedOffline <= 0L) {
-                continue;
-            }
-
-            generatedAmounts.put(currency, generatedOffline);
+        var generatedAmounts = IdleGenerationProgressService.accrueOfflineProgress(
+                data,
+                elapsedSeconds,
+                maxOfflineSeconds,
+                offlineBasePercent,
+                offlinePercentMultiplier,
+                currenciesToGenerate());
+        PlayerIdleDataManager.save(player, data);
+        if (!generatedAmounts.isEmpty()) {
+            PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_OFFLINE_CATCHUP);
         }
-
-        PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_OFFLINE_CATCHUP);
     }
 
     static Set<CurrencyId> currenciesToGenerate() {
@@ -83,35 +81,6 @@ public final class IdleGenerationTicker {
             currencies.add(DEFAULT_CURRENCY);
         }
         return currencies;
-    }
-
-    static long computeOfflineGenerated(long generatedPerTick, long elapsedSeconds, long maxOfflineSeconds,
-            double offlineBasePercent, double offlinePercentMultiplier) {
-        if (generatedPerTick <= 0L || elapsedSeconds <= 0L || maxOfflineSeconds <= 0L) {
-            return 0L;
-        }
-        if (offlineBasePercent <= 0.0 || offlinePercentMultiplier <= 0.0
-                || !Double.isFinite(offlineBasePercent) || !Double.isFinite(offlinePercentMultiplier)) {
-            return 0L;
-        }
-
-        var cappedElapsedSeconds = Math.min(elapsedSeconds, maxOfflineSeconds);
-        var generatedPerSecond = IdleRateCalculator.safeMultiply(generatedPerTick, TICKS_PER_SECOND);
-        if (generatedPerSecond <= 0L) {
-            return 0L;
-        }
-
-        var offlineRate = generatedPerSecond * offlineBasePercent * offlinePercentMultiplier;
-        if (offlineRate <= 0.0 || !Double.isFinite(offlineRate)) {
-            return 0L;
-        }
-
-        var generatedOffline = Math.floor(offlineRate * cappedElapsedSeconds);
-        if (generatedOffline <= 0.0) {
-            return 0L;
-        }
-
-        return generatedOffline >= Long.MAX_VALUE ? Long.MAX_VALUE : (long) generatedOffline;
     }
 
 }
