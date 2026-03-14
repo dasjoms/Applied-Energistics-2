@@ -118,6 +118,8 @@ public class LocalizationProvider implements IAE2DataProvider {
         add("entity.minecraft.villager.ae2.fluix_researcher", "Fluix Researcher");
         add("gui.ae2.idle.hud.title", "Idle HUD");
         add("gui.ae2.idle.hud.per_second_suffix", "/s");
+        add("gui.ae2.idle.hud.rate", "%1$s%2$s");
+        add("gui.ae2.idle.hud.line", "%1$s: %2$s (%3$s)");
         add("gui.ae2.PatternEncoding.primary_processing_result_hint",
                 "Can be requested through the automated crafting system.");
         add("gui.ae2.PatternEncoding.primary_processing_result_tooltip", "Primary Processing Result");
