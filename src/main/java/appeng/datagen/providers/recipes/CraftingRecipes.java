@@ -40,6 +40,8 @@ public class CraftingRecipes extends AE2RecipeProvider {
     @Override
     protected void buildRecipes(RecipeOutput consumer) {
 
+        // Idle Visor intentionally has no crafting recipe in first playable pass and remains creative-only for now.
+
         // ====================================================
         // Basic Cards
         // ====================================================
