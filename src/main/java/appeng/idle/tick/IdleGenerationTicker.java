@@ -102,7 +102,7 @@ public final class IdleGenerationTicker {
         PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_OFFLINE_CATCHUP);
     }
 
-    private static Set<CurrencyId> currenciesToGenerate() {
+    static Set<CurrencyId> currenciesToGenerate() {
         var currencies = new HashSet<>(IdleCurrencyManager.getCurrencies().keySet());
         if (currencies.isEmpty()) {
             currencies.add(DEFAULT_CURRENCY);
