@@ -29,11 +29,16 @@ public record RequestSpendUpgradePacket(ResourceLocation upgradeId, CurrencyId c
     }
 
     public static RequestSpendUpgradePacket decode(RegistryFriendlyByteBuf data) {
-        return new RequestSpendUpgradePacket(data.readResourceLocation());
+        return new RequestSpendUpgradePacket(
+                data.readResourceLocation(),
+                new CurrencyId(data.readResourceLocation()),
+                data.readVarLong());
     }
 
     public void write(RegistryFriendlyByteBuf data) {
         data.writeResourceLocation(upgradeId);
+        data.writeResourceLocation(currencyId.id());
+        data.writeVarLong(amount);
     }
 
     @Override
