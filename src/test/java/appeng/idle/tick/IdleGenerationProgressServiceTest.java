@@ -74,7 +74,6 @@ class IdleGenerationProgressServiceTest {
         });
     }
 
-
     @Test
     void onlineAccrualAppliesOnlineGenerationCapBeforeAwardingUnits() throws Exception {
         var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "online_cap_progress_currency"));
@@ -158,7 +157,8 @@ class IdleGenerationProgressServiceTest {
                 manager.when(() -> PlayerIdleDataManager.addGeneratedBalances(eq(player), any(), eq("ACTIVE_TEST")))
                         .thenReturn(true);
 
-                var granted = IdleGenerationProgressService.grantActiveProgressTicks(player, currency, 9L, "ACTIVE_TEST");
+                var granted = IdleGenerationProgressService.grantActiveProgressTicks(player, currency, 9L,
+                        "ACTIVE_TEST");
 
                 assertThat(granted).isTrue();
                 manager.verify(() -> PlayerIdleDataManager.addGeneratedBalances(

@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import net.minecraft.server.level.ServerPlayer;
+
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.generation.IdleGenerationCapService;
