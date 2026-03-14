@@ -16,6 +16,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -24,6 +25,7 @@ import appeng.idle.currency.CurrencyAmount;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.upgrade.IdleUpgradePurchaseService;
 import appeng.server.ISubCommand;
 
 /**
@@ -32,6 +34,8 @@ import appeng.server.ISubCommand;
 public class IdleCurrencyCommand implements ISubCommand {
     @Override
     public void addArguments(LiteralArgumentBuilder<CommandSourceStack> builder) {
+        builder.requires(source -> source.hasPermission(2));
+
         builder.then(literal("balance")
                 .then(argument("player", EntityArgument.player())
                         .executes(ctx -> {
@@ -56,6 +60,14 @@ public class IdleCurrencyCommand implements ISubCommand {
                                             return 1;
                                         })))));
 
+        builder.then(literal("purchase")
+                .then(argument("player", EntityArgument.player())
+                        .then(argument("upgrade", ResourceLocationArgument.id())
+                                .executes(ctx -> {
+                                    attemptPurchase(ctx);
+                                    return 1;
+                                }))));
+
         builder.then(literal("setlastseen")
                 .then(argument("player", EntityArgument.player())
                         .then(argument("epochSeconds", LongArgumentType.longArg(0L))
@@ -76,7 +88,7 @@ public class IdleCurrencyCommand implements ISubCommand {
     @Override
     public void call(MinecraftServer srv, CommandContext<CommandSourceStack> ctx, CommandSourceStack sender) {
         sender.sendSuccess(
-                () -> Component.literal("Usage: /ae2 idlecurrency <balance|grant|setlastseen|catchup> ..."),
+                () -> Component.literal("Usage: /ae2 idlecurrency <balance|grant|purchase|setlastseen|catchup> ..."),
                 false);
     }
 
@@ -115,6 +127,28 @@ public class IdleCurrencyCommand implements ISubCommand {
                 () -> Component.literal("Granted " + amount + " " + currencyId.id() + " to "
                         + player.getGameProfile().getName() + ". New balance: " + updated),
                 true);
+    }
+
+    private static void attemptPurchase(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var player = EntityArgument.getPlayer(ctx, "player");
+        var upgradeId = ResourceLocationArgument.getId(ctx, "upgrade");
+        var result = IdleUpgradePurchaseService.tryPurchase(player, upgradeId);
+
+        ctx.getSource().sendSuccess(
+                () -> Component.literal(buildPurchaseMessage(player.getGameProfile().getName(), upgradeId, result)),
+                true);
+    }
+
+    static String buildPurchaseMessage(String playerName, ResourceLocation upgradeId,
+            IdleUpgradePurchaseService.PurchaseResult result) {
+        return switch (result) {
+            case SUCCESS -> "Purchased " + upgradeId + " for " + playerName + ".";
+            case UNKNOWN_UPGRADE -> "Purchase rejected for " + playerName + ": unknown upgrade " + upgradeId + ".";
+            case MAX_LEVEL -> "Purchase rejected for " + playerName + ": upgrade already at max level (" + upgradeId
+                    + ").";
+            case INSUFFICIENT_FUNDS -> "Purchase rejected for " + playerName + ": insufficient idle currency for "
+                    + upgradeId + ".";
+        };
     }
 
     private static void setLastSeen(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

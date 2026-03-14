@@ -37,6 +37,7 @@ public enum Commands {
     CHANNEL_MODE(4, "channelmode", new ChannelModeCommand()),
     TICK_MONITORING(4, "tickmonitor", new TickMonitoring()),
     GRIDS(4, "grids", new GridsCommand()),
+    // Dev note: /ae2 idlecurrency supports balance/grant/purchase paths for server-side idle economy validation.
     IDLE_CURRENCY(4, "idlecurrency", new IdleCurrencyCommand()),
 
     // Testing

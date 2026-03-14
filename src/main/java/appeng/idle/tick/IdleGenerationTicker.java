@@ -54,6 +54,8 @@ public final class IdleGenerationTicker {
             }
 
             var generatedThisInterval = safeMultiply(generatedPerTick, intervalTicks);
+            // Clamp order starts here: generation cap -> addition -> balance cap.
+            generatedThisInterval = clampOnlineGenerationCap(currency, generatedThisInterval);
             if (generatedThisInterval <= 0L) {
                 continue;
             }
@@ -88,6 +90,8 @@ public final class IdleGenerationTicker {
 
             var generatedOffline = computeOfflineGenerated(generatedPerTick, elapsedSeconds, maxOfflineSeconds,
                     offlineBasePercent, offlinePercentMultiplier);
+            // Clamp order starts here: generation cap -> addition -> balance cap.
+            generatedOffline = clampOnlineGenerationCap(currency, generatedOffline);
             if (generatedOffline <= 0L) {
                 continue;
             }
@@ -116,6 +120,18 @@ public final class IdleGenerationTicker {
         }
 
         return value * multiplier;
+    }
+
+    private static long clampOnlineGenerationCap(CurrencyId currency, long generatedAmount) {
+        if (generatedAmount <= 0L) {
+            return 0L;
+        }
+
+        var definition = IdleCurrencyManager.get(currency);
+        var caps = definition == null ? null : definition.caps();
+        var onlineGenerationCap = caps == null ? null : caps.onlineGenerationCap();
+
+        return onlineGenerationCap == null ? generatedAmount : Math.min(generatedAmount, onlineGenerationCap);
     }
 
     static long computeOfflineGenerated(long generatedPerTick, long elapsedSeconds, long maxOfflineSeconds,
