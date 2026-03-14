@@ -84,7 +84,8 @@ public class ItemModelProvider extends net.neoforged.neoforge.client.model.gener
         flatSingleLayer(AEItems.CELL_COMPONENT_256K, "item/cell_component_256k");
         flatSingleLayer(AEItems.CREATIVE_CELL, "item/creative_storage_cell");
         flatSingleLayer(AEItems.ITEM_CELL_HOUSING, "item/item_cell_housing");
-        flatSingleLayer(AEItems.IDLE_VISOR, "item/guide");
+        // Idle Visor currently reuses the guide texture for first playable pass.
+        flatSingleLayer(AEItemIds.IDLE_VISOR, "item/guide");
         flatSingleLayer(AEItems.LOGIC_PROCESSOR, "item/logic_processor");
         flatSingleLayer(AEItems.LOGIC_PROCESSOR_PRESS, "item/logic_processor_press");
         flatSingleLayer(AEItems.LOGIC_PROCESSOR_PRINT, "item/printed_logic_processor");
