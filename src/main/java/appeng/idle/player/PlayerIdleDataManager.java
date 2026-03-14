@@ -1,6 +1,7 @@
 package appeng.idle.player;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 
 import net.minecraft.nbt.CompoundTag;
@@ -86,6 +87,47 @@ public final class PlayerIdleDataManager {
         data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
+    }
+
+    public static boolean addGeneratedBalances(ServerPlayer player, Map<CurrencyId, Long> generatedAmounts,
+            String reason) {
+        ensureServerPlayer(player);
+        Objects.requireNonNull(generatedAmounts, "generatedAmounts");
+        Objects.requireNonNull(reason, "reason");
+
+        if (generatedAmounts.isEmpty()) {
+            return false;
+        }
+
+        var data = get(player);
+        var changed = false;
+
+        for (var entry : generatedAmounts.entrySet()) {
+            var currencyId = Objects.requireNonNull(entry.getKey(), "currencyId");
+            var generated = entry.getValue() == null ? 0L : entry.getValue();
+            if (generated <= 0L) {
+                continue;
+            }
+
+            var currentBalance = data.getBalance(currencyId);
+            var updatedBalance = currentBalance > Long.MAX_VALUE - generated
+                    ? Long.MAX_VALUE
+                    : currentBalance + generated;
+
+            if (updatedBalance != currentBalance) {
+                data.setBalance(currencyId, updatedBalance);
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            return false;
+        }
+
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+        return true;
     }
 
     public static void handlePlayerClone(PlayerEvent.Clone event) {
