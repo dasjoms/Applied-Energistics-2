@@ -14,7 +14,6 @@ import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 
 import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
