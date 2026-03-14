@@ -97,6 +97,28 @@ public final class PlayerIdleDataManager {
         save(player, data);
     }
 
+    public static void setLastSeenEpochSeconds(ServerPlayer player, long epochSeconds) {
+        ensureServerPlayer(player);
+
+        var data = get(player);
+        data.setLastSeenEpochSeconds(Math.max(0L, epochSeconds));
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+    }
+
+    public static void simulateOfflineCatchup(ServerPlayer player, long elapsedSeconds) {
+        ensureServerPlayer(player);
+
+        var cappedElapsedSeconds = Math.min(Math.max(0L, elapsedSeconds),
+                AEConfig.instance().getIdleOfflineMaxSeconds());
+        IdleGenerationTicker.accrueOfflineCatchup(player, cappedElapsedSeconds);
+
+        var data = get(player);
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+    }
+
     public static boolean addGeneratedBalances(ServerPlayer player, Map<CurrencyId, Long> generatedAmounts,
             String reason) {
         ensureServerPlayer(player);
