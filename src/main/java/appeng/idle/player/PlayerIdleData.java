@@ -70,7 +70,7 @@ public final class PlayerIdleData {
         this.dataVersion = dataVersion;
     }
 
-    void setBalance(CurrencyId currencyId, long amount) {
+    public void setBalance(CurrencyId currencyId, long amount) {
         if (amount == 0L) {
             balances.remove(currencyId);
         } else {

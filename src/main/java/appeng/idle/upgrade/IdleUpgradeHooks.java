@@ -12,4 +12,8 @@ public final class IdleUpgradeHooks {
     public static double getOfflinePercentMultiplier(PlayerIdleData data) {
         return 1.0;
     }
+
+    public static boolean trySpendForUpgrade(PlayerIdleData data, CostBundle upgradeCost) {
+        return CurrencyTransactionService.trySpend(data, upgradeCost, SpendReason.UPGRADE_PURCHASE);
+    }
 }
