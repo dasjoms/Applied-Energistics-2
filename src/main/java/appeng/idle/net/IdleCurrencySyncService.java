@@ -91,7 +91,7 @@ public final class IdleCurrencySyncService {
         var hudValues = snapshotHudValues(player);
         var rates = new LinkedHashMap<CurrencyId, Long>(hudValues.size());
         for (var entry : hudValues.entrySet()) {
-            rates.put(entry.getKey(), entry.getValue().gainPerSecond());
+            rates.put(entry.getKey(), toRatePerSecond(entry.getKey(), entry.getValue().gainPerSecond()));
         }
         return rates;
     }
@@ -121,17 +121,12 @@ public final class IdleCurrencySyncService {
         return hudValues;
     }
 
-    private static long gainPerSecond(CurrencyId currency, long baseTicksPerUnit, double totalMultiplier) {
+    private static double gainPerSecond(CurrencyId currency, long baseTicksPerUnit, double totalMultiplier) {
         if (baseTicksPerUnit <= 0L || totalMultiplier <= 0.0 || !Double.isFinite(totalMultiplier)) {
-            return 0L;
+            return 0.0;
         }
 
-        var generatedPerTick = (long) Math.floor(totalMultiplier / baseTicksPerUnit);
-        if (generatedPerTick <= 0L) {
-            return 0L;
-        }
-
-        var generatedPerSecond = safeMultiply(generatedPerTick, TICKS_PER_SECOND);
+        var generatedPerSecond = totalMultiplier * TICKS_PER_SECOND / baseTicksPerUnit;
         return clampOnlineGenerationCap(currency, generatedPerSecond);
     }
 
@@ -167,21 +162,13 @@ public final class IdleCurrencySyncService {
         return currencies;
     }
 
-    private static long safeMultiply(long value, int multiplier) {
-        if (value <= 0L || multiplier <= 0) {
-            return 0L;
-        }
-
-        if (value > Long.MAX_VALUE / multiplier) {
-            return Long.MAX_VALUE;
-        }
-
-        return value * multiplier;
+    private static long toRatePerSecond(CurrencyId currency, double generatedPerSecond) {
+        return (long) Math.floor(clampOnlineGenerationCap(currency, generatedPerSecond));
     }
 
-    private static long clampOnlineGenerationCap(CurrencyId currency, long generatedAmount) {
-        if (generatedAmount <= 0L) {
-            return 0L;
+    private static double clampOnlineGenerationCap(CurrencyId currency, double generatedAmount) {
+        if (generatedAmount <= 0.0 || !Double.isFinite(generatedAmount)) {
+            return 0.0;
         }
 
         var definition = IdleCurrencyManager.get(currency);
