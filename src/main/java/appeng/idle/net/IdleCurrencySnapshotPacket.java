@@ -12,7 +12,7 @@ import appeng.core.network.ClientboundPacket;
 import appeng.core.network.CustomAppEngPayload;
 import appeng.idle.currency.CurrencyId;
 
-public record IdleCurrencySnapshotPacket(Map<CurrencyId, Long> balances) implements ClientboundPacket {
+public record IdleCurrencySnapshotPacket(Map<CurrencyId, Long> balances, Map<CurrencyId, Long> rates) implements ClientboundPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, IdleCurrencySnapshotPacket> STREAM_CODEC = StreamCodec
             .ofMember(IdleCurrencySnapshotPacket::write, IdleCurrencySnapshotPacket::decode);
 
@@ -25,16 +25,19 @@ public record IdleCurrencySnapshotPacket(Map<CurrencyId, Long> balances) impleme
     }
 
     public static IdleCurrencySnapshotPacket decode(RegistryFriendlyByteBuf data) {
-        return new IdleCurrencySnapshotPacket(IdleCurrencyPacketCodec.readBalances(data));
+        return new IdleCurrencySnapshotPacket(
+                IdleCurrencyPacketCodec.readBalances(data),
+                IdleCurrencyPacketCodec.readRates(data));
     }
 
     public void write(RegistryFriendlyByteBuf data) {
         IdleCurrencyPacketCodec.writeBalances(data, balances);
+        IdleCurrencyPacketCodec.writeRates(data, rates);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handleOnClient(Player player) {
-        IdleCurrencyClientCache.applySnapshot(balances);
+        IdleCurrencyClientCache.applySnapshot(balances, rates);
     }
 }

@@ -33,6 +33,14 @@ final class IdleCurrencyPacketCodec {
         return balances;
     }
 
+    static void writeRates(RegistryFriendlyByteBuf data, Map<CurrencyId, Long> rates) {
+        writeBalances(data, rates);
+    }
+
+    static Map<CurrencyId, Long> readRates(RegistryFriendlyByteBuf data) {
+        return readBalances(data);
+    }
+
 
     static void writeHudValues(RegistryFriendlyByteBuf data, Map<CurrencyId, IdleCurrencyHudValue> values) {
         data.writeVarInt(values.size());
