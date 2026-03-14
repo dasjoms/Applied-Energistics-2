@@ -7,15 +7,15 @@ import net.minecraft.server.level.ServerPlayer;
 
 import appeng.core.network.CustomAppEngPayload;
 import appeng.core.network.ServerboundPacket;
-import appeng.idle.currency.CurrencyAmount;
-import appeng.idle.currency.CurrencyId;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.upgrade.CurrencyTransactionService;
+import appeng.idle.upgrade.IdleUpgrades;
+import appeng.idle.upgrade.SpendReason;
 
 /**
  * Client request to spend idle currency for an upgrade. Server performs all validation and mutations.
  */
-public record RequestSpendUpgradePacket(ResourceLocation upgradeId, CurrencyId currencyId,
-        long amount) implements ServerboundPacket {
+public record RequestSpendUpgradePacket(ResourceLocation upgradeId) implements ServerboundPacket {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, RequestSpendUpgradePacket> STREAM_CODEC = StreamCodec
             .ofMember(RequestSpendUpgradePacket::write, RequestSpendUpgradePacket::decode);
@@ -28,33 +28,35 @@ public record RequestSpendUpgradePacket(ResourceLocation upgradeId, CurrencyId c
     }
 
     public static RequestSpendUpgradePacket decode(RegistryFriendlyByteBuf data) {
-        return new RequestSpendUpgradePacket(
-                data.readResourceLocation(),
-                new CurrencyId(data.readResourceLocation()),
-                data.readVarLong());
+        return new RequestSpendUpgradePacket(data.readResourceLocation());
     }
 
     public void write(RegistryFriendlyByteBuf data) {
         data.writeResourceLocation(upgradeId);
-        data.writeResourceLocation(currencyId.id());
-        data.writeVarLong(amount);
     }
 
     @Override
     public void handleOnServer(ServerPlayer player) {
-        if (amount <= 0L) {
-            return;
-        }
-
-        var spent = PlayerIdleDataManager.trySpend(player, currencyId, new CurrencyAmount(amount));
-        if (!spent) {
+        var definition = IdleUpgrades.get(upgradeId);
+        if (definition == null) {
             IdleCurrencySyncService.sendSnapshot(player);
             return;
         }
 
         var data = PlayerIdleDataManager.get(player);
         var currentLevel = data.ownedUpgradeLevelsView().getOrDefault(upgradeId, 0);
-        PlayerIdleDataManager.setUpgradeLevel(player, upgradeId, currentLevel + 1);
+        if (currentLevel >= definition.maxLevel()) {
+            IdleCurrencySyncService.sendSnapshot(player);
+            return;
+        }
 
+        var spent = CurrencyTransactionService.trySpend(data, definition.costPerLevel(), SpendReason.UPGRADE_PURCHASE);
+        if (!spent) {
+            IdleCurrencySyncService.sendSnapshot(player);
+            return;
+        }
+
+        PlayerIdleDataManager.save(player, data);
+        PlayerIdleDataManager.setUpgradeLevel(player, upgradeId, currentLevel + 1);
     }
 }
