@@ -19,6 +19,9 @@ import appeng.idle.currency.CurrencyAmount;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.net.IdleCurrencySyncService;
 import appeng.idle.tick.IdleGenerationTicker;
+import appeng.idle.upgrade.CostBundle;
+import appeng.idle.upgrade.CurrencyTransactionService;
+import appeng.idle.upgrade.SpendReason;
 
 /**
  * Handles loading/saving player idle data into persistent player NBT and enforces server-authoritative mutations.
@@ -84,6 +87,24 @@ public final class PlayerIdleDataManager {
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
         IdleCurrencySyncService.sendDelta(player, Map.of(currencyId, currentBalance - amount.units()));
+        return true;
+    }
+
+    public static boolean trySpend(ServerPlayer player, CostBundle costBundle, SpendReason reason) {
+        ensureServerPlayer(player);
+        Objects.requireNonNull(costBundle, "costBundle");
+        Objects.requireNonNull(reason, "reason");
+
+        var data = get(player);
+        var spent = CurrencyTransactionService.trySpend(data, costBundle, reason);
+        if (!spent) {
+            return false;
+        }
+
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+        IdleCurrencySyncService.sendSnapshot(player);
         return true;
     }
 

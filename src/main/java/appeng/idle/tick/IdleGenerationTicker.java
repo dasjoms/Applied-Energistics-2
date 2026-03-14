@@ -10,8 +10,8 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import appeng.core.AEConfig;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
+import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.GenerationContext;
-import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
@@ -42,7 +42,7 @@ public final class IdleGenerationTicker {
     private static void accrueForPlayer(ServerPlayer player, int intervalTicks) {
         var data = PlayerIdleDataManager.get(player);
 
-        var currencies = currenciesToGenerate(data);
+        var currencies = currenciesToGenerate();
         var generatedAmounts = new HashMap<CurrencyId, Long>();
 
         for (var currency : currencies) {
@@ -75,7 +75,7 @@ public final class IdleGenerationTicker {
         var offlinePercentMultiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(data);
         var maxOfflineSeconds = AEConfig.instance().getIdleOfflineMaxSeconds();
 
-        var currencies = currenciesToGenerate(data);
+        var currencies = currenciesToGenerate();
         var generatedAmounts = new HashMap<CurrencyId, Long>();
 
         for (var currency : currencies) {
@@ -98,9 +98,11 @@ public final class IdleGenerationTicker {
         PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_OFFLINE_CATCHUP);
     }
 
-    private static Set<CurrencyId> currenciesToGenerate(PlayerIdleData data) {
-        var currencies = new HashSet<>(data.balancesView().keySet());
-        currencies.add(DEFAULT_CURRENCY);
+    static Set<CurrencyId> currenciesToGenerate() {
+        var currencies = new HashSet<>(IdleCurrencyManager.getCurrencies().keySet());
+        if (currencies.isEmpty()) {
+            currencies.add(DEFAULT_CURRENCY);
+        }
         return currencies;
     }
 
