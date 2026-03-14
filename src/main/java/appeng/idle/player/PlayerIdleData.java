@@ -19,27 +19,35 @@ public final class PlayerIdleData {
     private static final String TAG_LAST_SEEN = "lastSeenEpochSeconds";
     private static final String TAG_BALANCES = "balances";
     private static final String TAG_OWNED_UPGRADES = "ownedUpgradeLevels";
+    private static final String TAG_VISOR_UNLOCKED = "idleVisorUnlocked";
     private static final String TAG_ID = "id";
     private static final String TAG_AMOUNT = "amount";
     private static final String TAG_LEVEL = "level";
 
-    public static final int CURRENT_DATA_VERSION = 1;
+    public static final int CURRENT_DATA_VERSION = 2;
 
     private final Map<CurrencyId, Long> balances;
     private final Map<ResourceLocation, Integer> ownedUpgradeLevels;
     private long lastSeenEpochSeconds;
     private int dataVersion;
+    private boolean idleVisorUnlocked;
 
     public PlayerIdleData() {
-        this(new HashMap<>(), 0L, CURRENT_DATA_VERSION, new HashMap<>());
+        this(new HashMap<>(), 0L, CURRENT_DATA_VERSION, new HashMap<>(), false);
     }
 
     public PlayerIdleData(Map<CurrencyId, Long> balances, long lastSeenEpochSeconds, int dataVersion,
             Map<ResourceLocation, Integer> ownedUpgradeLevels) {
+        this(balances, lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, false);
+    }
+
+    public PlayerIdleData(Map<CurrencyId, Long> balances, long lastSeenEpochSeconds, int dataVersion,
+            Map<ResourceLocation, Integer> ownedUpgradeLevels, boolean idleVisorUnlocked) {
         this.balances = new HashMap<>(balances);
         this.lastSeenEpochSeconds = lastSeenEpochSeconds;
         this.dataVersion = dataVersion;
         this.ownedUpgradeLevels = new HashMap<>(ownedUpgradeLevels);
+        this.idleVisorUnlocked = idleVisorUnlocked;
     }
 
     public long getBalance(CurrencyId currencyId) {
@@ -62,12 +70,20 @@ public final class PlayerIdleData {
         return Collections.unmodifiableMap(ownedUpgradeLevels);
     }
 
+    public boolean isIdleVisorUnlocked() {
+        return idleVisorUnlocked;
+    }
+
     void setLastSeenEpochSeconds(long lastSeenEpochSeconds) {
         this.lastSeenEpochSeconds = lastSeenEpochSeconds;
     }
 
     void setDataVersion(int dataVersion) {
         this.dataVersion = dataVersion;
+    }
+
+    void setIdleVisorUnlocked(boolean idleVisorUnlocked) {
+        this.idleVisorUnlocked = idleVisorUnlocked;
     }
 
     public void setBalance(CurrencyId currencyId, long amount) {
@@ -108,6 +124,7 @@ public final class PlayerIdleData {
             upgradesTag.add(upgradeTag);
         }
         tag.put(TAG_OWNED_UPGRADES, upgradesTag);
+        tag.putBoolean(TAG_VISOR_UNLOCKED, idleVisorUnlocked);
 
         return tag;
     }
@@ -153,6 +170,7 @@ public final class PlayerIdleData {
                 balances,
                 tag.getLong(TAG_LAST_SEEN),
                 tag.contains(TAG_DATA_VERSION, Tag.TAG_INT) ? tag.getInt(TAG_DATA_VERSION) : CURRENT_DATA_VERSION,
-                ownedUpgradeLevels);
+                ownedUpgradeLevels,
+                tag.getBoolean(TAG_VISOR_UNLOCKED));
     }
 }

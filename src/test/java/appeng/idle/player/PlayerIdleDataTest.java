@@ -20,7 +20,8 @@ class PlayerIdleDataTest {
                 Map.of(new CurrencyId(ae), 42L),
                 1720000000L,
                 7,
-                Map.of(speedUpgrade, 3));
+                Map.of(speedUpgrade, 3),
+                true);
 
         var restored = PlayerIdleData.fromTag(data.toTag());
 
@@ -28,6 +29,7 @@ class PlayerIdleDataTest {
         assertThat(restored.getLastSeenEpochSeconds()).isEqualTo(1720000000L);
         assertThat(restored.getDataVersion()).isEqualTo(7);
         assertThat(restored.ownedUpgradeLevelsView()).containsEntry(speedUpgrade, 3);
+        assertThat(restored.isIdleVisorUnlocked()).isTrue();
     }
 
     @Test

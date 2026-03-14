@@ -10,11 +10,13 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 
 import appeng.core.AEConfig;
+import appeng.core.definitions.AEItems;
 import appeng.idle.currency.CurrencyAmount;
 import appeng.idle.currency.CurrencyDefinition;
 import appeng.idle.currency.CurrencyId;
@@ -198,6 +200,37 @@ public final class PlayerIdleDataManager {
         var balanceCap = caps == null ? null : caps.balanceCap();
 
         return balanceCap == null ? balanceAfterAddition : Math.min(balanceAfterAddition, balanceCap);
+    }
+
+    public static boolean isIdleGenerationUnlocked(ServerPlayer player) {
+        ensureServerPlayer(player);
+        return get(player).isIdleVisorUnlocked();
+    }
+
+    public static void unlockIdleGeneration(ServerPlayer player) {
+        ensureServerPlayer(player);
+
+        var data = get(player);
+        if (data.isIdleVisorUnlocked()) {
+            return;
+        }
+
+        data.setIdleVisorUnlocked(true);
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+    }
+
+    public static void handleEquipmentChanged(LivingEquipmentChangeEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || player.level().isClientSide()) {
+            return;
+        }
+
+        if (!AEItems.IDLE_VISOR.is(event.getTo())) {
+            return;
+        }
+
+        unlockIdleGeneration(player);
     }
 
     public static void handlePlayerLoggedIn(PlayerLoggedInEvent event) {
