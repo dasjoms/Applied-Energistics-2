@@ -18,32 +18,41 @@ public final class PlayerIdleData {
     private static final String TAG_DATA_VERSION = "dataVersion";
     private static final String TAG_LAST_SEEN = "lastSeenEpochSeconds";
     private static final String TAG_BALANCES = "balances";
+    private static final String TAG_GENERATION_PROGRESS_TICKS = "generationProgressTicks";
     private static final String TAG_OWNED_UPGRADES = "ownedUpgradeLevels";
     private static final String TAG_VISOR_UNLOCKED = "idleVisorUnlocked";
     private static final String TAG_ID = "id";
     private static final String TAG_AMOUNT = "amount";
     private static final String TAG_LEVEL = "level";
 
-    public static final int CURRENT_DATA_VERSION = 2;
+    public static final int CURRENT_DATA_VERSION = 3;
 
     private final Map<CurrencyId, Long> balances;
+    private final Map<CurrencyId, Long> generationProgressTicks;
     private final Map<ResourceLocation, Integer> ownedUpgradeLevels;
     private long lastSeenEpochSeconds;
     private int dataVersion;
     private boolean idleVisorUnlocked;
 
     public PlayerIdleData() {
-        this(new HashMap<>(), 0L, CURRENT_DATA_VERSION, new HashMap<>(), false);
+        this(new HashMap<>(), new HashMap<>(), 0L, CURRENT_DATA_VERSION, new HashMap<>(), false);
     }
 
     public PlayerIdleData(Map<CurrencyId, Long> balances, long lastSeenEpochSeconds, int dataVersion,
             Map<ResourceLocation, Integer> ownedUpgradeLevels) {
-        this(balances, lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, false);
+        this(balances, new HashMap<>(), lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, false);
     }
 
     public PlayerIdleData(Map<CurrencyId, Long> balances, long lastSeenEpochSeconds, int dataVersion,
             Map<ResourceLocation, Integer> ownedUpgradeLevels, boolean idleVisorUnlocked) {
+        this(balances, new HashMap<>(), lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, idleVisorUnlocked);
+    }
+
+    public PlayerIdleData(Map<CurrencyId, Long> balances, Map<CurrencyId, Long> generationProgressTicks,
+            long lastSeenEpochSeconds, int dataVersion,
+            Map<ResourceLocation, Integer> ownedUpgradeLevels, boolean idleVisorUnlocked) {
         this.balances = new HashMap<>(balances);
+        this.generationProgressTicks = new HashMap<>(generationProgressTicks);
         this.lastSeenEpochSeconds = lastSeenEpochSeconds;
         this.dataVersion = dataVersion;
         this.ownedUpgradeLevels = new HashMap<>(ownedUpgradeLevels);
@@ -56,6 +65,14 @@ public final class PlayerIdleData {
 
     public Map<CurrencyId, Long> balancesView() {
         return Collections.unmodifiableMap(balances);
+    }
+
+    public long getGenerationProgressTicks(CurrencyId currencyId) {
+        return generationProgressTicks.getOrDefault(currencyId, 0L);
+    }
+
+    public Map<CurrencyId, Long> generationProgressTicksView() {
+        return Collections.unmodifiableMap(generationProgressTicks);
     }
 
     public long getLastSeenEpochSeconds() {
@@ -94,6 +111,18 @@ public final class PlayerIdleData {
         }
     }
 
+    public void setGenerationProgressTicks(CurrencyId currencyId, long ticks) {
+        if (ticks < 0L) {
+            throw new IllegalArgumentException("generationProgressTicks must be non-negative.");
+        }
+
+        if (ticks == 0L) {
+            generationProgressTicks.remove(currencyId);
+        } else {
+            generationProgressTicks.put(currencyId, ticks);
+        }
+    }
+
     void setUpgradeLevel(ResourceLocation upgradeId, int level) {
         if (level <= 0) {
             ownedUpgradeLevels.remove(upgradeId);
@@ -115,6 +144,15 @@ public final class PlayerIdleData {
             balancesTag.add(balanceTag);
         }
         tag.put(TAG_BALANCES, balancesTag);
+
+        var progressTag = new ListTag();
+        for (var entry : generationProgressTicks.entrySet()) {
+            var progressEntryTag = new CompoundTag();
+            progressEntryTag.putString(TAG_ID, entry.getKey().id().toString());
+            progressEntryTag.putLong(TAG_AMOUNT, entry.getValue());
+            progressTag.add(progressEntryTag);
+        }
+        tag.put(TAG_GENERATION_PROGRESS_TICKS, progressTag);
 
         var upgradesTag = new ListTag();
         for (var entry : ownedUpgradeLevels.entrySet()) {
@@ -166,8 +204,27 @@ public final class PlayerIdleData {
             }
         }
 
+        var generationProgressTicks = new HashMap<CurrencyId, Long>();
+        var progressTag = tag.getList(TAG_GENERATION_PROGRESS_TICKS, Tag.TAG_COMPOUND);
+        for (var progressEntryTag : progressTag) {
+            if (!(progressEntryTag instanceof CompoundTag progressEntry)) {
+                continue;
+            }
+
+            var currencyId = ResourceLocation.tryParse(progressEntry.getString(TAG_ID));
+            if (currencyId == null) {
+                continue;
+            }
+
+            var ticks = progressEntry.getLong(TAG_AMOUNT);
+            if (ticks > 0L) {
+                generationProgressTicks.put(new CurrencyId(currencyId), ticks);
+            }
+        }
+
         return new PlayerIdleData(
                 balances,
+                generationProgressTicks,
                 tag.getLong(TAG_LAST_SEEN),
                 tag.contains(TAG_DATA_VERSION, Tag.TAG_INT) ? tag.getInt(TAG_DATA_VERSION) : CURRENT_DATA_VERSION,
                 ownedUpgradeLevels,

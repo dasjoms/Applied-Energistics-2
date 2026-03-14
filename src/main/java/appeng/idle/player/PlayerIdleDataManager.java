@@ -47,7 +47,11 @@ public final class PlayerIdleDataManager {
             return created;
         }
 
-        return PlayerIdleData.fromTag(persistedTag.getCompound(IDLE_ROOT_TAG));
+        var data = PlayerIdleData.fromTag(persistedTag.getCompound(IDLE_ROOT_TAG));
+        if (migrateIfNeeded(data)) {
+            save(player, data);
+        }
+        return data;
     }
 
     public static void save(ServerPlayer player, PlayerIdleData data) {
@@ -289,6 +293,21 @@ public final class PlayerIdleDataManager {
         if (player.level().isClientSide()) {
             throw new IllegalStateException("Idle player data may only be mutated on the server.");
         }
+    }
+
+    private static boolean migrateIfNeeded(PlayerIdleData data) {
+        if (data.getDataVersion() >= PlayerIdleData.CURRENT_DATA_VERSION) {
+            return false;
+        }
+
+        if (data.getDataVersion() < 3) {
+            // Version 3 introduced generation progress ticks; default missing legacy data to an empty map.
+            data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+            data.setLastSeenEpochSeconds(Math.max(0L, data.getLastSeenEpochSeconds()));
+            return true;
+        }
+
+        return false;
     }
 
     private static CompoundTag getPersistedTag(ServerPlayer player) {
