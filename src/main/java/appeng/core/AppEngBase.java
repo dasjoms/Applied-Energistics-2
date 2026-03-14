@@ -67,6 +67,7 @@ import appeng.hooks.WrenchHook;
 import appeng.hooks.ticking.TickHandler;
 import appeng.hotkeys.HotkeyActions;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.tick.IdleGenerationTicker;
 import appeng.init.InitAdvancementTriggers;
 import appeng.init.InitCapabilityProviders;
 import appeng.init.InitCauldronInteraction;
@@ -182,6 +183,7 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(WrenchHook::onPlayerUseBlockEvent);
         NeoForge.EVENT_BUS.addListener(SkyStoneBreakSpeed::handleBreakFaster);
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerClone);
+        NeoForge.EVENT_BUS.addListener(IdleGenerationTicker::onServerTickEnd);
 
         HotkeyActions.init();
     }

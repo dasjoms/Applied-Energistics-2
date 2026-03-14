@@ -238,6 +238,10 @@ public final class AEConfig {
         return common.craftingCalculationTimePerTick.get();
     }
 
+    public int getIdleGenerationIntervalTicks() {
+        return common.idleGenerationIntervalTicks.get();
+    }
+
     public boolean isSpatialAnchorEnablesRandomTicks() {
         return common.spatialAnchorEnableRandomTicks.get();
     }
@@ -523,6 +527,7 @@ public final class AEConfig {
         // Misc
         public final IntValue formationPlaneEntityLimit;
         public final IntValue craftingCalculationTimePerTick;
+        public final IntValue idleGenerationIntervalTicks;
         public final BooleanValue debugTools;
         public final BooleanValue matterCannonBlockDamage;
         public final BooleanValue tinyTntBlockDamage;
@@ -606,6 +611,11 @@ public final class AEConfig {
 
             builder.push("craftingCPU");
             this.craftingCalculationTimePerTick = define(builder, "craftingCalculationTimePerTick", 5);
+            builder.pop();
+
+            builder.push("idle");
+            idleGenerationIntervalTicks = define(builder, "generationIntervalTicks", 20, 1, 1200,
+                    "How many game ticks pass between idle currency generation runs for online players.");
             builder.pop();
 
             builder.push("crafting");
