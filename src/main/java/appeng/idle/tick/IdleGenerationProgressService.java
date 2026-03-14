@@ -6,9 +6,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EquipmentSlot;
-
-import appeng.core.definitions.AEItems;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.PlayerIdleData;
@@ -63,11 +60,7 @@ public final class IdleGenerationProgressService {
             throw new IllegalArgumentException("progressTicks must be > 0.");
         }
 
-        if (!AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD))) {
-            return false;
-        }
-
-        if (!PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
+        if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
             return false;
         }
 

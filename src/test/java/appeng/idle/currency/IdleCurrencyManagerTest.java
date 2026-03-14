@@ -10,7 +10,7 @@ class IdleCurrencyManagerTest {
         var currencies = IdleCurrencyManager.getCurrencies();
 
         assertThat(currencies).containsKey(IdleCurrencies.IDLE);
-        assertThat(currencies.get(IdleCurrencies.IDLE).baseOnlineRate()).isEqualTo(1.0);
+        assertThat(currencies.get(IdleCurrencies.IDLE).baseTicksPerUnit()).isEqualTo(200L);
     }
 
     @Test
