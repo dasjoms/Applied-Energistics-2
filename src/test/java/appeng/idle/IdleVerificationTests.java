@@ -74,17 +74,19 @@ class IdleVerificationTests {
     }
 
     @Test
-    void offlineCatchupMathAppliesCap() {
-        var data = new PlayerIdleData();
-        var generated = IdleGenerationProgressService.accrueOfflineProgress(
-                data,
-                120L,
-                30L,
-                0.5,
-                1.0,
-                java.util.Set.of(IDLE));
+    void offlineCatchupMathAppliesCap() throws Exception {
+        withInjectedTestCurrency(60L, testCurrency -> {
+            var data = new PlayerIdleData();
+            var generated = IdleGenerationProgressService.accrueOfflineProgress(
+                    data,
+                    120L,
+                    30L,
+                    0.5,
+                    1.0,
+                    java.util.Set.of(testCurrency));
 
-        assertThat(generated).containsEntry(IDLE, 1L);
+            assertThat(generated).containsEntry(testCurrency, 5L);
+        });
     }
 
     @Test
@@ -104,28 +106,31 @@ class IdleVerificationTests {
     }
 
     @Test
-    void upgradeMultiplierApplicationAffectsOfflineCatchup() {
+    void upgradeMultiplierApplicationAffectsOfflineCatchup() throws Exception {
         var withUpgrade = new PlayerIdleData(
                 Map.of(),
                 0L,
                 PlayerIdleData.CURRENT_DATA_VERSION,
                 Map.of(IdleUpgrades.OFFLINE_EFFICIENCY_1.id(), 3));
 
-        var multiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(withUpgrade);
-        var generated = IdleGenerationProgressService.accrueOfflineProgress(
-                withUpgrade,
-                10L,
-                100L,
-                0.25,
-                multiplier,
-                java.util.Set.of(IDLE));
+        withInjectedTestCurrency(40L, testCurrency -> {
+            var multiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(withUpgrade);
+            var generated = IdleGenerationProgressService.accrueOfflineProgress(
+                    withUpgrade,
+                    10L,
+                    100L,
+                    0.25,
+                    multiplier,
+                    java.util.Set.of(testCurrency));
 
-        assertThat(multiplier).isEqualTo(1.3);
-        assertThat(generated).isEmpty();
+            assertThat(multiplier).isEqualTo(1.3);
+            assertThat(generated).containsEntry(testCurrency, 1L);
+            assertThat(withUpgrade.getGenerationProgressTicks(testCurrency)).isEqualTo(25L);
+        });
     }
 
     @Test
-    void upgradeLevelChangesScaleOfflineGainRateAsExpected() {
+    void upgradeLevelChangesScaleOfflineGainRateAsExpected() throws Exception {
         var levelOne = new PlayerIdleData(
                 Map.of(),
                 0L,
@@ -140,24 +145,27 @@ class IdleVerificationTests {
         var multiplierOne = IdleUpgradeHooks.getOfflinePercentMultiplier(levelOne);
         var multiplierThree = IdleUpgradeHooks.getOfflinePercentMultiplier(levelThree);
 
-        var generatedOne = IdleGenerationProgressService.accrueOfflineProgress(
-                levelOne,
-                200L,
-                1000L,
-                0.5,
-                multiplierOne,
-                java.util.Set.of(IDLE));
-        var generatedThree = IdleGenerationProgressService.accrueOfflineProgress(
-                levelThree,
-                200L,
-                1000L,
-                0.5,
-                multiplierThree,
-                java.util.Set.of(IDLE));
+        withInjectedTestCurrency(100L, testCurrency -> {
+            var generatedOne = IdleGenerationProgressService.accrueOfflineProgress(
+                    levelOne,
+                    200L,
+                    1000L,
+                    0.5,
+                    multiplierOne,
+                    java.util.Set.of(testCurrency));
+            var generatedThree = IdleGenerationProgressService.accrueOfflineProgress(
+                    levelThree,
+                    200L,
+                    1000L,
+                    0.5,
+                    multiplierThree,
+                    java.util.Set.of(testCurrency));
 
-        assertThat(multiplierOne).isEqualTo(1.1);
-        assertThat(multiplierThree).isEqualTo(1.3);
-        assertThat(generatedThree.getOrDefault(IDLE, 0L)).isGreaterThan(generatedOne.getOrDefault(IDLE, 0L));
+            assertThat(multiplierOne).isEqualTo(1.1);
+            assertThat(multiplierThree).isEqualTo(1.3);
+            assertThat(generatedThree.getOrDefault(testCurrency, 0L))
+                    .isGreaterThan(generatedOne.getOrDefault(testCurrency, 0L));
+        });
     }
 
     @Test
@@ -198,9 +206,28 @@ class IdleVerificationTests {
         }
     }
 
+    private static void withInjectedTestCurrency(long baseTicksPerUnit, ThrowingCurrencyAssertion assertion)
+            throws Exception {
+        var testCurrency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "verification_math_test"));
+        var definition = new CurrencyDefinition(
+                testCurrency,
+                "gui.ae2.idle.currency.verification_math_test",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                baseTicksPerUnit,
+                true,
+                null);
+
+        withInjectedCurrency(definition, () -> assertion.run(testCurrency));
+    }
+
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
+    }
+
+    @FunctionalInterface
+    private interface ThrowingCurrencyAssertion {
+        void run(CurrencyId currencyId) throws Exception;
     }
 
 }
