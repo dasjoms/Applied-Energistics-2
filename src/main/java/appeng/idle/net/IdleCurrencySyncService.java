@@ -7,11 +7,13 @@ import java.util.Objects;
 import java.util.Set;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.neoforge.event.entity.player.PlayerContainerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import appeng.core.definitions.AEItems;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.currency.IdleCurrencyManager;
@@ -51,7 +53,21 @@ public final class IdleCurrencySyncService {
         }
 
         for (var player : event.getServer().getPlayerList().getPlayers()) {
-            sendSnapshot(player);
+            sendHeartbeat(player);
+        }
+    }
+
+    static boolean shouldReceiveHudHeartbeat(ServerPlayer player) {
+        return AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD));
+    }
+
+    private static void sendHeartbeat(ServerPlayer player) {
+        Objects.requireNonNull(player, "player");
+        PacketDistributor.sendToPlayer(player,
+                new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
+
+        if (shouldReceiveHudHeartbeat(player)) {
+            sendHudSnapshot(player);
         }
     }
 
