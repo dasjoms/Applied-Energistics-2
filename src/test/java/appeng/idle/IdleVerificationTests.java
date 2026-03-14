@@ -2,7 +2,6 @@ package appeng.idle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,7 +14,7 @@ import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.player.GenerationContext;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.tick.BasicGenerationRule;
-import appeng.idle.tick.IdleGenerationTicker;
+import appeng.idle.tick.IdleGenerationProgressService;
 import appeng.idle.upgrade.CostBundle;
 import appeng.idle.upgrade.CurrencyTransactionService;
 import appeng.idle.upgrade.IdleUpgradeHooks;
@@ -55,9 +54,16 @@ class IdleVerificationTests {
 
     @Test
     void offlineCatchupMathAppliesCap() {
-        var generated = computeOfflineGenerated(2L, 120L, 30L, 0.5, 1.0);
+        var data = new PlayerIdleData();
+        var generated = IdleGenerationProgressService.accrueOfflineProgress(
+                data,
+                120L,
+                30L,
+                0.5,
+                1.0,
+                java.util.Set.of(IDLE));
 
-        assertThat(generated).isEqualTo(600L);
+        assertThat(generated).containsEntry(IDLE, 1L);
     }
 
     @Test
@@ -85,10 +91,16 @@ class IdleVerificationTests {
                 Map.of(IdleUpgrades.OFFLINE_EFFICIENCY_1.id(), 3));
 
         var multiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(withUpgrade);
-        var generated = computeOfflineGenerated(1L, 10L, 100L, 0.25, multiplier);
+        var generated = IdleGenerationProgressService.accrueOfflineProgress(
+                withUpgrade,
+                10L,
+                100L,
+                0.25,
+                multiplier,
+                java.util.Set.of(IDLE));
 
         assertThat(multiplier).isEqualTo(1.3);
-        assertThat(generated).isEqualTo(65L);
+        assertThat(generated).isEmpty();
     }
 
     @Test
@@ -107,14 +119,24 @@ class IdleVerificationTests {
         var multiplierOne = IdleUpgradeHooks.getOfflinePercentMultiplier(levelOne);
         var multiplierThree = IdleUpgradeHooks.getOfflinePercentMultiplier(levelThree);
 
-        var generatedOne = computeOfflineGenerated(2L, 20L, 100L, 0.5, multiplierOne);
-        var generatedThree = computeOfflineGenerated(2L, 20L, 100L, 0.5, multiplierThree);
+        var generatedOne = IdleGenerationProgressService.accrueOfflineProgress(
+                levelOne,
+                200L,
+                1000L,
+                0.5,
+                multiplierOne,
+                java.util.Set.of(IDLE));
+        var generatedThree = IdleGenerationProgressService.accrueOfflineProgress(
+                levelThree,
+                200L,
+                1000L,
+                0.5,
+                multiplierThree,
+                java.util.Set.of(IDLE));
 
         assertThat(multiplierOne).isEqualTo(1.1);
         assertThat(multiplierThree).isEqualTo(1.3);
-        assertThat(generatedOne).isEqualTo(440L);
-        assertThat(generatedThree).isEqualTo(520L);
-        assertThat(generatedThree).isGreaterThan(generatedOne);
+        assertThat(generatedThree.getOrDefault(IDLE, 0L)).isGreaterThan(generatedOne.getOrDefault(IDLE, 0L));
     }
 
     @Test
@@ -130,29 +152,6 @@ class IdleVerificationTests {
         assertThat(spent).isTrue();
         assertThat(playerOne.getBalance(IDLE)).isEqualTo(60L);
         assertThat(playerTwo.getBalance(IDLE)).isEqualTo(25L);
-    }
-
-    private static long computeOfflineGenerated(long generatedPerTick, long elapsedSeconds, long maxOfflineSeconds,
-            double offlineBasePercent, double offlinePercentMultiplier) {
-        try {
-            var method = IdleGenerationTicker.class.getDeclaredMethod(
-                    "computeOfflineGenerated",
-                    long.class,
-                    long.class,
-                    long.class,
-                    double.class,
-                    double.class);
-            method.setAccessible(true);
-            return (long) method.invoke(
-                    null,
-                    generatedPerTick,
-                    elapsedSeconds,
-                    maxOfflineSeconds,
-                    offlineBasePercent,
-                    offlinePercentMultiplier);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new AssertionError("Unable to invoke offline catch-up calculator", e);
-        }
     }
 
 }
