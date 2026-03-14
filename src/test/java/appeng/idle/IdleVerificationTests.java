@@ -2,6 +2,7 @@ package appeng.idle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -9,8 +10,10 @@ import org.junit.jupiter.api.Test;
 
 import net.minecraft.resources.ResourceLocation;
 
+import appeng.idle.currency.CurrencyDefinition;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
+import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.GenerationContext;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.tick.BasicGenerationRule;
@@ -43,13 +46,31 @@ class IdleVerificationTests {
     }
 
     @Test
-    void onlineGenerationMathUsesBaseRateAndMultiplier() {
+    void onlineGenerationMathUsesTicksPerUnitAndMultiplier() throws Exception {
         var rule = new BasicGenerationRule();
-        var context = new GenerationContext(UUID.randomUUID(), true, new MultiplierBundle(2.75));
+        var testCurrency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "online_math_test"));
+        var baseTicksPerUnit = 4L;
+        var definition = new CurrencyDefinition(
+                testCurrency,
+                "gui.ae2.idle.currency.online_math_test",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                baseTicksPerUnit,
+                true,
+                null);
 
-        var generatedPerTick = rule.generatePerTick(context, IDLE);
+        withInjectedCurrency(definition, () -> {
+            var belowThreshold = new GenerationContext(UUID.randomUUID(), true,
+                    new MultiplierBundle(baseTicksPerUnit - 0.01));
+            var atThreshold = new GenerationContext(UUID.randomUUID(), true, new MultiplierBundle(baseTicksPerUnit));
+            var aboveThresholdMultiplier = 10.9;
+            var aboveThreshold = new GenerationContext(UUID.randomUUID(), true,
+                    new MultiplierBundle(aboveThresholdMultiplier));
 
-        assertThat(generatedPerTick.units()).isEqualTo(2L);
+            assertThat(rule.generatePerTick(belowThreshold, testCurrency).units()).isEqualTo(0L);
+            assertThat(rule.generatePerTick(atThreshold, testCurrency).units()).isEqualTo(1L);
+            assertThat(rule.generatePerTick(aboveThreshold, testCurrency).units())
+                    .isEqualTo((long) Math.floor(aboveThresholdMultiplier / baseTicksPerUnit));
+        });
     }
 
     @Test
@@ -152,6 +173,34 @@ class IdleVerificationTests {
         assertThat(spent).isTrue();
         assertThat(playerOne.getBalance(IDLE)).isEqualTo(60L);
         assertThat(playerTwo.getBalance(IDLE)).isEqualTo(25L);
+    }
+
+    private static void withInjectedCurrency(CurrencyDefinition definition, ThrowingRunnable assertion)
+            throws Exception {
+        var managerInstanceField = IdleCurrencyManager.class.getDeclaredField("INSTANCE");
+        managerInstanceField.setAccessible(true);
+        var managerInstance = managerInstanceField.get(null);
+
+        var currenciesField = IdleCurrencyManager.class.getDeclaredField("currencies");
+        currenciesField.setAccessible(true);
+
+        @SuppressWarnings("unchecked")
+        var originalCurrencies = (Map<CurrencyId, CurrencyDefinition>) currenciesField.get(managerInstance);
+
+        var modified = new LinkedHashMap<>(originalCurrencies);
+        modified.put(definition.id(), definition);
+
+        try {
+            currenciesField.set(managerInstance, Map.copyOf(modified));
+            assertion.run();
+        } finally {
+            currenciesField.set(managerInstance, originalCurrencies);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
 }
