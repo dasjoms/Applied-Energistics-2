@@ -242,6 +242,10 @@ public final class AEConfig {
         return common.idleGenerationIntervalTicks.get();
     }
 
+    public int getIdleHudSyncIntervalTicks() {
+        return common.idleHudSyncIntervalTicks.get();
+    }
+
     public double getIdleOfflineBasePercent() {
         return common.idleOfflineBasePercent.get();
     }
@@ -536,6 +540,7 @@ public final class AEConfig {
         public final IntValue formationPlaneEntityLimit;
         public final IntValue craftingCalculationTimePerTick;
         public final IntValue idleGenerationIntervalTicks;
+        public final IntValue idleHudSyncIntervalTicks;
         public final DoubleValue idleOfflineBasePercent;
         public final IntValue idleOfflineMaxSeconds;
         public final BooleanValue debugTools;
@@ -626,6 +631,8 @@ public final class AEConfig {
             builder.push("idle");
             idleGenerationIntervalTicks = define(builder, "generationIntervalTicks", 20, 1, 1200,
                     "How many game ticks pass between idle currency generation runs for online players.");
+            idleHudSyncIntervalTicks = define(builder, "hudSyncIntervalTicks", 2, 1, 1200,
+                    "How many game ticks pass between server-to-client idle HUD snapshot updates for visor wearers.");
             idleOfflineBasePercent = define(builder, "offlineBasePercent", 0.25, 0.0, 1.0,
                     "Base percentage of online idle generation that applies while a player is offline.");
             idleOfflineMaxSeconds = define(builder, "offlineMaxSeconds", 86400, 0, Integer.MAX_VALUE,
