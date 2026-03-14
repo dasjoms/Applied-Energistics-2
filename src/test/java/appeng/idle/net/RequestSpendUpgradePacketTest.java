@@ -13,13 +13,17 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
+import appeng.idle.currency.CurrencyId;
 import appeng.util.CodecTestUtil;
 
 class RequestSpendUpgradePacketTest {
 
     @Test
-    void streamCodecRoundTripRetainsUpgradeId() {
-        var original = new RequestSpendUpgradePacket(ResourceLocation.fromNamespaceAndPath("ae2", "speed"));
+    void streamCodecRoundTripRetainsAllFields() {
+        var original = new RequestSpendUpgradePacket(
+                ResourceLocation.fromNamespaceAndPath("ae2", "speed"),
+                new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "idle")),
+                15);
 
         CodecTestUtil.testRoundtrip(RequestSpendUpgradePacket.STREAM_CODEC, original);
 
@@ -29,16 +33,18 @@ class RequestSpendUpgradePacketTest {
         var decoded = RequestSpendUpgradePacket.STREAM_CODEC.decode(buffer);
 
         assertThat(decoded.upgradeId()).isEqualTo(original.upgradeId());
+        assertThat(decoded.currencyId()).isEqualTo(original.currencyId());
+        assertThat(decoded.amount()).isEqualTo(original.amount());
     }
 
     @Test
-    void packetCarriesOnlyUpgradeId() {
+    void packetCarriesUpgradeIdCurrencyIdAndAmount() {
         var componentNames = Arrays.stream(RequestSpendUpgradePacket.class.getRecordComponents())
                 .map(component -> component.getName())
                 .toList();
 
         assertThat(componentNames)
-                .containsExactly("upgradeId")
-                .doesNotContain("currency", "currencyId", "amount");
+                .containsExactly("upgradeId", "currencyId", "amount")
+                .doesNotContain("currency");
     }
 }
