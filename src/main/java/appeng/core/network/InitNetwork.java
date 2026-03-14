@@ -42,6 +42,7 @@ import appeng.core.network.serverbound.SwapSlotsPacket;
 import appeng.core.network.serverbound.SwitchGuisPacket;
 import appeng.core.network.serverbound.UpdateHoldingCtrlPacket;
 import appeng.idle.net.IdleCurrencyDeltaPacket;
+import appeng.idle.net.IdleCurrencyHudSnapshotPacket;
 import appeng.idle.net.IdleCurrencySnapshotPacket;
 import appeng.idle.net.RequestSpendUpgradePacket;
 
@@ -69,6 +70,7 @@ public class InitNetwork {
         clientbound(registrar, ExportedGridContent.TYPE, ExportedGridContent.STREAM_CODEC);
         clientbound(registrar, IdleCurrencySnapshotPacket.TYPE, IdleCurrencySnapshotPacket.STREAM_CODEC);
         clientbound(registrar, IdleCurrencyDeltaPacket.TYPE, IdleCurrencyDeltaPacket.STREAM_CODEC);
+        clientbound(registrar, IdleCurrencyHudSnapshotPacket.TYPE, IdleCurrencyHudSnapshotPacket.STREAM_CODEC);
 
         // Serverbound
         serverbound(registrar, ColorApplicatorSelectColorPacket.TYPE, ColorApplicatorSelectColorPacket.STREAM_CODEC);

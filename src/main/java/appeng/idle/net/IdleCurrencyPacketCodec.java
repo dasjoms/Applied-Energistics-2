@@ -32,4 +32,30 @@ final class IdleCurrencyPacketCodec {
 
         return balances;
     }
+
+
+    static void writeHudValues(RegistryFriendlyByteBuf data, Map<CurrencyId, IdleCurrencyHudValue> values) {
+        data.writeVarInt(values.size());
+        for (var entry : values.entrySet()) {
+            data.writeResourceLocation(entry.getKey().id());
+            var value = entry.getValue();
+            data.writeVarLong(value.balance());
+            data.writeVarLong(value.gainPerSecond());
+        }
+    }
+
+    static Map<CurrencyId, IdleCurrencyHudValue> readHudValues(RegistryFriendlyByteBuf data) {
+        var size = data.readVarInt();
+        var values = new LinkedHashMap<CurrencyId, IdleCurrencyHudValue>(Math.max(size, 0));
+
+        for (var i = 0; i < size; i++) {
+            ResourceLocation currency = data.readResourceLocation();
+            var balance = data.readVarLong();
+            var gainPerSecond = data.readVarLong();
+            values.put(new CurrencyId(currency), new IdleCurrencyHudValue(balance, gainPerSecond));
+        }
+
+        return values;
+    }
+
 }
