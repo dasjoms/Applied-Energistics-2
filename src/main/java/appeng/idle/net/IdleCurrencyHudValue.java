@@ -5,4 +5,3 @@ package appeng.idle.net;
  */
 public record IdleCurrencyHudValue(long balance, long gainPerSecond) {
 }
-

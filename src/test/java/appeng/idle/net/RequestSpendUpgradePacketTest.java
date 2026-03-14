@@ -92,5 +92,4 @@ class RequestSpendUpgradePacketTest {
         assertThat(decoded.refreshedRates()).containsExactlyEntriesOf(original.refreshedRates());
     }
 
-
 }

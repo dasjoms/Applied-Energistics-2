@@ -61,7 +61,8 @@ class IdleRateCalculatorTest {
         });
     }
 
-    private static void withInjectedCurrency(CurrencyDefinition definition, ThrowingRunnable assertion) throws Exception {
+    private static void withInjectedCurrency(CurrencyDefinition definition, ThrowingRunnable assertion)
+            throws Exception {
         var managerInstanceField = IdleCurrencyManager.class.getDeclaredField("INSTANCE");
         managerInstanceField.setAccessible(true);
         var managerInstance = managerInstanceField.get(null);
