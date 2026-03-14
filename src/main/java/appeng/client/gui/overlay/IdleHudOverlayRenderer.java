@@ -45,7 +45,7 @@ public class IdleHudOverlayRenderer {
 
             var value = entry.getValue();
             var balance = ReadableNumberConverter.format(Math.max(0L, value.balance()), 7);
-            var gainPerSecond = ReadableNumberConverter.format(Math.max(0L, value.gainPerSecond()), 6);
+            var gainPerSecond = ReadableNumberConverter.format(Math.max(0.0, value.gainPerSecond()), 6);
             var progressTicks = ReadableNumberConverter.format(Math.max(0L, value.progressTicks()), 6);
             var ticksPerUnit = ReadableNumberConverter.format(Math.max(0L, value.ticksPerUnit()), 6);
 

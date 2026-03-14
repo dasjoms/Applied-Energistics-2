@@ -47,7 +47,7 @@ final class IdleCurrencyPacketCodec {
             data.writeResourceLocation(entry.getKey().id());
             var value = entry.getValue();
             data.writeVarLong(value.balance());
-            data.writeVarLong(value.gainPerSecond());
+            data.writeDouble(value.gainPerSecond());
             data.writeVarLong(value.progressTicks());
             data.writeVarLong(value.ticksPerUnit());
             data.writeBoolean(value.secondsToNext() != null);
@@ -64,7 +64,7 @@ final class IdleCurrencyPacketCodec {
         for (var i = 0; i < size; i++) {
             ResourceLocation currency = data.readResourceLocation();
             var balance = data.readVarLong();
-            var gainPerSecond = data.readVarLong();
+            var gainPerSecond = data.readDouble();
             var progressTicks = data.readVarLong();
             var ticksPerUnit = data.readVarLong();
             Long secondsToNext = data.readBoolean() ? data.readVarLong() : null;
