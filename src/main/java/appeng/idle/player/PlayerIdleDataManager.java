@@ -118,7 +118,7 @@ public final class PlayerIdleDataManager {
         data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
-        IdleCurrencySyncService.sendDelta(player, Map.of(), true);
+        IdleCurrencySyncService.sendSnapshot(player);
     }
 
     public static void setLastSeenEpochSeconds(ServerPlayer player, long epochSeconds) {

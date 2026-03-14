@@ -8,9 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import appeng.core.network.CustomAppEngPayload;
 import appeng.core.network.ServerboundPacket;
 import appeng.idle.currency.CurrencyId;
-import appeng.idle.player.PlayerIdleDataManager;
-import appeng.idle.upgrade.IdleUpgrades;
-import appeng.idle.upgrade.SpendReason;
+import appeng.idle.upgrade.IdleUpgradePurchaseService;
 
 /**
  * Client request to spend idle currency for an upgrade. Server performs all validation and mutations.
@@ -45,26 +43,9 @@ public record RequestSpendUpgradePacket(ResourceLocation upgradeId, CurrencyId c
     public void handleOnServer(ServerPlayer player) {
         // Currency and amount are still decoded for backward compatibility with older clients,
         // but server-authoritative pricing comes from the upgrade definition.
-        var definition = IdleUpgrades.get(upgradeId);
-        if (definition == null) {
+        var result = IdleUpgradePurchaseService.tryPurchase(player, upgradeId);
+        if (result != IdleUpgradePurchaseService.PurchaseResult.SUCCESS) {
             IdleCurrencySyncService.sendSnapshot(player);
-            return;
         }
-
-        var data = PlayerIdleDataManager.get(player);
-        var currentLevel = data.ownedUpgradeLevelsView().getOrDefault(upgradeId, 0);
-        if (currentLevel >= definition.maxLevel()) {
-            IdleCurrencySyncService.sendSnapshot(player);
-            return;
-        }
-
-        var spent = PlayerIdleDataManager.trySpend(player, definition.costPerLevel(), SpendReason.UPGRADE_PURCHASE);
-        if (!spent) {
-            IdleCurrencySyncService.sendSnapshot(player);
-            return;
-        }
-
-        PlayerIdleDataManager.setUpgradeLevel(player, upgradeId, currentLevel + 1);
-        IdleCurrencySyncService.sendSnapshot(player);
     }
 }
