@@ -41,7 +41,6 @@ final class IdleCurrencyPacketCodec {
         return readBalances(data);
     }
 
-
     static void writeHudValues(RegistryFriendlyByteBuf data, Map<CurrencyId, IdleCurrencyHudValue> values) {
         data.writeVarInt(values.size());
         for (var entry : values.entrySet()) {

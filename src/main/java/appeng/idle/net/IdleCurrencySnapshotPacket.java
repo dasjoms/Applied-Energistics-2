@@ -12,7 +12,8 @@ import appeng.core.network.ClientboundPacket;
 import appeng.core.network.CustomAppEngPayload;
 import appeng.idle.currency.CurrencyId;
 
-public record IdleCurrencySnapshotPacket(Map<CurrencyId, Long> balances, Map<CurrencyId, Long> rates) implements ClientboundPacket {
+public record IdleCurrencySnapshotPacket(Map<CurrencyId, Long> balances,
+        Map<CurrencyId, Long> rates) implements ClientboundPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, IdleCurrencySnapshotPacket> STREAM_CODEC = StreamCodec
             .ofMember(IdleCurrencySnapshotPacket::write, IdleCurrencySnapshotPacket::decode);
 

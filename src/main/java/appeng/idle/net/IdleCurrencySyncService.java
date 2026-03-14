@@ -12,8 +12,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEven
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import appeng.idle.currency.CurrencyId;
 import appeng.core.AEConfig;
+import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.GenerationContext;
@@ -61,7 +61,8 @@ public final class IdleCurrencySyncService {
 
     public static void sendSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
-        PacketDistributor.sendToPlayer(player, new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
+        PacketDistributor.sendToPlayer(player,
+                new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
         sendHudSnapshot(player);
     }
 
@@ -91,8 +92,6 @@ public final class IdleCurrencySyncService {
         return new LinkedHashMap<>(PlayerIdleDataManager.get(player).balancesView());
     }
 
-
-
     private static Map<CurrencyId, Long> snapshotRates(ServerPlayer player) {
         var hudValues = snapshotHudValues(player);
         var rates = new LinkedHashMap<CurrencyId, Long>(hudValues.size());
@@ -112,7 +111,8 @@ public final class IdleCurrencySyncService {
             var multipliers = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency);
             var context = new GenerationContext(player.getUUID(), true, multipliers);
             var generatedPerTick = GENERATION_RULE.generatePerTick(context, currency).units();
-            var generatedPerInterval = generatedPerTick <= 0L ? 0L : safeMultiply(generatedPerTick, generationIntervalTicks);
+            var generatedPerInterval = generatedPerTick <= 0L ? 0L
+                    : safeMultiply(generatedPerTick, generationIntervalTicks);
             var clampedPerInterval = clampOnlineGenerationCap(currency, generatedPerInterval);
             var gainPerSecond = clampedPerInterval <= 0L
                     ? 0L
@@ -123,7 +123,6 @@ public final class IdleCurrencySyncService {
 
         return hudValues;
     }
-
 
     private static Set<CurrencyId> currenciesToGenerate() {
         var currencies = new LinkedHashSet<CurrencyId>(IdleCurrencyManager.getCurrencies().keySet());

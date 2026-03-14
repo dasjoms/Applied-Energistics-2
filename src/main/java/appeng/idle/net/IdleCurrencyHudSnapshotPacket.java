@@ -13,7 +13,8 @@ import appeng.core.network.CustomAppEngPayload;
 import appeng.idle.currency.CurrencyId;
 
 public record IdleCurrencyHudSnapshotPacket(Map<CurrencyId, IdleCurrencyHudValue> values)
-        implements ClientboundPacket {
+        implements
+            ClientboundPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, IdleCurrencyHudSnapshotPacket> STREAM_CODEC = StreamCodec
             .ofMember(IdleCurrencyHudSnapshotPacket::write, IdleCurrencyHudSnapshotPacket::decode);
 

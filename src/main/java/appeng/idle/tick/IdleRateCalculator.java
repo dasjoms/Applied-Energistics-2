@@ -51,7 +51,8 @@ public final class IdleRateCalculator {
         }
 
         var data = PlayerIdleDataManager.get(player);
-        return calculateGeneratedForInterval(player.getUUID(), data, intervalTicks, IdleGenerationTicker.currenciesToGenerate());
+        return calculateGeneratedForInterval(player.getUUID(), data, intervalTicks,
+                IdleGenerationTicker.currenciesToGenerate());
     }
 
     static Map<CurrencyId, Long> calculateGeneratedForInterval(UUID playerId, PlayerIdleData data, int intervalTicks,

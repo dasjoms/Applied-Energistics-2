@@ -91,7 +91,6 @@ class IdleVerificationTests {
         assertThat(generated).isEqualTo(65L);
     }
 
-
     @Test
     void upgradeLevelChangesScaleOfflineGainRateAsExpected() {
         var levelOne = new PlayerIdleData(
