@@ -188,6 +188,7 @@ public final class AEItemIds {
     public static final ResourceLocation FLUIX_SWORD = id("fluix_sword");
 
     public static final ResourceLocation METEORITE_COMPASS = id("meteorite_compass");
+    public static final ResourceLocation IDLE_VISOR = id("idle_visor");
 
     ///
     /// The following items were previously part of ApiItems
