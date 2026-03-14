@@ -71,7 +71,8 @@ class IdleUpgradePurchaseServiceTest {
     }
 
     private static UpgradeDefinition definition(int maxLevel, long matterCost) {
-        return new UpgradeDefinition(UPGRADE_ID, maxLevel, new CostBundle(Map.of(MATTER, matterCost)), UpgradeEffects.NO_OP);
+        return new UpgradeDefinition(UPGRADE_ID, maxLevel, new CostBundle(Map.of(MATTER, matterCost)),
+                UpgradeEffects.NO_OP);
     }
 
     private static CurrencyId currency(String path) {

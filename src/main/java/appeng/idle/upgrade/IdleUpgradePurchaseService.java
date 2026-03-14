@@ -66,7 +66,8 @@ public final class IdleUpgradePurchaseService {
         return PurchaseAttempt.of(PurchaseResult.SUCCESS, currentLevel + 1);
     }
 
-    private static void persistPurchase(ServerPlayer player, PlayerIdleData data, ResourceLocation upgradeId, int level) {
+    private static void persistPurchase(ServerPlayer player, PlayerIdleData data, ResourceLocation upgradeId,
+            int level) {
         PlayerIdleDataManager.save(player, data);
         PlayerIdleDataManager.setUpgradeLevel(player, upgradeId, level);
     }
