@@ -40,6 +40,7 @@ public final class PlayerIdleDataManager {
         var persistedTag = getPersistedTag(player);
         if (!persistedTag.contains(IDLE_ROOT_TAG, Tag.TAG_COMPOUND)) {
             var created = new PlayerIdleData();
+            created.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
             save(player, created);
             return created;
         }
@@ -206,6 +207,13 @@ public final class PlayerIdleDataManager {
 
         var nowEpochSeconds = Instant.now().getEpochSecond();
         var data = get(player);
+        if (data.getLastSeenEpochSeconds() <= 0L) {
+            data.setLastSeenEpochSeconds(nowEpochSeconds);
+            data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+            save(player, data);
+            return;
+        }
+
         var elapsedSeconds = Math.max(0L, nowEpochSeconds - data.getLastSeenEpochSeconds());
         var cappedElapsedSeconds = Math.min(elapsedSeconds, AEConfig.instance().getIdleOfflineMaxSeconds());
 
