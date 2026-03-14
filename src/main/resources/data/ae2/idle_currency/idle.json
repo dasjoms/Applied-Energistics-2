@@ -1,0 +1,7 @@
+{
+  "id": "ae2:idle",
+  "displayNameKey": "gui.ae2.idle.currency.idle",
+  "iconItem": "ae2:certus_quartz_crystal",
+  "baseOnlineRate": 1.0,
+  "visibleByDefault": true
+}

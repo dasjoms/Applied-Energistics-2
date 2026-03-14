@@ -8,8 +8,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import appeng.core.AEConfig;
-import appeng.core.AppEng;
 import appeng.idle.currency.CurrencyId;
+import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.player.GenerationContext;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
@@ -20,7 +20,7 @@ import appeng.idle.upgrade.MultiplierBundle;
  * Applies periodic idle generation accrual for online players.
  */
 public final class IdleGenerationTicker {
-    private static final CurrencyId DEFAULT_CURRENCY = new CurrencyId(AppEng.makeId("idle"));
+    private static final CurrencyId DEFAULT_CURRENCY = IdleCurrencies.IDLE;
     private static final String REASON_ONLINE_TICK = "ONLINE_TICK";
     private static final String REASON_OFFLINE_CATCHUP = "OFFLINE_CATCHUP";
     private static final int TICKS_PER_SECOND = 20;
