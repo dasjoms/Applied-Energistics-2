@@ -2,6 +2,10 @@ package appeng.client.idle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+
+import appeng.core.definitions.AEItems;
 
 /**
  * Shared client-side visibility checks for the idle HUD and future idle-related toggles.
@@ -30,6 +34,10 @@ public final class IdleHudVisibility {
             return false;
         }
 
+        if (!hasIdleVisorEquipped(player)) {
+            return false;
+        }
+
         if (policy.hideWhileDebugScreenOpen() && minecraft.gui.getDebugOverlay().showDebugScreen()) {
             return false;
         }
@@ -39,6 +47,10 @@ public final class IdleHudVisibility {
         }
 
         return true;
+    }
+
+    static boolean hasIdleVisorEquipped(Player player) {
+        return AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD));
     }
 
     public record VisibilityPolicy(boolean hideWhileDebugScreenOpen, boolean hideWhileChatOpen) {
