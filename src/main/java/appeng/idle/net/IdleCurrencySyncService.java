@@ -167,5 +167,4 @@ public final class IdleCurrencySyncService {
         return (long) Math.floor(IdleGenerationCapService.clampOnlineGenerationCap(currency, generatedPerSecond));
     }
 
-
 }

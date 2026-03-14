@@ -149,7 +149,8 @@ public final class IdleCurrencyManager extends SimpleJsonResourceReloadListener 
             return baseTicksPerUnit;
         }
 
-        throw new JsonParseException("Missing required field 'baseTicksPerUnit' (or deprecated fallback 'baseOnlineRate')");
+        throw new JsonParseException(
+                "Missing required field 'baseTicksPerUnit' (or deprecated fallback 'baseOnlineRate')");
     }
 
     private static CurrencyId parseCurrencyId(ResourceLocation sourceFile, JsonObject json) {
