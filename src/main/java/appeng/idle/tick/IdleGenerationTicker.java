@@ -36,7 +36,7 @@ public final class IdleGenerationTicker {
     }
 
     private static void accrueForPlayer(ServerPlayer player, int intervalTicks) {
-        if (!PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
+        if (!PlayerIdleDataManager.isPassiveGenerationEnabled(player)) {
             return;
         }
 
@@ -52,7 +52,7 @@ public final class IdleGenerationTicker {
     }
 
     public static void accrueOfflineCatchup(ServerPlayer player, long elapsedSeconds) {
-        if (elapsedSeconds <= 0L || !PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
+        if (elapsedSeconds <= 0L || !PlayerIdleDataManager.isPassiveGenerationEnabled(player)) {
             return;
         }
 

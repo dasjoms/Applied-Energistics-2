@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -209,6 +210,16 @@ public final class PlayerIdleDataManager {
     public static boolean isIdleGenerationUnlocked(ServerPlayer player) {
         ensureServerPlayer(player);
         return get(player).isIdleVisorUnlocked();
+    }
+
+    public static boolean isPassiveGenerationEnabled(ServerPlayer player) {
+        return isIdleGenerationUnlocked(player);
+    }
+
+    public static boolean isActiveRewardEligibleNow(ServerPlayer player) {
+        ensureServerPlayer(player);
+        return isIdleGenerationUnlocked(player)
+                && AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD));
     }
 
     public static void unlockIdleGeneration(ServerPlayer player) {

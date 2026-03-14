@@ -46,7 +46,7 @@ public final class IdleRateCalculator {
     }
 
     public static Map<CurrencyId, Long> calculateGeneratedForInterval(ServerPlayer player, int intervalTicks) {
-        if (intervalTicks <= 0 || !PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
+        if (intervalTicks <= 0 || !PlayerIdleDataManager.isPassiveGenerationEnabled(player)) {
             return Map.of();
         }
 
