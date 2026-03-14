@@ -12,14 +12,10 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEven
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import appeng.core.AEConfig;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.currency.IdleCurrencyManager;
-import appeng.idle.player.GenerationContext;
 import appeng.idle.player.PlayerIdleDataManager;
-import appeng.idle.tick.BasicGenerationRule;
-import appeng.idle.tick.GenerationRule;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
 /**
@@ -28,7 +24,6 @@ import appeng.idle.upgrade.IdleUpgradeHooks;
 public final class IdleCurrencySyncService {
     private static final int HEARTBEAT_INTERVAL_TICKS = 20 * 10;
     private static final int TICKS_PER_SECOND = 20;
-    private static final GenerationRule GENERATION_RULE = new BasicGenerationRule();
 
     private IdleCurrencySyncService() {
     }
@@ -103,25 +98,64 @@ public final class IdleCurrencySyncService {
 
     private static Map<CurrencyId, IdleCurrencyHudValue> snapshotHudValues(ServerPlayer player) {
         var data = PlayerIdleDataManager.get(player);
-        var generationIntervalTicks = Math.max(AEConfig.instance().getIdleGenerationIntervalTicks(), 1);
 
         var hudValues = new LinkedHashMap<CurrencyId, IdleCurrencyHudValue>();
         for (var currency : currenciesToGenerate()) {
             var balance = data.getBalance(currency);
-            var multipliers = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency);
-            var context = new GenerationContext(player.getUUID(), true, multipliers);
-            var generatedPerTick = GENERATION_RULE.generatePerTick(context, currency).units();
-            var generatedPerInterval = generatedPerTick <= 0L ? 0L
-                    : safeMultiply(generatedPerTick, generationIntervalTicks);
-            var clampedPerInterval = clampOnlineGenerationCap(currency, generatedPerInterval);
-            var gainPerSecond = clampedPerInterval <= 0L
-                    ? 0L
-                    : safeMultiply(clampedPerInterval, TICKS_PER_SECOND) / generationIntervalTicks;
+            var definition = IdleCurrencyManager.get(currency);
+            var baseTicksPerUnit = definition == null ? 0L : definition.baseTicksPerUnit();
 
-            hudValues.put(currency, new IdleCurrencyHudValue(balance, gainPerSecond));
+            var multipliers = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency);
+            var totalMultiplier = multipliers.totalMultiplier();
+
+            var gainPerSecond = gainPerSecond(currency, baseTicksPerUnit, totalMultiplier);
+            var ticksPerUnit = ticksPerUnit(baseTicksPerUnit, totalMultiplier);
+            var progressTicks = ticksPerUnit <= 0L ? 0L
+                    : Math.min(Math.max(0L, data.getGenerationProgressTicks(currency)), ticksPerUnit - 1L);
+            var secondsToNext = secondsToNext(progressTicks, ticksPerUnit);
+
+            hudValues.put(currency,
+                    new IdleCurrencyHudValue(balance, gainPerSecond, progressTicks, ticksPerUnit, secondsToNext));
         }
 
         return hudValues;
+    }
+
+    private static long gainPerSecond(CurrencyId currency, long baseTicksPerUnit, double totalMultiplier) {
+        if (baseTicksPerUnit <= 0L || totalMultiplier <= 0.0 || !Double.isFinite(totalMultiplier)) {
+            return 0L;
+        }
+
+        var generatedPerTick = (long) Math.floor(totalMultiplier / baseTicksPerUnit);
+        if (generatedPerTick <= 0L) {
+            return 0L;
+        }
+
+        var generatedPerSecond = safeMultiply(generatedPerTick, TICKS_PER_SECOND);
+        return clampOnlineGenerationCap(currency, generatedPerSecond);
+    }
+
+    private static long ticksPerUnit(long baseTicksPerUnit, double totalMultiplier) {
+        if (baseTicksPerUnit <= 0L || totalMultiplier <= 0.0 || !Double.isFinite(totalMultiplier)) {
+            return 0L;
+        }
+
+        var effectiveTicksPerUnit = baseTicksPerUnit / totalMultiplier;
+        if (effectiveTicksPerUnit <= 0.0 || !Double.isFinite(effectiveTicksPerUnit)) {
+            return 0L;
+        }
+
+        return Math.max(1L, (long) Math.floor(effectiveTicksPerUnit));
+    }
+
+    private static Long secondsToNext(long progressTicks, long ticksPerUnit) {
+        if (ticksPerUnit <= 0L || progressTicks >= ticksPerUnit) {
+            return null;
+        }
+
+        var remainingTicks = ticksPerUnit - progressTicks;
+        var seconds = (remainingTicks + TICKS_PER_SECOND - 1L) / TICKS_PER_SECOND;
+        return Math.max(0L, seconds);
     }
 
     private static Set<CurrencyId> currenciesToGenerate() {
