@@ -13,6 +13,7 @@ import appeng.idle.currency.CurrencyId;
 import appeng.idle.player.GenerationContext;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.upgrade.IdleUpgradeHooks;
 import appeng.idle.upgrade.MultiplierBundle;
 
 /**
@@ -21,6 +22,8 @@ import appeng.idle.upgrade.MultiplierBundle;
 public final class IdleGenerationTicker {
     private static final CurrencyId DEFAULT_CURRENCY = new CurrencyId(AppEng.makeId("idle"));
     private static final String REASON_ONLINE_TICK = "ONLINE_TICK";
+    private static final String REASON_OFFLINE_CATCHUP = "OFFLINE_CATCHUP";
+    private static final int TICKS_PER_SECOND = 20;
     private static final GenerationRule GENERATION_RULE = new BasicGenerationRule();
 
     private IdleGenerationTicker() {
@@ -61,6 +64,39 @@ public final class IdleGenerationTicker {
         PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_ONLINE_TICK);
     }
 
+    public static void accrueOfflineCatchup(ServerPlayer player, long elapsedSeconds) {
+        if (elapsedSeconds <= 0L) {
+            return;
+        }
+
+        var data = PlayerIdleDataManager.get(player);
+        var context = new GenerationContext(player.getUUID(), true, MultiplierBundle.IDENTITY);
+
+        var offlineBasePercent = AEConfig.instance().getIdleOfflineBasePercent();
+        var offlinePercentMultiplier = IdleUpgradeHooks.getOfflinePercentMultiplier(data);
+        var maxOfflineSeconds = AEConfig.instance().getIdleOfflineMaxSeconds();
+
+        var currencies = currenciesToGenerate(data);
+        var generatedAmounts = new HashMap<CurrencyId, Long>();
+
+        for (var currency : currencies) {
+            var generatedPerTick = GENERATION_RULE.generatePerTick(context, currency).units();
+            if (generatedPerTick <= 0L) {
+                continue;
+            }
+
+            var generatedOffline = computeOfflineGenerated(generatedPerTick, elapsedSeconds, maxOfflineSeconds,
+                    offlineBasePercent, offlinePercentMultiplier);
+            if (generatedOffline <= 0L) {
+                continue;
+            }
+
+            generatedAmounts.put(currency, generatedOffline);
+        }
+
+        PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_OFFLINE_CATCHUP);
+    }
+
     private static Set<CurrencyId> currenciesToGenerate(PlayerIdleData data) {
         var currencies = new HashSet<>(data.balancesView().keySet());
         currencies.add(DEFAULT_CURRENCY);
@@ -77,6 +113,35 @@ public final class IdleGenerationTicker {
         }
 
         return value * multiplier;
+    }
+
+    static long computeOfflineGenerated(long generatedPerTick, long elapsedSeconds, long maxOfflineSeconds,
+            double offlineBasePercent, double offlinePercentMultiplier) {
+        if (generatedPerTick <= 0L || elapsedSeconds <= 0L || maxOfflineSeconds <= 0L) {
+            return 0L;
+        }
+        if (offlineBasePercent <= 0.0 || offlinePercentMultiplier <= 0.0
+                || !Double.isFinite(offlineBasePercent) || !Double.isFinite(offlinePercentMultiplier)) {
+            return 0L;
+        }
+
+        var cappedElapsedSeconds = Math.min(elapsedSeconds, maxOfflineSeconds);
+        var generatedPerSecond = safeMultiply(generatedPerTick, TICKS_PER_SECOND);
+        if (generatedPerSecond <= 0L) {
+            return 0L;
+        }
+
+        var offlineRate = generatedPerSecond * offlineBasePercent * offlinePercentMultiplier;
+        if (offlineRate <= 0.0 || !Double.isFinite(offlineRate)) {
+            return 0L;
+        }
+
+        var generatedOffline = Math.floor(offlineRate * cappedElapsedSeconds);
+        if (generatedOffline <= 0.0) {
+            return 0L;
+        }
+
+        return generatedOffline >= Long.MAX_VALUE ? Long.MAX_VALUE : (long) generatedOffline;
     }
 
 }

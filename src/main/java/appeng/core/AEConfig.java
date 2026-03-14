@@ -242,6 +242,14 @@ public final class AEConfig {
         return common.idleGenerationIntervalTicks.get();
     }
 
+    public double getIdleOfflineBasePercent() {
+        return common.idleOfflineBasePercent.get();
+    }
+
+    public int getIdleOfflineMaxSeconds() {
+        return common.idleOfflineMaxSeconds.get();
+    }
+
     public boolean isSpatialAnchorEnablesRandomTicks() {
         return common.spatialAnchorEnableRandomTicks.get();
     }
@@ -528,6 +536,8 @@ public final class AEConfig {
         public final IntValue formationPlaneEntityLimit;
         public final IntValue craftingCalculationTimePerTick;
         public final IntValue idleGenerationIntervalTicks;
+        public final DoubleValue idleOfflineBasePercent;
+        public final IntValue idleOfflineMaxSeconds;
         public final BooleanValue debugTools;
         public final BooleanValue matterCannonBlockDamage;
         public final BooleanValue tinyTntBlockDamage;
@@ -616,6 +626,10 @@ public final class AEConfig {
             builder.push("idle");
             idleGenerationIntervalTicks = define(builder, "generationIntervalTicks", 20, 1, 1200,
                     "How many game ticks pass between idle currency generation runs for online players.");
+            idleOfflineBasePercent = define(builder, "offlineBasePercent", 0.25, 0.0, 1.0,
+                    "Base percentage of online idle generation that applies while a player is offline.");
+            idleOfflineMaxSeconds = define(builder, "offlineMaxSeconds", 86400, 0, Integer.MAX_VALUE,
+                    "Maximum number of offline seconds that can be converted into catch-up generation on login.");
             builder.pop();
 
             builder.push("crafting");
