@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,18 @@ class IdleCurrencyClientCacheTest {
     }
 
     @Test
+    void snapshotAppliesBalancesAndRatesTogether() {
+        IdleCurrencyClientCache.applySnapshot(
+                Map.of(IDLE, 40L, MATTER, 15L),
+                Map.of(IDLE, 3L, MATTER, 9L));
+
+        assertThat(IdleCurrencyClientCache.getBalanceMap())
+                .containsExactlyEntriesOf(Map.of(IDLE, 40L, MATTER, 15L));
+        assertThat(IdleCurrencyClientCache.getRateMap())
+                .containsExactlyEntriesOf(Map.of(IDLE, 3L, MATTER, 9L));
+    }
+
+    @Test
     void deltaMergesBalanceUpdatesAndCanRefreshRates() {
         IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L, MATTER, 3L), Map.of(IDLE, 1L));
 
@@ -44,6 +57,22 @@ class IdleCurrencyClientCacheTest {
                 .containsExactlyEntriesOf(Map.of(IDLE, 12L));
         assertThat(IdleCurrencyClientCache.getRates())
                 .containsExactlyEntriesOf(Map.of(IDLE, 4L, MATTER, 2L));
+    }
+
+    @Test
+    void deltaRemovesBalancesForZeroNegativeAndNullValues() {
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L, MATTER, 3L), Map.of(IDLE, 1L, MATTER, 2L));
+
+        var delta = new LinkedHashMap<CurrencyId, Long>();
+        delta.put(IDLE, 0L);
+        delta.put(MATTER, null);
+        delta.put(currency("flux"), -5L);
+
+        IdleCurrencyClientCache.applyDelta(delta, Map.of());
+
+        assertThat(IdleCurrencyClientCache.getBalances()).isEmpty();
+        assertThat(IdleCurrencyClientCache.getRates())
+                .containsExactlyEntriesOf(Map.of(IDLE, 1L, MATTER, 2L));
     }
 
     @Test
