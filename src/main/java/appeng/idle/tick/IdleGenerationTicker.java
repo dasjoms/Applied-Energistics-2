@@ -44,7 +44,7 @@ public final class IdleGenerationTicker {
     }
 
     public static void accrueOfflineCatchup(ServerPlayer player, long elapsedSeconds) {
-        if (elapsedSeconds <= 0L) {
+        if (elapsedSeconds <= 0L || !PlayerIdleDataManager.isIdleGenerationUnlocked(player)) {
             return;
         }
 
