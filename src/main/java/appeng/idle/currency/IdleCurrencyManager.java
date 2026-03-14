@@ -17,8 +17,10 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import appeng.core.AELog;
+import appeng.idle.net.IdleCurrencySyncService;
 
 /**
  * Loads and serves idle currency definitions from built-ins plus datapack JSON files.
@@ -74,6 +76,13 @@ public final class IdleCurrencyManager extends SimpleJsonResourceReloadListener 
 
         currencies = Collections.unmodifiableMap(merged);
         AELog.info("Loaded {} idle currency definitions (including built-ins)", currencies.size());
+
+        var server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            for (var player : server.getPlayerList().getPlayers()) {
+                IdleCurrencySyncService.sendSnapshot(player);
+            }
+        }
     }
 
     private static Map<CurrencyId, CurrencyDefinition> loadBuiltIns() {
