@@ -10,9 +10,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 
+import appeng.core.AEConfig;
 import appeng.idle.currency.CurrencyAmount;
 import appeng.idle.currency.CurrencyId;
+import appeng.idle.tick.IdleGenerationTicker;
 
 /**
  * Handles loading/saving player idle data into persistent player NBT and enforces server-authoritative mutations.
@@ -128,6 +132,35 @@ public final class PlayerIdleDataManager {
         data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
         save(player, data);
         return true;
+    }
+
+    public static void handlePlayerLoggedIn(PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        var nowEpochSeconds = Instant.now().getEpochSecond();
+        var data = get(player);
+        var elapsedSeconds = Math.max(0L, nowEpochSeconds - data.getLastSeenEpochSeconds());
+        var cappedElapsedSeconds = Math.min(elapsedSeconds, AEConfig.instance().getIdleOfflineMaxSeconds());
+
+        IdleGenerationTicker.accrueOfflineCatchup(player, cappedElapsedSeconds);
+
+        data = get(player);
+        data.setLastSeenEpochSeconds(nowEpochSeconds);
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
+    }
+
+    public static void handlePlayerLoggedOut(PlayerLoggedOutEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        var data = get(player);
+        data.setLastSeenEpochSeconds(Instant.now().getEpochSecond());
+        data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+        save(player, data);
     }
 
     public static void handlePlayerClone(PlayerEvent.Clone event) {

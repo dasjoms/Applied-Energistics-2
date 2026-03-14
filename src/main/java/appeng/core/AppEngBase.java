@@ -183,6 +183,8 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(WrenchHook::onPlayerUseBlockEvent);
         NeoForge.EVENT_BUS.addListener(SkyStoneBreakSpeed::handleBreakFaster);
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerClone);
+        NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerLoggedIn);
+        NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerLoggedOut);
         NeoForge.EVENT_BUS.addListener(IdleGenerationTicker::onServerTickEnd);
 
         HotkeyActions.init();
