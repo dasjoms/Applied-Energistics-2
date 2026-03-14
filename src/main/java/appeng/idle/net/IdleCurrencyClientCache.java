@@ -11,6 +11,7 @@ import appeng.idle.currency.CurrencyId;
  */
 public final class IdleCurrencyClientCache {
     private static volatile Map<CurrencyId, Long> balances = Map.of();
+    private static volatile Map<CurrencyId, IdleCurrencyHudValue> hudValues = Map.of();
 
     private IdleCurrencyClientCache() {
     }
@@ -21,6 +22,14 @@ public final class IdleCurrencyClientCache {
 
     public static void applySnapshot(Map<CurrencyId, Long> snapshot) {
         balances = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
+    }
+
+    public static Map<CurrencyId, IdleCurrencyHudValue> getHudValues() {
+        return hudValues;
+    }
+
+    public static void applyHudSnapshot(Map<CurrencyId, IdleCurrencyHudValue> snapshot) {
+        hudValues = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
     }
 
     public static void applyDelta(Map<CurrencyId, Long> delta) {
