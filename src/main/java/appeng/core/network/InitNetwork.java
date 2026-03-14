@@ -41,6 +41,9 @@ import appeng.core.network.serverbound.SelectKeyTypePacket;
 import appeng.core.network.serverbound.SwapSlotsPacket;
 import appeng.core.network.serverbound.SwitchGuisPacket;
 import appeng.core.network.serverbound.UpdateHoldingCtrlPacket;
+import appeng.idle.net.IdleCurrencyDeltaPacket;
+import appeng.idle.net.IdleCurrencySnapshotPacket;
+import appeng.idle.net.RequestSpendUpgradePacket;
 
 public class InitNetwork {
     public static void init(RegisterPayloadHandlersEvent event) {
@@ -64,6 +67,8 @@ public class InitNetwork {
         clientbound(registrar, PatternAccessTerminalPacket.TYPE, PatternAccessTerminalPacket.STREAM_CODEC);
         clientbound(registrar, SetLinkStatusPacket.TYPE, SetLinkStatusPacket.STREAM_CODEC);
         clientbound(registrar, ExportedGridContent.TYPE, ExportedGridContent.STREAM_CODEC);
+        clientbound(registrar, IdleCurrencySnapshotPacket.TYPE, IdleCurrencySnapshotPacket.STREAM_CODEC);
+        clientbound(registrar, IdleCurrencyDeltaPacket.TYPE, IdleCurrencyDeltaPacket.STREAM_CODEC);
 
         // Serverbound
         serverbound(registrar, ColorApplicatorSelectColorPacket.TYPE, ColorApplicatorSelectColorPacket.STREAM_CODEC);
@@ -82,6 +87,7 @@ public class InitNetwork {
         serverbound(registrar, SwapSlotsPacket.TYPE, SwapSlotsPacket.STREAM_CODEC);
         serverbound(registrar, SwitchGuisPacket.TYPE, SwitchGuisPacket.STREAM_CODEC);
         serverbound(registrar, UpdateHoldingCtrlPacket.TYPE, UpdateHoldingCtrlPacket.STREAM_CODEC);
+        serverbound(registrar, RequestSpendUpgradePacket.TYPE, RequestSpendUpgradePacket.STREAM_CODEC);
 
         // Bidirectional
         bidirectional(registrar, ConfigValuePacket.TYPE, ConfigValuePacket.STREAM_CODEC);
