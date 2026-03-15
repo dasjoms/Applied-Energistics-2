@@ -41,6 +41,7 @@ class BlockBreakRewardHandlerTest {
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
                 MockedStatic<PlayerIdleDataManager> idleDataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
@@ -117,6 +118,7 @@ class BlockBreakRewardHandlerTest {
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
                 MockedStatic<PlayerIdleDataManager> idleDataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
@@ -140,6 +142,7 @@ class BlockBreakRewardHandlerTest {
         var event = blockBreakEvent(player, Blocks.STONE.defaultBlockState());
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
+                MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
