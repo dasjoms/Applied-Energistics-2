@@ -11,6 +11,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -26,6 +27,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 import appeng.idle.currency.CurrencyId;
+import appeng.idle.player.PlayerIdleData;
+import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.reward.natural.NaturalLogTracker;
 import appeng.idle.tick.IdleGenerationProgressService;
 
@@ -37,14 +40,12 @@ class BlockBreakRewardHandlerTest {
         var event = blockBreakEvent(player, Blocks.OAK_LOG.defaultBlockState());
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
-                MockedStatic<RewardEligibilityService> eligibilityService = mockStatic(RewardEligibilityService.class);
+                MockedStatic<PlayerIdleDataManager> idleDataManager = mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
                     .thenReturn(List.of(reward));
-            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(eq(player), eq(reward),
-                    any(RewardTriggerContext.class)))
-                    .thenReturn(true);
+            mockActiveEligibility(idleDataManager, player, true);
 
             BlockBreakRewardHandler.onBlockBreak(event);
 
@@ -64,7 +65,6 @@ class BlockBreakRewardHandlerTest {
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
                 MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class);
-                MockedStatic<RewardEligibilityService> eligibilityService = mockStatic(RewardEligibilityService.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
@@ -76,7 +76,6 @@ class BlockBreakRewardHandlerTest {
 
             BlockBreakRewardHandler.onBlockBreak(event);
 
-            eligibilityService.verifyNoInteractions();
             progressService.verifyNoInteractions();
         }
     }
@@ -89,7 +88,7 @@ class BlockBreakRewardHandlerTest {
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
                 MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class);
-                MockedStatic<RewardEligibilityService> eligibilityService = mockStatic(RewardEligibilityService.class);
+                MockedStatic<PlayerIdleDataManager> idleDataManager = mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
@@ -98,9 +97,7 @@ class BlockBreakRewardHandlerTest {
                     .when(() -> NaturalLogTracker.isNaturallyGeneratedLog(any(ServerLevel.class), any(BlockPos.class),
                             any(BlockState.class)))
                     .thenReturn(true);
-            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(eq(player), eq(reward),
-                    any(RewardTriggerContext.class)))
-                    .thenReturn(true);
+            mockActiveEligibility(idleDataManager, player, true);
 
             BlockBreakRewardHandler.onBlockBreak(event);
 
@@ -119,14 +116,12 @@ class BlockBreakRewardHandlerTest {
         var event = blockBreakEvent(player, Blocks.OAK_LOG.defaultBlockState());
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
-                MockedStatic<RewardEligibilityService> eligibilityService = mockStatic(RewardEligibilityService.class);
+                MockedStatic<PlayerIdleDataManager> idleDataManager = mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
                     .thenReturn(List.of(reward));
-            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(eq(player), eq(reward),
-                    any(RewardTriggerContext.class)))
-                    .thenReturn(false);
+            mockActiveEligibility(idleDataManager, player, false);
 
             BlockBreakRewardHandler.onBlockBreak(event);
 
@@ -145,7 +140,6 @@ class BlockBreakRewardHandlerTest {
         var event = blockBreakEvent(player, Blocks.STONE.defaultBlockState());
 
         try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
-                MockedStatic<RewardEligibilityService> eligibilityService = mockStatic(RewardEligibilityService.class);
                 MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
@@ -153,7 +147,6 @@ class BlockBreakRewardHandlerTest {
 
             BlockBreakRewardHandler.onBlockBreak(event);
 
-            eligibilityService.verifyNoInteractions();
             progressService.verifyNoInteractions();
         }
     }
@@ -210,17 +203,12 @@ class BlockBreakRewardHandlerTest {
                 null);
     }
 
-    private static RewardDefinition rewardForTag(String rewardPath, String tagNamespace, String tagPath,
-            long ticksAwarded) {
-        return new RewardDefinition(
-                ResourceLocation.fromNamespaceAndPath("ae2", rewardPath),
-                RewardTriggerType.BLOCK_BREAK,
-                new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "idle")),
-                ticksAwarded,
-                new RewardDefinition.BlockFilterCondition(
-                        null,
-                        ResourceLocation.fromNamespaceAndPath(tagNamespace, tagPath)),
-                null);
+    private static void mockActiveEligibility(MockedStatic<PlayerIdleDataManager> idleDataManager, ServerPlayer player,
+            boolean activeEligibleNow) {
+        idleDataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player))
+                .thenReturn(activeEligibleNow);
+        idleDataManager.when(() -> PlayerIdleDataManager.get(player))
+                .thenReturn(new PlayerIdleData(Map.of(), 0L, PlayerIdleData.CURRENT_DATA_VERSION, Map.of()));
     }
 
     private static BlockEvent.BreakEvent blockBreakEvent(ServerPlayer player, BlockState state) {
@@ -233,6 +221,7 @@ class BlockBreakRewardHandlerTest {
         when(event.getPos()).thenReturn(BlockPos.ZERO);
         when(event.getPlayer()).thenReturn(player);
         when(event.getState()).thenReturn(state);
+        when(level.getGameTime()).thenReturn(1234L);
 
         return event;
     }
