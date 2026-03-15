@@ -22,7 +22,8 @@ class PlayerIdleDataTest {
                 1720000000L,
                 7,
                 Map.of(speedUpgrade, 3),
-                true);
+                true,
+                12345L);
 
         var restored = PlayerIdleData.fromTag(data.toTag());
 
@@ -32,6 +33,7 @@ class PlayerIdleDataTest {
         assertThat(restored.getDataVersion()).isEqualTo(7);
         assertThat(restored.ownedUpgradeLevelsView()).containsEntry(speedUpgrade, 3);
         assertThat(restored.isIdleVisorUnlocked()).isTrue();
+        assertThat(restored.getOnlineProgressBaselineTick()).isEqualTo(12345L);
     }
 
     @Test
@@ -70,6 +72,13 @@ class PlayerIdleDataTest {
 
         var restored = PlayerIdleData.fromTag(data.toTag());
         assertThat(restored.isIdleVisorUnlocked()).isTrue();
+    }
+
+    @Test
+    void baselineTickDefaultsToUninitializedWhenTagOmitted() {
+        var restored = PlayerIdleData.fromTag(new net.minecraft.nbt.CompoundTag());
+
+        assertThat(restored.getOnlineProgressBaselineTick()).isEqualTo(-1L);
     }
 
     private static net.minecraft.nbt.CompoundTag dataWithInvalidEntries() {
