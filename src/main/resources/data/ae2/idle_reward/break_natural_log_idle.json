@@ -1,0 +1,9 @@
+{
+  "id": "ae2:break_natural_log_idle",
+  "triggerType": "block_break",
+  "currencyId": "ae2:idle",
+  "progressTicksAwarded": 20,
+  "conditions": {
+    "tag": "minecraft:logs"
+  }
+}
