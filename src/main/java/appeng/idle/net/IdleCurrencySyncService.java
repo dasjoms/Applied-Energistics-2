@@ -13,6 +13,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEven
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
@@ -48,12 +49,21 @@ public final class IdleCurrencySyncService {
     }
 
     public static void handleServerTickEnd(ServerTickEvent.Post event) {
-        if (event.getServer().getTickCount() % HEARTBEAT_INTERVAL_TICKS != 0) {
-            return;
+        var tickCount = event.getServer().getTickCount();
+
+        if (tickCount % HEARTBEAT_INTERVAL_TICKS == 0) {
+            for (var player : event.getServer().getPlayerList().getPlayers()) {
+                sendHeartbeat(player);
+            }
         }
 
-        for (var player : event.getServer().getPlayerList().getPlayers()) {
-            sendHeartbeat(player);
+        var hudSyncIntervalTicks = AEConfig.instance().getIdleHudSyncIntervalTicks();
+        if (hudSyncIntervalTicks > 0 && tickCount % hudSyncIntervalTicks == 0) {
+            for (var player : event.getServer().getPlayerList().getPlayers()) {
+                if (shouldReceiveHudHeartbeat(player)) {
+                    sendHudSnapshot(player);
+                }
+            }
         }
     }
 
