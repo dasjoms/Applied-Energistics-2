@@ -85,6 +85,15 @@ class IdleCurrencyClientCacheTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
+    @Test
+    void emptyHudSnapshotClearsClientHudPayload() {
+        IdleCurrencyClientCache.applyHudSnapshot(Map.of(IDLE, new IdleCurrencyHudValue(11L, 0.5, 3L, 20L, 1L)));
+
+        IdleCurrencyClientCache.applyHudSnapshot(Map.of());
+
+        assertThat(IdleCurrencyClientCache.getHudValues()).isEmpty();
+    }
+
     private static CurrencyId currency(String path) {
         return new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", path));
     }
