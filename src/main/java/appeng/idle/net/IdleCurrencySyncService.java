@@ -1,15 +1,18 @@
 package appeng.idle.net;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.neoforge.event.entity.player.PlayerContainerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -29,6 +32,7 @@ import appeng.idle.tick.IdleGenerationMath;
 public final class IdleCurrencySyncService {
     private static final int HEARTBEAT_INTERVAL_TICKS = 20 * 10;
     private static final int TICKS_PER_SECOND = 20;
+    private static final Map<UUID, Map<CurrencyId, IdleCurrencyHudValue>> LAST_SENT_HUD_VALUES_BY_PLAYER = new HashMap<>();
 
     private IdleCurrencySyncService() {
     }
@@ -47,6 +51,14 @@ public final class IdleCurrencySyncService {
         }
 
         sendSnapshot(player);
+    }
+
+    public static void handlePlayerLoggedOut(PlayerLoggedOutEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        clearLastSentHudSnapshot(player);
     }
 
     public static void handleServerTickEnd(ServerTickEvent.Post event) {
@@ -93,12 +105,26 @@ public final class IdleCurrencySyncService {
 
     public static void sendHudSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
-        PacketDistributor.sendToPlayer(player, new IdleCurrencyHudSnapshotPacket(snapshotHudValues(player)));
+
+        var hudValues = snapshotHudValues(player);
+        var playerId = player.getUUID();
+        var previousHudValues = LAST_SENT_HUD_VALUES_BY_PLAYER.get(playerId);
+        if (previousHudValues != null && previousHudValues.equals(hudValues)) {
+            return;
+        }
+
+        PacketDistributor.sendToPlayer(player, new IdleCurrencyHudSnapshotPacket(hudValues));
+        LAST_SENT_HUD_VALUES_BY_PLAYER.put(playerId, Map.copyOf(hudValues));
     }
 
     public static void sendEmptyHudSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
+        clearLastSentHudSnapshot(player);
         PacketDistributor.sendToPlayer(player, new IdleCurrencyHudSnapshotPacket(Map.of()));
+    }
+
+    private static void clearLastSentHudSnapshot(ServerPlayer player) {
+        LAST_SENT_HUD_VALUES_BY_PLAYER.remove(player.getUUID());
     }
 
     public static void sendDelta(ServerPlayer player, Map<CurrencyId, Long> changedBalances) {

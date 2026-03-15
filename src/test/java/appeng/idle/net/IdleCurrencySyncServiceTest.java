@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -22,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -214,6 +216,110 @@ class IdleCurrencySyncServiceTest {
                         assertThat(second.progressTicks()).isGreaterThan(first.progressTicks());
                         assertThat(second.secondsToNext()).isNotEqualTo(first.secondsToNext());
                         assertThat(data.getBalance(HUD_TEST_CURRENCY)).isEqualTo(9L);
+                    }
+                });
+    }
+
+    @Test
+    void unchangedHudHeartbeatSnapshotIsSkippedUntilValueChanges() throws Exception {
+        withInjectedCurrency(new CurrencyDefinition(
+                HUD_TEST_CURRENCY,
+                "gui.ae2.idle.currency.hud_sync_test_currency",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                20,
+                true,
+                null), () -> {
+                    var player = mock(ServerPlayer.class);
+                    when(player.getUUID()).thenReturn(UUID.randomUUID());
+                    when(player.getServer()).thenReturn(mock(MinecraftServer.class));
+
+                    var data = new PlayerIdleData(Map.of(HUD_TEST_CURRENCY, 5L), 0L,
+                            PlayerIdleData.CURRENT_DATA_VERSION, Map.of(), true);
+                    data.setOnlineProgressBaselineTick(0L);
+
+                    try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                            MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+                        dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+                        dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player))
+                                .thenReturn(false);
+
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+
+                        data.setBalance(HUD_TEST_CURRENCY, 6L);
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+
+                        packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                                argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(2));
+                    }
+                });
+    }
+
+    @Test
+    void sendEmptyHudSnapshotClearsHudCache() throws Exception {
+        withInjectedCurrency(new CurrencyDefinition(
+                HUD_TEST_CURRENCY,
+                "gui.ae2.idle.currency.hud_sync_test_currency",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                20,
+                true,
+                null), () -> {
+                    var player = mock(ServerPlayer.class);
+                    when(player.getUUID()).thenReturn(UUID.randomUUID());
+                    when(player.getServer()).thenReturn(mock(MinecraftServer.class));
+
+                    var data = new PlayerIdleData(Map.of(HUD_TEST_CURRENCY, 5L), 0L,
+                            PlayerIdleData.CURRENT_DATA_VERSION, Map.of(), true);
+                    data.setOnlineProgressBaselineTick(0L);
+
+                    try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                            MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+                        dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+                        dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player))
+                                .thenReturn(false);
+
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+                        IdleCurrencySyncService.sendEmptyHudSnapshot(player);
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+
+                        packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                                argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(3));
+                    }
+                });
+    }
+
+    @Test
+    void playerLogoutClearsHudCache() throws Exception {
+        withInjectedCurrency(new CurrencyDefinition(
+                HUD_TEST_CURRENCY,
+                "gui.ae2.idle.currency.hud_sync_test_currency",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                20,
+                true,
+                null), () -> {
+                    var player = mock(ServerPlayer.class);
+                    when(player.getUUID()).thenReturn(UUID.randomUUID());
+                    when(player.getServer()).thenReturn(mock(MinecraftServer.class));
+
+                    var data = new PlayerIdleData(Map.of(HUD_TEST_CURRENCY, 5L), 0L,
+                            PlayerIdleData.CURRENT_DATA_VERSION, Map.of(), true);
+                    data.setOnlineProgressBaselineTick(0L);
+
+                    var logoutEvent = mock(PlayerLoggedOutEvent.class);
+                    when(logoutEvent.getEntity()).thenReturn(player);
+
+                    try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                            MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+                        dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+                        dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player))
+                                .thenReturn(false);
+
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+                        IdleCurrencySyncService.handlePlayerLoggedOut(logoutEvent);
+                        IdleCurrencySyncService.sendHudSnapshot(player);
+
+                        packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                                argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(2));
                     }
                 });
     }

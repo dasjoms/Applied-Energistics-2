@@ -189,6 +189,7 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handlePlayerLoggedOut);
         NeoForge.EVENT_BUS.addListener(PlayerIdleDataManager::handleEquipmentChanged);
         NeoForge.EVENT_BUS.addListener(IdleCurrencySyncService::handlePlayerLoggedIn);
+        NeoForge.EVENT_BUS.addListener(IdleCurrencySyncService::handlePlayerLoggedOut);
         NeoForge.EVENT_BUS.addListener(IdleCurrencySyncService::handleContainerOpen);
         NeoForge.EVENT_BUS.addListener(IdleCurrencySyncService::handleServerTickEnd);
         NeoForge.EVENT_BUS.addListener(IdleCurrencyManager::onAddReloadListener);
