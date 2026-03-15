@@ -26,8 +26,8 @@ class IdleHudOverlayRendererTest {
 
         assertThat(fastState.progressFraction()).isEqualTo(0.5f);
         assertThat(slowState.progressFraction()).isEqualTo(0.05f);
-        assertThat(fastState.timingText()).isEqualTo("1s");
-        assertThat(slowState.timingText()).isEqualTo("10s");
+        assertThat(fastState.timingText()).isEqualTo("0.5s");
+        assertThat(slowState.timingText()).isEqualTo("9.5s");
     }
 
     @Test
@@ -54,5 +54,12 @@ class IdleHudOverlayRendererTest {
         assertThat(cappedState.timingText()).isEqualTo("--");
         assertThat(invalidTimingState.progressFraction()).isEqualTo(0f);
         assertThat(invalidTimingState.timingText()).isEqualTo("--");
+    }
+
+    @Test
+    void getBarWidthIsLimitedToLeftBoundScreenFraction() {
+        assertThat(IdleHudOverlayRenderer.getBarWidth(300, 90, 60)).isEqualTo(60);
+        assertThat(IdleHudOverlayRenderer.getBarWidth(300, 260, 60)).isEqualTo(34);
+        assertThat(IdleHudOverlayRenderer.getBarWidth(300, 295, 60)).isEqualTo(0);
     }
 }
