@@ -24,6 +24,7 @@ public class IdleHudOverlayRenderer {
     private static final int HUD_MARGIN = 6;
     private static final int COLUMN_SPACING = 8;
     private static final int BAR_HEIGHT = 6;
+    private static final int MAX_BAR_SCREEN_WIDTH_DIVISOR = 5;
     private static final boolean USE_TEXTURED_BAR_SKIN = false;
 
     private static final ResourceLocation BAR_SKIN_TEXTURE = AppEng.makeId("textures/guis/inscriber.png");
@@ -71,17 +72,19 @@ public class IdleHudOverlayRenderer {
         guiGraphics.drawString(font, Component.translatable("gui.ae2.idle.hud.title"), x, y, COLOR_TITLE, true);
         y += font.lineHeight + 2;
 
-        var rightEdge = minecraft.getWindow().getGuiScaledWidth() - HUD_MARGIN;
+        var screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        var maxBarWidth = Math.max(0, screenWidth / MAX_BAR_SCREEN_WIDTH_DIVISOR);
 
         for (var row : rows) {
-            guiGraphics.drawString(font, row.displayName(), x, y, COLOR_LINE, true);
+            var balanceX = x;
+            guiGraphics.drawString(font, row.balanceText(), balanceX, y, COLOR_LINE, true);
 
-            var balanceX = rightEdge - font.width(row.balanceText());
-            var timeRight = balanceX - COLUMN_SPACING;
-            var timeX = timeRight - font.width(row.timePerUnitText());
-            var barRight = timeX - COLUMN_SPACING;
-            var barLeft = x + font.width(row.displayName()) + COLUMN_SPACING;
-            var barWidth = Math.max(0, barRight - barLeft);
+            var nameX = balanceX + font.width(row.balanceText()) + COLUMN_SPACING;
+            guiGraphics.drawString(font, row.displayName(), nameX, y, COLOR_LINE, true);
+
+            var barLeft = nameX + font.width(row.displayName()) + COLUMN_SPACING;
+            var barWidth = getBarWidth(screenWidth, barLeft, maxBarWidth);
+            var timeX = barLeft + barWidth + COLUMN_SPACING;
 
             if (barWidth > 0) {
                 var barTop = y + Math.max(0, (font.lineHeight - BAR_HEIGHT) / 2);
@@ -95,10 +98,14 @@ public class IdleHudOverlayRenderer {
                 }
             }
 
-            guiGraphics.drawString(font, row.timePerUnitText(), timeX, y, COLOR_LINE, true);
-            guiGraphics.drawString(font, row.balanceText(), balanceX, y, COLOR_LINE, true);
+            guiGraphics.drawString(font, row.timeRemainingText(), timeX, y, COLOR_LINE, true);
             y += font.lineHeight;
         }
+    }
+
+    static int getBarWidth(int screenWidth, int barLeft, int maxBarWidth) {
+        var rightBound = screenWidth - HUD_MARGIN;
+        return Math.max(0, Math.min(maxBarWidth, rightBound - barLeft));
     }
 
     static int getFillWidth(int barWidth, double progressFraction) {
@@ -156,7 +163,8 @@ public class IdleHudOverlayRenderer {
             return new ProgressState(0f, "--");
         }
 
-        return new ProgressState(fraction, formatSeconds(maxTicks / 20.0));
+        var remainingTicks = Math.max(0L, maxTicks - ticks);
+        return new ProgressState(fraction, formatSeconds(remainingTicks / 20.0));
     }
 
     private static boolean isCapped(IdleCurrencyHudValue value) {
@@ -170,7 +178,7 @@ public class IdleHudOverlayRenderer {
     record ProgressState(float progressFraction, String timingText) {
     }
 
-    private record RowModel(Component displayName, double progressFraction, String timePerUnitText,
+    private record RowModel(Component displayName, double progressFraction, String timeRemainingText,
             String balanceText) {
     }
 }

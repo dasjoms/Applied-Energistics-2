@@ -26,8 +26,8 @@ class IdleHudOverlayRendererTest {
 
         assertThat(fastState.progressFraction()).isEqualTo(0.5f);
         assertThat(slowState.progressFraction()).isEqualTo(0.05f);
-        assertThat(fastState.timingText()).isEqualTo("1s");
-        assertThat(slowState.timingText()).isEqualTo("10s");
+        assertThat(parseSecondsFromTimingText(fastState.timingText())).isEqualTo(0.5);
+        assertThat(parseSecondsFromTimingText(slowState.timingText())).isEqualTo(9.5);
     }
 
     @Test
@@ -55,4 +55,18 @@ class IdleHudOverlayRendererTest {
         assertThat(invalidTimingState.progressFraction()).isEqualTo(0f);
         assertThat(invalidTimingState.timingText()).isEqualTo("--");
     }
+
+    @Test
+    void getBarWidthIsLimitedToLeftBoundScreenFraction() {
+        assertThat(IdleHudOverlayRenderer.getBarWidth(300, 90, 60)).isEqualTo(60);
+        assertThat(IdleHudOverlayRenderer.getBarWidth(300, 260, 60)).isEqualTo(34);
+        assertThat(IdleHudOverlayRenderer.getBarWidth(300, 295, 60)).isEqualTo(0);
+    }
+
+    private static double parseSecondsFromTimingText(String timingText) {
+        assertThat(timingText).endsWith("s");
+        var numericPart = timingText.substring(0, timingText.length() - 1).replace(',', '.');
+        return Double.parseDouble(numericPart);
+    }
+
 }
