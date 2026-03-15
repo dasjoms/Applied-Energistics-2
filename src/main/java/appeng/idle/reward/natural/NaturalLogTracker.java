@@ -6,6 +6,8 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -79,11 +81,15 @@ public final class NaturalLogTracker {
         }
 
         var state = event.getPlacedBlock();
-        if (state.is(BlockTags.LOGS)) {
+        if (shouldMarkPlayerPlaced(state, event.getEntity())) {
             mark(level, event.getPos(), Provenance.PLAYER_PLACED);
         } else {
             clear(level, event.getPos());
         }
+    }
+
+    static boolean shouldMarkPlayerPlaced(BlockState state, Entity entity) {
+        return state.is(BlockTags.LOGS) && entity instanceof Player;
     }
 
     public static void onBlockRemovedOrChanged(ServerLevel level, BlockPos pos, BlockState oldState) {
