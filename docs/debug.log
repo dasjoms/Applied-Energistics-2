@@ -1,0 +1,228 @@
+[15März2026 03:22:37.941] [main/DEBUG] [io.netty.util.internal.logging.InternalLoggerFactory/]: Using SLF4J as the default logging framework
+[15März2026 03:22:37.946] [main/DEBUG] [io.netty.util.ResourceLeakDetector/]: -Dio.netty.leakDetection.level: simple
+[15März2026 03:22:37.947] [main/DEBUG] [io.netty.util.ResourceLeakDetector/]: -Dio.netty.leakDetection.targetRecords: 4
+[15März2026 03:22:40.255] [main/DEBUG] [oshi.util.FileUtil/]: No oshi.properties file found from ClassLoader cpw.mods.modlauncher.TransformingClassLoader@6e33fcae
+[15März2026 03:22:41.058] [Datafixer Bootstrap/INFO] [com.mojang.datafixers.DataFixerBuilder/]: 229 Datafixer optimizations took 847 milliseconds
+[15März2026 03:22:41.212] [main/DEBUG] [oshi.util.FileUtil/]: No oshi.architecture.properties file found from ClassLoader cpw.mods.modlauncher.TransformingClassLoader@6e33fcae
+[15März2026 03:22:41.373] [pool-8-thread-1/DEBUG] [mixin/]: Mixing MappedRegistryAccessor from neoforge.mixins.json into net.minecraft.core.MappedRegistry
+[15März2026 03:22:41.375] [pool-8-thread-1/DEBUG] [mixin/]: neoforge.mixins.json:MappedRegistryAccessor from mod neoforge: Class version 65 required is higher than the class version supported by the current version of Mixin (JAVA_16 supports class version 60)
+[15März2026 03:22:41.601] [pool-8-thread-1/DEBUG] [mixin/]: Mixing ItemEntityMixin from ae2.mixins.json into net.minecraft.world.entity.item.ItemEntity
+[15März2026 03:22:41.603] [pool-8-thread-1/DEBUG] [mixin/]: Renaming synthetic method lambda$handleEntityTransform$0(Lnet/minecraft/world/level/material/FluidState;Lappeng/recipes/transform/TransformCircumstance;)Z to mdfbc56e$ae2$lambda$handleEntityTransform$0$0 in ae2.mixins.json:ItemEntityMixin from mod ae2
+[15März2026 03:22:41.680] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleExplosion(Lnet/minecraft/world/damagesource/DamageSource;FLorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:22:41.681] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleEntityTransform(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
+[15März2026 03:22:41.681] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleEntityTransform(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V has 0 override(s) in child classes
+[15März2026 03:22:41.681] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleEntityTransform(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result
+[15März2026 03:22:41.681] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleEntityTransform(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
+[15März2026 03:22:41.682] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleEntityTransform(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V has 0 override(s) in child classes
+[15März2026 03:22:41.682] [pool-8-thread-1/DEBUG] [mixin/]: ae2.mixins.json:ItemEntityMixin from mod ae2->@Inject::handleEntityTransform(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result
+[15März2026 03:22:42.828] [pool-8-thread-1/DEBUG] [mixin/]: Mixing BlockEntityTypeAccessor from neoforge.mixins.json into net.minecraft.world.level.block.entity.BlockEntityType
+[15März2026 03:22:42.829] [pool-8-thread-1/DEBUG] [mixin/]: neoforge.mixins.json:BlockEntityTypeAccessor from mod neoforge: Class version 65 required is higher than the class version supported by the current version of Mixin (JAVA_16 supports class version 60)
+[15März2026 03:22:43.233] [pool-8-thread-1/DEBUG] [mixin/]: Mixing AnvilMenuMixin from ae2.mixins.json into net.minecraft.world.inventory.AnvilMenu
+[15März2026 03:22:44.991] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: -Dio.netty.noUnsafe: false
+[15März2026 03:22:44.991] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: Java version: 21
+[15März2026 03:22:44.992] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: sun.misc.Unsafe.theUnsafe: available
+[15März2026 03:22:44.993] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: sun.misc.Unsafe.copyMemory: available
+[15März2026 03:22:44.993] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: sun.misc.Unsafe.storeFence: available
+[15März2026 03:22:44.994] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: java.nio.Buffer.address: available
+[15März2026 03:22:44.996] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: java.nio.Bits.unaligned: available, true
+[15März2026 03:22:45.001] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent0/]: java.nio.DirectByteBuffer.<init>(long, {int,long}): unavailable
+[15März2026 03:22:45.001] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: sun.misc.Unsafe: available
+[15März2026 03:22:45.002] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: maxDirectMemory: 2147483648 bytes (maybe)
+[15März2026 03:22:45.003] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: -Dio.netty.tmpdir: C:\Users\home\AppData\Local\Temp (java.io.tmpdir)
+[15März2026 03:22:45.003] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: -Dio.netty.bitMode: 64 (sun.arch.data.model)
+[15März2026 03:22:45.004] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: Platform: Windows
+[15März2026 03:22:45.005] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: -Dio.netty.maxDirectMemory: -1 bytes
+[15März2026 03:22:45.005] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: -Dio.netty.uninitializedArrayAllocationThreshold: -1
+[15März2026 03:22:45.006] [pool-8-thread-1/DEBUG] [io.netty.util.internal.CleanerJava9/]: java.nio.ByteBuffer.cleaner(): available
+[15März2026 03:22:45.007] [pool-8-thread-1/DEBUG] [io.netty.util.internal.PlatformDependent/]: -Dio.netty.noPreferDirect: false
+[15März2026 03:22:48.270] [Render thread/DEBUG] [mixin/]: Mixing WrappedGenericStackTooltipModIdMixin from ae2.mixins.json into net.minecraft.client.gui.screens.Screen
+[15März2026 03:22:48.279] [Render thread/DEBUG] [mixin/]: ae2.mixins.json:WrappedGenericStackTooltipModIdMixin from mod ae2->@Inject::getTooltipFromItem(Lnet/minecraft/client/Minecraft;Lnet/minecraft/world/item/ItemStack;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:22:48.321] [Render thread/DEBUG] [mixin/]: Mixing AbstractContainerScreenMixin from ae2.mixins.json into net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+[15März2026 03:22:48.459] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/home/AppData/Roaming/.minecraft/libraries/net/minecraft/client/1.21.1-20240808.144430/client-1.21.1-20240808.144430-srg.jar%23190!/assets/.mcassetsroot' uses unexpected schema
+[15März2026 03:22:48.461] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/home/AppData/Roaming/.minecraft/libraries/net/minecraft/client/1.21.1-20240808.144430/client-1.21.1-20240808.144430-srg.jar%23190!/data/.mcassetsroot' uses unexpected schema
+[15März2026 03:22:48.509] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[15März2026 03:22:48.523] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: ErzengelBingus
+[15März2026 03:22:48.707] [Render thread/WARN] [net.minecraft.client.Options/]: Skipping bad option: 
+[15März2026 03:22:48.767] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.3+5
+[15März2026 03:22:49.280] [Render thread/DEBUG] [net.neoforged.fml.ModWorkManager/LOADING]: Using 8 threads for parallel mod-loading
+[15März2026 03:22:49.314] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for [guideme.internal.GuideME, guideme.internal.GuideMEClient]
+[15März2026 03:22:49.323] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for [net.neoforged.neoforge.common.NeoForgeMod, net.neoforged.neoforge.client.ClientNeoForgeMod]
+[15März2026 03:22:49.328] [Render thread/DEBUG] [net.neoforged.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for [appeng.core.AppEngClient]
+[15März2026 03:22:49.379] [modloading-worker-0/DEBUG] [net.neoforged.neoforge.internal.versions.neoforge.NeoForgeVersion/CORE]: Found NeoForge version 21.1.169
+[15März2026 03:22:49.381] [modloading-worker-0/DEBUG] [net.neoforged.neoforge.internal.versions.neoforge.NeoForgeVersion/CORE]: Found FML version 4.0.39
+[15März2026 03:22:49.382] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.1.169, for MC 1.21.1
+[15März2026 03:22:49.411] [modloading-worker-0/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Config file neoforge-client.toml for neoforge tracking
+[15März2026 03:22:49.412] [modloading-worker-0/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Config file neoforge-server.toml for neoforge tracking
+[15März2026 03:22:49.412] [modloading-worker-0/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Config file neoforge-common.toml for neoforge tracking
+[15März2026 03:22:49.412] [modloading-worker-0/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Config file ae2-client.toml for ae2 tracking
+[15März2026 03:22:49.413] [modloading-worker-0/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Config file ae2-common.toml for ae2 tracking
+[15März2026 03:22:49.524] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Attempting to inject @EventBusSubscriber classes into the eventbus for neoforge
+[15März2026 03:22:49.530] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.server.command.ConfigCommand to GAME
+[15März2026 03:22:49.533] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.network.filters.GenericPacketSplitter to MOD
+[15März2026 03:22:49.574] [modloading-worker-0/DEBUG] [io.netty.buffer.AbstractByteBuf/]: -Dio.netty.buffer.checkAccessible: true
+[15März2026 03:22:49.575] [modloading-worker-0/DEBUG] [io.netty.buffer.AbstractByteBuf/]: -Dio.netty.buffer.checkBounds: true
+[15März2026 03:22:49.576] [modloading-worker-0/DEBUG] [io.netty.util.ResourceLeakDetectorFactory/]: Loaded default ResourceLeakDetector: io.netty.util.ResourceLeakDetector@393607cf
+[15März2026 03:22:49.586] [modloading-worker-0/DEBUG] [mixin/]: Mixing LuceneVectorizationMixin from guideme.optional.mixins.json into guideme.internal.shaded.lucene.internal.vectorization.VectorizationProvider
+[15März2026 03:22:49.587] [modloading-worker-0/DEBUG] [mixin/]: guideme.optional.mixins.json:LuceneVectorizationMixin from mod guideme: Class version 65 required is higher than the class version supported by the current version of Mixin (JAVA_11 supports class version 55)
+[15März2026 03:22:49.591] [modloading-worker-0/DEBUG] [io.netty.util.internal.InternalThreadLocalMap/]: -Dio.netty.threadLocalMap.stringBuilder.initialSize: 1024
+[15März2026 03:22:49.591] [modloading-worker-0/DEBUG] [io.netty.util.internal.InternalThreadLocalMap/]: -Dio.netty.threadLocalMap.stringBuilder.maxSize: 4096
+[15März2026 03:22:49.593] [modloading-worker-0/DEBUG] [mixin/]: guideme.optional.mixins.json:LuceneVectorizationMixin from mod guideme->@Inject::getUpperJavaFeatureVersion(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:22:49.596] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.numHeapArenas: 16
+[15März2026 03:22:49.596] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.numDirectArenas: 16
+[15März2026 03:22:49.596] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.pageSize: 8192
+[15März2026 03:22:49.597] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.maxOrder: 9
+[15März2026 03:22:49.597] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.chunkSize: 4194304
+[15März2026 03:22:49.597] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.smallCacheSize: 256
+[15März2026 03:22:49.597] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.normalCacheSize: 64
+[15März2026 03:22:49.597] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.maxCachedBufferCapacity: 32768
+[15März2026 03:22:49.597] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.cacheTrimInterval: 8192
+[15März2026 03:22:49.598] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.cacheTrimIntervalMillis: 0
+[15März2026 03:22:49.598] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.useCacheForAllThreads: false
+[15März2026 03:22:49.598] [modloading-worker-0/DEBUG] [io.netty.buffer.PooledByteBufAllocator/]: -Dio.netty.allocator.maxCachedByteBuffersPerChunk: 1023
+[15März2026 03:22:49.618] [modloading-worker-0/DEBUG] [io.netty.buffer.ByteBufUtil/]: -Dio.netty.allocator.type: pooled
+[15März2026 03:22:49.618] [modloading-worker-0/DEBUG] [io.netty.buffer.ByteBufUtil/]: -Dio.netty.threadLocalDirectBufferSize: 0
+[15März2026 03:22:49.619] [modloading-worker-0/DEBUG] [io.netty.buffer.ByteBufUtil/]: -Dio.netty.maxThreadLocalCharBufferSize: 16384
+[15März2026 03:22:49.637] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.network.NetworkInitialization to MOD
+[15März2026 03:22:49.639] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.network.ConfigurationInitialization to MOD
+[15März2026 03:22:49.648] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.common.MonsterRoomHooks to GAME
+[15März2026 03:22:49.651] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.common.DeferredSpawnEggItem$CommonHandler to MOD
+[15März2026 03:22:49.654] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.common.DeferredSpawnEggItem$ColorRegisterHandler to MOD
+[15März2026 03:22:49.657] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.client.model.data.ModelDataManager to GAME
+[15März2026 03:22:49.661] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.client.ParticleBoundsDebugRenderer to GAME
+[15März2026 03:22:49.687] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.client.ClientHooks$ClientEvents to MOD
+[15März2026 03:22:49.693] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.client.BlockEntityRenderBoundsDebugRenderer to GAME
+[15März2026 03:22:49.695] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing net.neoforged.neoforge.attachment.AttachmentInternals to GAME
+[15März2026 03:22:49.765] [modloading-worker-0/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Config file guideme.toml for guideme tracking
+[15März2026 03:22:49.809] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Attempting to inject @EventBusSubscriber classes into the eventbus for guideme
+[15März2026 03:22:50.090] [modloading-worker-0/DEBUG] [mixin/]: Mixing TextureAtlasMixin from ae2.mixins.json into net.minecraft.client.renderer.texture.TextureAtlas
+[15März2026 03:22:50.101] [modloading-worker-0/DEBUG] [mixin/]: ae2.mixins.json:TextureAtlasMixin from mod ae2->@Inject::uploadHook(Lnet/minecraft/client/renderer/texture/SpriteLoader$Preparations;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
+[15März2026 03:22:50.101] [modloading-worker-0/DEBUG] [mixin/]: ae2.mixins.json:TextureAtlasMixin from mod ae2->@Inject::uploadHook(Lnet/minecraft/client/renderer/texture/SpriteLoader$Preparations;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V has 0 override(s) in child classes
+[15März2026 03:22:50.102] [modloading-worker-0/DEBUG] [mixin/]: ae2.mixins.json:TextureAtlasMixin from mod ae2->@Inject::uploadHook(Lnet/minecraft/client/renderer/texture/SpriteLoader$Preparations;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result
+[15März2026 03:22:50.263] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Attempting to inject @EventBusSubscriber classes into the eventbus for ae2
+[15März2026 03:22:50.263] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing appeng.server.testplots.SpawnTestTools to GAME
+[15März2026 03:22:50.266] [modloading-worker-0/DEBUG] [net.neoforged.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing appeng.datagen.AE2DataGenerators to MOD
+[15März2026 03:22:51.344] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loading configs type CLIENT
+[15März2026 03:22:51.359] [modloading-sync-worker/DEBUG] [net.neoforged.neoforge.common.NeoForgeConfig/FORGEMOD]: Loaded NeoForge config file neoforge-client.toml
+[15März2026 03:22:51.360] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loaded TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\neoforge-client.toml
+[15März2026 03:22:51.369] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Watching TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\neoforge-client.toml for changes
+[15März2026 03:22:51.371] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loaded TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\ae2-client.toml
+[15März2026 03:22:51.372] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Watching TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\ae2-client.toml for changes
+[15März2026 03:22:51.373] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loaded TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\guideme.toml
+[15März2026 03:22:51.374] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Watching TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\guideme.toml for changes
+[15März2026 03:22:51.374] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loading configs type COMMON
+[15März2026 03:22:51.375] [modloading-sync-worker/DEBUG] [net.neoforged.neoforge.common.NeoForgeConfig/FORGEMOD]: Loaded NeoForge config file neoforge-common.toml
+[15März2026 03:22:51.375] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loaded TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\neoforge-common.toml
+[15März2026 03:22:51.376] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Watching TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\neoforge-common.toml for changes
+[15März2026 03:22:51.384] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loaded TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\ae2-common.toml
+[15März2026 03:22:51.386] [modloading-sync-worker/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Watching TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\ae2-common.toml for changes
+[15März2026 03:22:51.706] [Render thread/DEBUG] [mixin/]: Mixing ModelBakeryMixin from ae2.mixins.json into net.minecraft.client.resources.model.ModelBakery
+[15März2026 03:22:51.713] [Render thread/DEBUG] [mixin/]: ae2.mixins.json:ModelBakeryMixin from mod ae2->@Inject::getModelHook(Lnet/minecraft/resources/ResourceLocation;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:22:51.908] [Render thread/DEBUG] [mixin/]: Mixing spatial.MinecraftServerMixin from ae2.mixins.json into net.minecraft.server.MinecraftServer
+[15März2026 03:22:51.952] [Render thread/DEBUG] [mixin/]: ae2.mixins.json:spatial.MinecraftServerMixin from mod ae2->@Inject::injectSpatialLevel(Lnet/minecraft/server/level/progress/ChunkProgressListener;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
+[15März2026 03:22:51.952] [Render thread/DEBUG] [mixin/]: ae2.mixins.json:spatial.MinecraftServerMixin from mod ae2->@Inject::injectSpatialLevel(Lnet/minecraft/server/level/progress/ChunkProgressListener;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V has 0 override(s) in child classes
+[15März2026 03:22:51.952] [Render thread/DEBUG] [mixin/]: ae2.mixins.json:spatial.MinecraftServerMixin from mod ae2->@Inject::injectSpatialLevel(Lnet/minecraft/server/level/progress/ChunkProgressListener;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result
+[15März2026 03:22:52.495] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: vanilla, mod_resources, mod/guideme, mod/neoforge, mod/ae2
+[15März2026 03:22:52.685] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Dispatching synchronous work for work queue Common setup: 2 jobs
+[15März2026 03:22:52.716] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Synchronous work queue completed in 30.68 ms
+[15März2026 03:22:52.783] [Worker-Main-4/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.1.05.hex, loading
+[15März2026 03:22:53.624] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Dispatching synchronous work for work queue Sided setup: 1 jobs
+[15März2026 03:22:53.638] [Render thread/DEBUG] [net.neoforged.fml.DeferredWorkQueue/LOADING]: Synchronous work queue completed in 13.50 ms
+[15März2026 03:22:53.686] [Worker-Main-2/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_jp_patch-15.1.05.hex, loading
+[15März2026 03:22:54.369] [Worker-Main-1/DEBUG] [mixin/]: Mixing VariantDeserializerMixin from ae2.mixins.json into net.minecraft.client.renderer.block.model.Variant$Deserializer
+[15März2026 03:22:54.379] [Worker-Main-1/DEBUG] [mixin/]: ae2.mixins.json:VariantDeserializerMixin from mod ae2->@Inject::addAdditionalRotationOptions(Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:22:57.304] [Render thread/WARN] [net.minecraft.client.Options/]: Skipping bad option: 
+[15März2026 03:22:57.358] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
+[15März2026 03:22:57.359] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[15März2026 03:22:57.481] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Lautsprecher (Sound Blaster Z)
+[15März2026 03:22:57.482] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
+[15März2026 03:22:57.640] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/blocks.png-atlas
+[15März2026 03:22:57.675] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[15März2026 03:22:57.677] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[15März2026 03:22:57.678] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[15März2026 03:22:57.680] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[15März2026 03:22:57.689] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[15März2026 03:22:57.690] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[15März2026 03:22:57.691] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[15März2026 03:22:57.692] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[15März2026 03:22:57.793] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x0 minecraft:textures/atlas/particles.png-atlas
+[15März2026 03:22:57.796] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x0 minecraft:textures/atlas/paintings.png-atlas
+[15März2026 03:22:57.797] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[15März2026 03:22:57.798] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 64x64x0 minecraft:textures/atlas/map_decorations.png-atlas
+[15März2026 03:22:57.799] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x0 minecraft:textures/atlas/gui.png-atlas
+[15März2026 03:22:57.802] [Render thread/DEBUG] [guideme.render.GuiAssets/]: Resetting 8 GUI sprites.
+[15März2026 03:22:57.841] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[15März2026 03:22:57.923] [Render thread/INFO] [guideme.internal.GuideReloadListener/]: Data driven guides: []
+[15März2026 03:22:57.939] [Render thread/INFO] [net.neoforged.neoforge.client.entity.animation.json.AnimationLoader/]: Loaded 0 entity animations
+[15März2026 03:23:18.749] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.TestPlots for plots
+[15März2026 03:23:18.753] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.SubnetPlots for plots
+[15März2026 03:23:18.753] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.SpawnExtraGridTestTools for plots
+[15März2026 03:23:18.754] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.SpatialTestPlots for plots
+[15März2026 03:23:18.754] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.QnbTestPlots for plots
+[15März2026 03:23:18.754] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.PatternProviderPlots for plots
+[15März2026 03:23:18.754] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.PatternProviderLockModePlots for plots
+[15März2026 03:23:18.755] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.P2PTestPlots for plots
+[15März2026 03:23:18.755] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.MemoryCardTestPlots for plots
+[15März2026 03:23:18.756] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.ItemP2PTestPlots for plots
+[15März2026 03:23:18.756] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.InvalidPatternTestPlot for plots
+[15März2026 03:23:18.756] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.InterfaceTestPlots for plots
+[15März2026 03:23:18.756] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.InscriberTestPlots for plots
+[15März2026 03:23:18.777] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.GuidebookPlot for plots
+[15März2026 03:23:18.778] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.ExternalEnergyTestPlots for plots
+[15März2026 03:23:18.778] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.CrystalResonanceGeneratorTestPlots for plots
+[15März2026 03:23:18.779] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.ChannelTests for plots
+[15März2026 03:23:18.779] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.AutoCraftingTestPlots for plots
+[15März2026 03:23:18.779] [Worker-Main-6/INFO] [AE2:C/]: Scanning class appeng.server.testplots.AnnihilationPlaneTests for plots
+[15März2026 03:23:19.192] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1781 recipes
+[15März2026 03:23:19.493] [Render thread/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1806 advancements
+[15März2026 03:23:19.496] [Render thread/INFO] [AE2:C/]: Overrode idle currency {} from datapack entry {}
+[15März2026 03:23:19.496] [Render thread/INFO] [AE2:C/]: Loaded {} idle currency definitions (including built-ins)
+[15März2026 03:23:26.217] [Render thread/DEBUG] [net.neoforged.neoforge.common.CommonHooks/WP]: Gathered mod list to write to world save New World
+[15März2026 03:23:26.290] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.21.1
+[15März2026 03:23:26.291] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[15März2026 03:23:26.418] [Server thread/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loading configs type SERVER
+[15März2026 03:23:26.421] [Server thread/DEBUG] [net.neoforged.neoforge.common.NeoForgeConfig/FORGEMOD]: Loaded NeoForge config file neoforge-server.toml
+[15März2026 03:23:26.421] [Server thread/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Loaded TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\neoforge-server.toml
+[15März2026 03:23:26.422] [Server thread/DEBUG] [net.neoforged.fml.config.ConfigTracker/CONFIG]: Watching TOML config file C:\Users\home\AppData\Roaming\.minecraft\config\neoforge-server.toml for changes
+[15März2026 03:23:26.567] [Server thread/DEBUG] [mixin/]: Mixing chunkloading.ChunkMapMixin from ae2.mixins.json into net.minecraft.server.level.ChunkMap
+[15März2026 03:23:26.574] [Server thread/DEBUG] [mixin/]: ae2.mixins.json:chunkloading.ChunkMapMixin from mod ae2->@Inject::spatialAnchorEnableRandomTicks(Lnet/minecraft/world/level/ChunkPos;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:23:26.574] [Server thread/DEBUG] [mixin/]: ae2.mixins.json:chunkloading.ChunkMapMixin from mod ae2->@Inject::spatialAnchorEnableRandomTicks(Lnet/minecraft/world/level/ChunkPos;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:23:26.574] [Server thread/DEBUG] [mixin/]: ae2.mixins.json:chunkloading.ChunkMapMixin from mod ae2->@Inject::spatialAnchorEnableRandomTicks(Lnet/minecraft/world/level/ChunkPos;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:23:27.066] [Worker-Main-4/DEBUG] [mixin/]: Mixing StructureTemplateMixin from ae2.mixins.json into net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate
+[15März2026 03:23:27.070] [Worker-Main-4/DEBUG] [mixin/]: ae2.mixins.json:StructureTemplateMixin from mod ae2->@Inject::enableClientSideStateSaving(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
+[15März2026 03:23:27.070] [Worker-Main-4/DEBUG] [mixin/]: ae2.mixins.json:StructureTemplateMixin from mod ae2->@Inject::enableClientSideStateSaving(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V has 0 override(s) in child classes
+[15März2026 03:23:27.071] [Worker-Main-4/DEBUG] [mixin/]: ae2.mixins.json:StructureTemplateMixin from mod ae2->@Inject::enableClientSideStateSaving(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result
+[15März2026 03:23:27.071] [Worker-Main-4/DEBUG] [mixin/]: ae2.mixins.json:StructureTemplateMixin from mod ae2->@Inject::disableClientSideStateSaving(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
+[15März2026 03:23:27.071] [Worker-Main-4/DEBUG] [mixin/]: ae2.mixins.json:StructureTemplateMixin from mod ae2->@Inject::disableClientSideStateSaving(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V has 0 override(s) in child classes
+[15März2026 03:23:27.071] [Worker-Main-4/DEBUG] [mixin/]: ae2.mixins.json:StructureTemplateMixin from mod ae2->@Inject::disableClientSideStateSaving(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V won't be passed a CallbackInfo as a result
+[15März2026 03:23:28.141] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[15März2026 03:23:28.192] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[15März2026 03:23:28.665] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[15März2026 03:23:29.169] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 51%
+[15März2026 03:23:29.552] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[15März2026 03:23:29.554] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 1401 ms
+[15März2026 03:23:29.614] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 29, from 10
+[15März2026 03:23:29.615] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
+[15März2026 03:23:29.648] [Render thread/DEBUG] [io.netty.channel.MultithreadEventLoopGroup/]: -Dio.netty.eventLoopThreads: 16
+[15März2026 03:23:29.670] [Render thread/DEBUG] [io.netty.util.concurrent.GlobalEventExecutor/]: -Dio.netty.globalEventExecutor.quietPeriodSeconds: 1
+[15März2026 03:23:29.688] [Render thread/DEBUG] [io.netty.channel.nio.NioEventLoop/]: -Dio.netty.noKeySetOptimization: false
+[15März2026 03:23:29.688] [Render thread/DEBUG] [io.netty.channel.nio.NioEventLoop/]: -Dio.netty.selectorAutoRebuildThreshold: 512
+[15März2026 03:23:29.699] [Render thread/DEBUG] [io.netty.util.internal.PlatformDependent/]: org.jctools-core.MpscChunkedArrayQueue: available
+[15März2026 03:23:29.763] [Render thread/DEBUG] [io.netty.channel.DefaultChannelId/]: -Dio.netty.processId: 12044 (auto-detected)
+[15März2026 03:23:29.768] [Render thread/DEBUG] [io.netty.util.NetUtil/]: -Djava.net.preferIPv4Stack: false
+[15März2026 03:23:29.768] [Render thread/DEBUG] [io.netty.util.NetUtil/]: -Djava.net.preferIPv6Addresses: system
+[15März2026 03:23:29.772] [Render thread/DEBUG] [io.netty.util.NetUtilInitializations/]: Loopback interface: loopback_0 (Software Loopback Interface 1, 0:0:0:0:0:0:0:1)
+[15März2026 03:23:29.777] [Render thread/DEBUG] [io.netty.util.NetUtil/]: Failed to get SOMAXCONN from sysctl and file \proc\sys\net\core\somaxconn. Default: 200
+[15März2026 03:23:29.778] [Render thread/DEBUG] [io.netty.channel.DefaultChannelId/]: -Dio.netty.machineId: 94:de:80:ff:fe:c6:75:4b (auto-detected)
+[15März2026 03:23:29.941] [Render thread/DEBUG] [io.netty.util.Recycler/]: -Dio.netty.recycler.maxCapacityPerThread: 4096
+[15März2026 03:23:29.941] [Render thread/DEBUG] [io.netty.util.Recycler/]: -Dio.netty.recycler.ratio: 8
+[15März2026 03:23:29.941] [Render thread/DEBUG] [io.netty.util.Recycler/]: -Dio.netty.recycler.chunkSize: 32
+[15März2026 03:23:29.941] [Render thread/DEBUG] [io.netty.util.Recycler/]: -Dio.netty.recycler.blocking: false
+[15März2026 03:23:29.941] [Render thread/DEBUG] [io.netty.util.Recycler/]: -Dio.netty.recycler.batchFastThreadLocalOnly: true
+[15März2026 03:23:30.131] [Netty Server IO #1/DEBUG] [net.neoforged.neoforge.network.filters.NetworkFilters/]: Injected net.neoforged.neoforge.network.filters.GenericPacketSplitter@44c5e915 into net.minecraft.network.Connection@d81f7b6
+[15März2026 03:23:30.145] [Netty Local Client IO #0/DEBUG] [net.neoforged.neoforge.network.filters.NetworkFilters/]: Injected net.neoforged.neoforge.network.filters.GenericPacketSplitter@7fd01696 into net.minecraft.network.Connection@441687e0
+[15März2026 03:23:30.575] [Netty Server IO #1/DEBUG] [net.neoforged.neoforge.network.filters.NetworkFilters/]: Injected net.neoforged.neoforge.network.filters.GenericPacketSplitter@421b1d47 into net.minecraft.network.Connection@d81f7b6
+[15März2026 03:23:30.675] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: ErzengelBingus[local:E:e97c1cad] logged in with entity id 1 at (-0.5, 0.0, -5.5)
+[15März2026 03:23:30.795] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ErzengelBingus joined the game
+[15März2026 03:23:30.902] [Server thread/DEBUG] [mixin/]: Mixing EnchantmentHelperMixin from ae2.mixins.json into net.minecraft.world.item.enchantment.EnchantmentHelper
+[15März2026 03:23:30.906] [Server thread/DEBUG] [mixin/]: ae2.mixins.json:EnchantmentHelperMixin from mod ae2->@Inject::hookGetItemEnchantmentLevel(Lnet/minecraft/core/Holder;Lnet/minecraft/world/item/ItemStack;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V does use it's CallbackInfoReturnable
+[15März2026 03:23:31.148] [Render thread/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 2 advancements
