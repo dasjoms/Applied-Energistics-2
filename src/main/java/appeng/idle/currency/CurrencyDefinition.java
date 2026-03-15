@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 public record CurrencyDefinition(
         CurrencyId id,
         String displayNameKey,
+        String hudName,
         ResourceLocation iconItem,
         long baseTicksPerUnit,
         boolean visibleByDefault,
@@ -18,6 +19,9 @@ public record CurrencyDefinition(
     public CurrencyDefinition {
         if (displayNameKey == null || displayNameKey.isBlank()) {
             throw new IllegalArgumentException("displayNameKey must not be blank");
+        }
+        if (hudName == null || hudName.isBlank()) {
+            throw new IllegalArgumentException("hudName must not be blank");
         }
         if (iconItem == null) {
             throw new IllegalArgumentException("iconItem must not be null");

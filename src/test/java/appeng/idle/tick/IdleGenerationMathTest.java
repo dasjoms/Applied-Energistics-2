@@ -28,6 +28,7 @@ class IdleGenerationMathTest {
         var definition = new CurrencyDefinition(
                 currency,
                 "gui.ae2.idle.currency.tick_math_cap_test",
+                "gui.ae2.idle.currency.tick_math_cap_test",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 20L,
                 true,

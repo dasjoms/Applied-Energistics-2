@@ -53,6 +53,7 @@ class IdleVerificationTests {
         var definition = new CurrencyDefinition(
                 testCurrency,
                 "gui.ae2.idle.currency.online_math_test",
+                "gui.ae2.idle.currency.online_math_test",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 baseTicksPerUnit,
                 true,
@@ -211,6 +212,7 @@ class IdleVerificationTests {
         var testCurrency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "verification_math_test"));
         var definition = new CurrencyDefinition(
                 testCurrency,
+                "gui.ae2.idle.currency.verification_math_test",
                 "gui.ae2.idle.currency.verification_math_test",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 baseTicksPerUnit,
