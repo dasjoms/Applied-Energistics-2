@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +62,48 @@ class IdleCurrencySyncServiceTest {
     void projectedDisplayProgressReturnsZeroWhenTicksPerUnitIsNonPositive() {
         assertThat(IdleCurrencySyncService.projectDisplayProgressTicks(10L, 0L, 5L)).isZero();
         assertThat(IdleCurrencySyncService.projectDisplayProgressTicks(10L, -1L, 5L)).isZero();
+    }
+
+    @Test
+    void sendSnapshotDoesNotSendHudPacketWhenVisorIsAbsent() {
+        var player = mock(ServerPlayer.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(ItemStack.EMPTY);
+
+        var data = new PlayerIdleData(Map.of(), 0L, PlayerIdleData.CURRENT_DATA_VERSION, Map.of(), true);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+            dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+
+            IdleCurrencySyncService.sendSnapshot(player);
+
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCurrencySnapshotPacket)), times(1));
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), never());
+        }
+    }
+
+    @Test
+    void sendSnapshotSendsHudPacketWhenVisorIsPresent() {
+        var player = mock(ServerPlayer.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
+
+        var data = new PlayerIdleData(Map.of(), 0L, PlayerIdleData.CURRENT_DATA_VERSION, Map.of(), true);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+            dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+
+            IdleCurrencySyncService.sendSnapshot(player);
+
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCurrencySnapshotPacket)), times(1));
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(1));
+        }
     }
 
     @Test

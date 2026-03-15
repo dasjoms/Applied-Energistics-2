@@ -86,7 +86,9 @@ public final class IdleCurrencySyncService {
         Objects.requireNonNull(player, "player");
         PacketDistributor.sendToPlayer(player,
                 new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
-        sendHudSnapshot(player);
+        if (shouldReceiveHudHeartbeat(player)) {
+            sendHudSnapshot(player);
+        }
     }
 
     public static void sendHudSnapshot(ServerPlayer player) {
