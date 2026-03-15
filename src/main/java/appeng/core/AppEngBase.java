@@ -69,6 +69,7 @@ import appeng.hotkeys.HotkeyActions;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.net.IdleCurrencySyncService;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.reward.BlockBreakRewardHandler;
 import appeng.idle.reward.IdleRewardManager;
 import appeng.idle.tick.IdleGenerationTicker;
 import appeng.init.InitAdvancementTriggers;
@@ -195,6 +196,7 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(IdleCurrencySyncService::handleServerTickEnd);
         NeoForge.EVENT_BUS.addListener(IdleCurrencyManager::onAddReloadListener);
         NeoForge.EVENT_BUS.addListener(IdleRewardManager::onAddReloadListener);
+        NeoForge.EVENT_BUS.addListener(BlockBreakRewardHandler::onBlockBreak);
         NeoForge.EVENT_BUS.addListener(IdleGenerationTicker::onServerTickEnd);
 
         HotkeyActions.init();
