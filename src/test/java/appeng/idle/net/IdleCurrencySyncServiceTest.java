@@ -17,7 +17,7 @@ class IdleCurrencySyncServiceTest {
     void projectedDisplayProgressWrapsAtTicksPerUnitBoundary() {
         var projected = IdleCurrencySyncService.projectDisplayProgressTicks(18L, 20L, 5L);
 
-        assertThat(projected).isEqualTo(3L);
+        assertThat(projected).isEqualTo(19L);
     }
 
     @Test

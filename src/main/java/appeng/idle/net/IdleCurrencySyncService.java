@@ -19,6 +19,7 @@ import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.generation.IdleGenerationCapService;
+import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
@@ -130,7 +131,7 @@ public final class IdleCurrencySyncService {
 
     private static Map<CurrencyId, IdleCurrencyHudValue> snapshotHudValues(ServerPlayer player) {
         var data = PlayerIdleDataManager.get(player);
-        var elapsedTicksSinceBoundary = elapsedTicksSinceLastAccrualBoundary(player);
+        var elapsedTicksSinceBaseline = elapsedTicksSinceOnlineProgressBaseline(player, data);
 
         var hudValues = new LinkedHashMap<CurrencyId, IdleCurrencyHudValue>();
         for (var currency : currenciesToGenerate()) {
@@ -146,7 +147,7 @@ public final class IdleCurrencySyncService {
             var progressTicks = projectDisplayProgressTicks(
                     data.getGenerationProgressTicks(currency),
                     ticksPerUnit,
-                    elapsedTicksSinceBoundary);
+                    elapsedTicksSinceBaseline);
             var secondsToNext = secondsToNext(progressTicks, ticksPerUnit);
 
             hudValues.put(currency,
@@ -156,7 +157,7 @@ public final class IdleCurrencySyncService {
         return hudValues;
     }
 
-    static long elapsedTicksSinceLastAccrualBoundary(ServerPlayer player) {
+    static long elapsedTicksSinceOnlineProgressBaseline(ServerPlayer player, PlayerIdleData data) {
         if (!PlayerIdleDataManager.isPassiveGenerationEnabled(player)) {
             return 0L;
         }
@@ -171,7 +172,12 @@ public final class IdleCurrencySyncService {
             return 0L;
         }
 
-        return Math.floorMod(server.getTickCount(), intervalTicks);
+        var baselineTick = data.getOnlineProgressBaselineTick();
+        if (baselineTick < 0L) {
+            return Math.floorMod(server.getTickCount(), intervalTicks);
+        }
+
+        return Math.max(0L, server.getTickCount() - baselineTick);
     }
 
     static long projectDisplayProgressTicks(long baselineProgressTicks, long ticksPerUnit,
@@ -181,7 +187,7 @@ public final class IdleCurrencySyncService {
         }
 
         var clampedBaseline = Math.min(Math.max(0L, baselineProgressTicks), ticksPerUnit - 1L);
-        var clampedElapsed = Math.max(0L, elapsedTicksSinceBoundary);
+        var clampedElapsed = Math.min(Math.max(0L, elapsedTicksSinceBoundary), ticksPerUnit - 1L - clampedBaseline);
         return (clampedBaseline + clampedElapsed) % ticksPerUnit;
     }
 

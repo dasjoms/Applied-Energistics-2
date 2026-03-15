@@ -19,44 +19,55 @@ public final class PlayerIdleData {
     private static final String TAG_LAST_SEEN = "lastSeenEpochSeconds";
     private static final String TAG_BALANCES = "balances";
     private static final String TAG_GENERATION_PROGRESS_TICKS = "generationProgressTicks";
+    private static final String TAG_ONLINE_PROGRESS_BASELINE_TICK = "onlineProgressBaselineTick";
     private static final String TAG_OWNED_UPGRADES = "ownedUpgradeLevels";
     private static final String TAG_VISOR_UNLOCKED = "idleVisorUnlocked";
     private static final String TAG_ID = "id";
     private static final String TAG_AMOUNT = "amount";
     private static final String TAG_LEVEL = "level";
 
-    public static final int CURRENT_DATA_VERSION = 3;
+    public static final int CURRENT_DATA_VERSION = 4;
 
     private final Map<CurrencyId, Long> balances;
     private final Map<CurrencyId, Long> generationProgressTicks;
     private final Map<ResourceLocation, Integer> ownedUpgradeLevels;
     private long lastSeenEpochSeconds;
+    private long onlineProgressBaselineTick;
     private int dataVersion;
     private boolean idleVisorUnlocked;
 
     public PlayerIdleData() {
-        this(new HashMap<>(), new HashMap<>(), 0L, CURRENT_DATA_VERSION, new HashMap<>(), false);
+        this(new HashMap<>(), new HashMap<>(), 0L, CURRENT_DATA_VERSION, new HashMap<>(), false, -1L);
     }
 
     public PlayerIdleData(Map<CurrencyId, Long> balances, long lastSeenEpochSeconds, int dataVersion,
             Map<ResourceLocation, Integer> ownedUpgradeLevels) {
-        this(balances, new HashMap<>(), lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, false);
+        this(balances, new HashMap<>(), lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, false, -1L);
     }
 
     public PlayerIdleData(Map<CurrencyId, Long> balances, long lastSeenEpochSeconds, int dataVersion,
             Map<ResourceLocation, Integer> ownedUpgradeLevels, boolean idleVisorUnlocked) {
-        this(balances, new HashMap<>(), lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, idleVisorUnlocked);
+        this(balances, new HashMap<>(), lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels, idleVisorUnlocked, -1L);
     }
 
     public PlayerIdleData(Map<CurrencyId, Long> balances, Map<CurrencyId, Long> generationProgressTicks,
             long lastSeenEpochSeconds, int dataVersion,
             Map<ResourceLocation, Integer> ownedUpgradeLevels, boolean idleVisorUnlocked) {
+        this(balances, generationProgressTicks, lastSeenEpochSeconds, dataVersion, ownedUpgradeLevels,
+                idleVisorUnlocked, -1L);
+    }
+
+    public PlayerIdleData(Map<CurrencyId, Long> balances, Map<CurrencyId, Long> generationProgressTicks,
+            long lastSeenEpochSeconds, int dataVersion,
+            Map<ResourceLocation, Integer> ownedUpgradeLevels, boolean idleVisorUnlocked,
+            long onlineProgressBaselineTick) {
         this.balances = new HashMap<>(balances);
         this.generationProgressTicks = new HashMap<>(generationProgressTicks);
         this.lastSeenEpochSeconds = lastSeenEpochSeconds;
         this.dataVersion = dataVersion;
         this.ownedUpgradeLevels = new HashMap<>(ownedUpgradeLevels);
         this.idleVisorUnlocked = idleVisorUnlocked;
+        this.onlineProgressBaselineTick = Math.max(-1L, onlineProgressBaselineTick);
     }
 
     public long getBalance(CurrencyId currencyId) {
@@ -83,6 +94,10 @@ public final class PlayerIdleData {
         return dataVersion;
     }
 
+    public long getOnlineProgressBaselineTick() {
+        return onlineProgressBaselineTick;
+    }
+
     public Map<ResourceLocation, Integer> ownedUpgradeLevelsView() {
         return Collections.unmodifiableMap(ownedUpgradeLevels);
     }
@@ -97,6 +112,10 @@ public final class PlayerIdleData {
 
     void setDataVersion(int dataVersion) {
         this.dataVersion = dataVersion;
+    }
+
+    public void setOnlineProgressBaselineTick(long onlineProgressBaselineTick) {
+        this.onlineProgressBaselineTick = Math.max(-1L, onlineProgressBaselineTick);
     }
 
     void setIdleVisorUnlocked(boolean idleVisorUnlocked) {
@@ -153,6 +172,7 @@ public final class PlayerIdleData {
             progressTag.add(progressEntryTag);
         }
         tag.put(TAG_GENERATION_PROGRESS_TICKS, progressTag);
+        tag.putLong(TAG_ONLINE_PROGRESS_BASELINE_TICK, onlineProgressBaselineTick);
 
         var upgradesTag = new ListTag();
         for (var entry : ownedUpgradeLevels.entrySet()) {
@@ -228,6 +248,9 @@ public final class PlayerIdleData {
                 tag.getLong(TAG_LAST_SEEN),
                 tag.contains(TAG_DATA_VERSION, Tag.TAG_INT) ? tag.getInt(TAG_DATA_VERSION) : CURRENT_DATA_VERSION,
                 ownedUpgradeLevels,
-                tag.getBoolean(TAG_VISOR_UNLOCKED));
+                tag.getBoolean(TAG_VISOR_UNLOCKED),
+                tag.contains(TAG_ONLINE_PROGRESS_BASELINE_TICK, Tag.TAG_LONG)
+                        ? tag.getLong(TAG_ONLINE_PROGRESS_BASELINE_TICK)
+                        : -1L);
     }
 }

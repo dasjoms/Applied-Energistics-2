@@ -331,6 +331,14 @@ public final class PlayerIdleDataManager {
             return true;
         }
 
+        if (data.getDataVersion() < 4) {
+            // Version 4 introduced online progress baseline tick; default legacy data to uninitialized anchor.
+            data.setOnlineProgressBaselineTick(-1L);
+            data.setDataVersion(PlayerIdleData.CURRENT_DATA_VERSION);
+            data.setLastSeenEpochSeconds(Math.max(0L, data.getLastSeenEpochSeconds()));
+            return true;
+        }
+
         return false;
     }
 

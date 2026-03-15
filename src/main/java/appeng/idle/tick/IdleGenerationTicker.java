@@ -45,6 +45,10 @@ public final class IdleGenerationTicker {
                 data,
                 intervalTicks,
                 currenciesToGenerate());
+        var server = player.getServer();
+        if (server != null) {
+            data.setOnlineProgressBaselineTick(server.getTickCount());
+        }
         PlayerIdleDataManager.save(player, data);
         if (!generatedAmounts.isEmpty()) {
             PlayerIdleDataManager.addGeneratedBalances(player, generatedAmounts, REASON_ONLINE_TICK);
