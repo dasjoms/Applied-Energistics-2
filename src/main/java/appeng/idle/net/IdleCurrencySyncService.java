@@ -21,7 +21,7 @@ import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.generation.IdleGenerationCapService;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
-import appeng.idle.upgrade.IdleUpgradeHooks;
+import appeng.idle.tick.IdleGenerationMath;
 
 /**
  * Server->client idle currency synchronization.
@@ -139,11 +139,9 @@ public final class IdleCurrencySyncService {
             var definition = IdleCurrencyManager.get(currency);
             var baseTicksPerUnit = definition == null ? 0L : definition.baseTicksPerUnit();
 
-            var multipliers = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency);
-            var totalMultiplier = multipliers.totalMultiplier();
-
-            var gainPerSecond = gainPerSecond(currency, baseTicksPerUnit, totalMultiplier);
-            var ticksPerUnit = ticksPerUnit(baseTicksPerUnit, totalMultiplier);
+            var effectiveTicksPerUnit = IdleGenerationMath.effectiveTicksPerUnit(data, currency);
+            var ticksPerUnit = IdleGenerationMath.ticksPerUnitForDisplay(effectiveTicksPerUnit);
+            var gainPerSecond = gainPerSecond(data, currency, baseTicksPerUnit, effectiveTicksPerUnit);
             var progressTicks = projectDisplayProgressTicks(
                     data.getGenerationProgressTicks(currency),
                     ticksPerUnit,
@@ -191,26 +189,18 @@ public final class IdleCurrencySyncService {
         return (clampedBaseline + clampedElapsed) % ticksPerUnit;
     }
 
-    private static double gainPerSecond(CurrencyId currency, long baseTicksPerUnit, double totalMultiplier) {
-        if (baseTicksPerUnit <= 0L || totalMultiplier <= 0.0 || !Double.isFinite(totalMultiplier)) {
+    private static double gainPerSecond(PlayerIdleData data, CurrencyId currency, long baseTicksPerUnit,
+            double effectiveTicksPerUnit) {
+        if (baseTicksPerUnit <= 0L || effectiveTicksPerUnit <= 0.0 || !Double.isFinite(effectiveTicksPerUnit)) {
             return 0.0;
         }
 
-        var generatedPerSecond = totalMultiplier * TICKS_PER_SECOND / baseTicksPerUnit;
+        if (IdleGenerationMath.remainingBalanceCapacity(data, currency) <= 0L) {
+            return 0.0;
+        }
+
+        var generatedPerSecond = TICKS_PER_SECOND / effectiveTicksPerUnit;
         return IdleGenerationCapService.clampOnlineGenerationCap(currency, generatedPerSecond);
-    }
-
-    private static long ticksPerUnit(long baseTicksPerUnit, double totalMultiplier) {
-        if (baseTicksPerUnit <= 0L || totalMultiplier <= 0.0 || !Double.isFinite(totalMultiplier)) {
-            return 0L;
-        }
-
-        var effectiveTicksPerUnit = baseTicksPerUnit / totalMultiplier;
-        if (effectiveTicksPerUnit <= 0.0 || !Double.isFinite(effectiveTicksPerUnit)) {
-            return 0L;
-        }
-
-        return Math.max(1L, (long) Math.floor(effectiveTicksPerUnit));
     }
 
     private static Long secondsToNext(long progressTicks, long ticksPerUnit) {

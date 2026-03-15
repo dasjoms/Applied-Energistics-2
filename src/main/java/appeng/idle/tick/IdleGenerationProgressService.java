@@ -8,11 +8,8 @@ import java.util.Set;
 import net.minecraft.server.level.ServerPlayer;
 
 import appeng.idle.currency.CurrencyId;
-import appeng.idle.currency.IdleCurrencyManager;
-import appeng.idle.generation.IdleGenerationCapService;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
-import appeng.idle.upgrade.IdleUpgradeHooks;
 
 /**
  * Converts accumulated progress ticks into whole currency units while persisting remainder progress.
@@ -95,7 +92,7 @@ public final class IdleGenerationProgressService {
     }
 
     private static long accrueCurrency(PlayerIdleData data, CurrencyId currency, double addedProgressTicks) {
-        var effectiveTicksPerUnit = effectiveTicksPerUnit(data, currency);
+        var effectiveTicksPerUnit = IdleGenerationMath.effectiveTicksPerUnit(data, currency);
         if (effectiveTicksPerUnit <= 0.0 || !Double.isFinite(effectiveTicksPerUnit)) {
             return 0L;
         }
@@ -112,52 +109,7 @@ public final class IdleGenerationProgressService {
         var remainder = totalProgress - (wholeUnits * effectiveTicksPerUnit);
         data.setGenerationProgressTicks(currency, clampNonNegativeLong(Math.floor(remainder)));
 
-        return clampAwardByCaps(data, currency, wholeUnits);
-    }
-
-    private static long clampAwardByCaps(PlayerIdleData data, CurrencyId currency, long wholeUnits) {
-        if (wholeUnits <= 0L) {
-            return 0L;
-        }
-
-        var cappedByGeneration = IdleGenerationCapService.clampOnlineGenerationCap(currency, wholeUnits);
-        if (cappedByGeneration <= 0L) {
-            return 0L;
-        }
-
-        var definition = IdleCurrencyManager.get(currency);
-        var caps = definition == null ? null : definition.caps();
-        var balanceCap = caps == null ? null : caps.balanceCap();
-        if (balanceCap == null) {
-            return cappedByGeneration;
-        }
-
-        var currentBalance = data.getBalance(currency);
-        if (currentBalance >= balanceCap) {
-            return 0L;
-        }
-
-        return Math.min(cappedByGeneration, balanceCap - currentBalance);
-    }
-
-    private static double effectiveTicksPerUnit(PlayerIdleData data, CurrencyId currency) {
-        var definition = IdleCurrencyManager.get(currency);
-        if (definition == null) {
-            return 0.0;
-        }
-
-        var baseTicksPerUnit = definition.baseTicksPerUnit();
-        if (baseTicksPerUnit <= 0L) {
-            return 0.0;
-        }
-
-        var multiplier = IdleUpgradeHooks.getOnlineGenerationMultipliers(data, currency).totalMultiplier();
-        if (multiplier <= 0.0 || !Double.isFinite(multiplier)) {
-            return 0.0;
-        }
-
-        var effectiveTicksPerUnit = baseTicksPerUnit / multiplier;
-        return effectiveTicksPerUnit > 0.0 && Double.isFinite(effectiveTicksPerUnit) ? effectiveTicksPerUnit : 0.0;
+        return IdleGenerationMath.clampAwardByCaps(data, currency, wholeUnits);
     }
 
     private static long clampNonNegativeLong(double value) {
