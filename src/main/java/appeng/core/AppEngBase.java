@@ -199,6 +199,8 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(IdleRewardManager::onAddReloadListener);
         NeoForge.EVENT_BUS.addListener(BlockBreakRewardHandler::onBlockBreak);
         NeoForge.EVENT_BUS.addListener(NaturalLogTracker::onEntityPlace);
+        NeoForge.EVENT_BUS.addListener(NaturalLogTracker::onChunkLoad);
+        NeoForge.EVENT_BUS.addListener(NaturalLogTracker::onSaplingGrow);
         NeoForge.EVENT_BUS.addListener(IdleGenerationTicker::onServerTickEnd);
 
         HotkeyActions.init();

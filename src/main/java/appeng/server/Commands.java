@@ -25,6 +25,7 @@ import appeng.server.subcommands.ChannelModeCommand;
 import appeng.server.subcommands.ChunkLogger;
 import appeng.server.subcommands.GridsCommand;
 import appeng.server.subcommands.IdleCurrencyCommand;
+import appeng.server.subcommands.IdleLogProvenanceCommand;
 import appeng.server.subcommands.SetupTestWorldCommand;
 import appeng.server.subcommands.SpatialStorageCommand;
 import appeng.server.subcommands.TestMeteoritesCommand;
@@ -39,6 +40,7 @@ public enum Commands {
     GRIDS(4, "grids", new GridsCommand()),
     // Dev note: /ae2 idlecurrency supports balance/grant/purchase paths for server-side idle economy validation.
     IDLE_CURRENCY(4, "idlecurrency", new IdleCurrencyCommand()),
+    IDLE_LOG_PROVENANCE(4, "idlelogprovenance", new IdleLogProvenanceCommand(), true),
 
     // Testing
     COMPASS(4, "compass", new TestCompassCommand(), true),
