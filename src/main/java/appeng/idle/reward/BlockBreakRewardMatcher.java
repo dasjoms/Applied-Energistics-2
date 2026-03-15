@@ -8,7 +8,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.state.BlockState;
 
-import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.idle.reward.natural.NaturalLogTracker;
 
@@ -33,18 +32,16 @@ final class BlockBreakRewardMatcher implements RewardMatcher {
         }
 
         if (requiresNaturalLog(reward)) {
-            var natural = NaturalLogTracker.isNaturallyGeneratedLog(context.level(), context.position(), brokenState);
-            if (!natural) {
+            var eligible = NaturalLogTracker.isEligibleLogForReward(context.level(), context.position(), brokenState);
+            if (!eligible) {
                 var provenance = NaturalLogTracker.getProvenanceForDebug(context.level(), context.position(),
                         brokenState);
                 AELog.debug(
-                        "Rejected idle natural-log reward: reward=%s pos=%s block=%s provenance=%s unknownCounts=%s saplingCounts=%s",
+                        "Rejected idle natural-log reward (player-placed filtered): reward=%s pos=%s block=%s provenance=%s",
                         reward.id(),
                         context.position(),
                         BuiltInRegistries.BLOCK.getKey(brokenState.getBlock()),
-                        provenance,
-                        AEConfig.instance().isIdleNaturalLogUnknownCounts(),
-                        AEConfig.instance().isIdleNaturalLogSaplingGrownCounts());
+                        provenance);
                 return false;
             }
         }

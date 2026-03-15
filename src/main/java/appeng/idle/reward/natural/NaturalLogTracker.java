@@ -26,7 +26,7 @@ import appeng.core.worlddata.AESavedData;
 /**
  * Tracks log provenance for idle natural-log rewards.
  * <p>
- * Worldgen logs are accepted, player-placed logs are denied, and unknown or sapling-grown logs follow config policy.
+ * Player-placed logs are denied; all other provenance states are accepted.
  */
 public final class NaturalLogTracker {
     private static final String DATA_NAME = AppEng.MOD_ID + "_natural_log_tracker";
@@ -98,7 +98,7 @@ public final class NaturalLogTracker {
         }
     }
 
-    public static boolean isNaturallyGeneratedLog(ServerLevel level, BlockPos pos, BlockState state) {
+    public static boolean isEligibleLogForReward(ServerLevel level, BlockPos pos, BlockState state) {
         if (!state.is(BlockTags.LOGS)) {
             return false;
         }
@@ -106,16 +106,13 @@ public final class NaturalLogTracker {
         var data = get(level);
         data.ensureSectionTracked(level, pos);
         var provenance = data.getProvenance(pos);
-        return isProvenanceNatural(provenance, AEConfig.instance().isIdleNaturalLogUnknownCounts(),
-                AEConfig.instance().isIdleNaturalLogSaplingGrownCounts());
+        return isProvenanceEligibleForReward(provenance);
     }
 
-    static boolean isProvenanceNatural(Provenance provenance, boolean unknownCounts, boolean saplingGrownCounts) {
+    static boolean isProvenanceEligibleForReward(Provenance provenance) {
         return switch (provenance) {
-            case NATURAL_WORLDGEN -> true;
-            case UNKNOWN -> unknownCounts;
-            case SAPLING_GROWN -> saplingGrownCounts;
             case PLAYER_PLACED -> false;
+            case UNKNOWN, NATURAL_WORLDGEN, SAPLING_GROWN -> true;
         };
     }
 

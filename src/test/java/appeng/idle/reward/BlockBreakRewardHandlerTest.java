@@ -71,7 +71,7 @@ class BlockBreakRewardHandlerTest {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
                     .thenReturn(List.of(reward));
             naturalLogTracker
-                    .when(() -> NaturalLogTracker.isNaturallyGeneratedLog(any(ServerLevel.class), any(BlockPos.class),
+                    .when(() -> NaturalLogTracker.isEligibleLogForReward(any(ServerLevel.class), any(BlockPos.class),
                             any(BlockState.class)))
                     .thenReturn(false);
 
@@ -95,7 +95,7 @@ class BlockBreakRewardHandlerTest {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
                     .thenReturn(List.of(reward));
             naturalLogTracker
-                    .when(() -> NaturalLogTracker.isNaturallyGeneratedLog(any(ServerLevel.class), any(BlockPos.class),
+                    .when(() -> NaturalLogTracker.isEligibleLogForReward(any(ServerLevel.class), any(BlockPos.class),
                             any(BlockState.class)))
                     .thenReturn(true);
             mockActiveEligibility(idleDataManager, player, true);

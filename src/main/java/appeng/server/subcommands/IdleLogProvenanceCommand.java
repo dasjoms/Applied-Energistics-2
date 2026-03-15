@@ -44,10 +44,10 @@ public class IdleLogProvenanceCommand implements ISubCommand {
         var level = source.getLevel();
         var state = level.getBlockState(pos);
         var provenance = NaturalLogTracker.getProvenanceForDebug(level, pos, state);
-        var natural = NaturalLogTracker.isNaturallyGeneratedLog(level, pos, state);
+        var rewardEligible = NaturalLogTracker.isEligibleLogForReward(level, pos, state);
 
         source.sendSuccess(() -> Component.literal("Idle log provenance at " + pos + ": block="
                 + state.getBlock().builtInRegistryHolder().key().location() + ", provenance=" + provenance
-                + ", naturalEligible=" + natural), false);
+                + ", rewardEligible=" + rewardEligible), false);
     }
 }

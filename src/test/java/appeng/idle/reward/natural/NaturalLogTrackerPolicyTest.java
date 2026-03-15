@@ -7,27 +7,24 @@ import org.junit.jupiter.api.Test;
 class NaturalLogTrackerPolicyTest {
     @Test
     void placedLogDenied() {
-        assertThat(NaturalLogTracker.isProvenanceNatural(NaturalLogTracker.Provenance.PLAYER_PLACED, false, false))
+        assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.PLAYER_PLACED))
                 .isFalse();
     }
 
     @Test
     void worldgenLogAccepted() {
-        assertThat(NaturalLogTracker.isProvenanceNatural(NaturalLogTracker.Provenance.NATURAL_WORLDGEN, false, false))
+        assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.NATURAL_WORLDGEN))
                 .isTrue();
     }
 
     @Test
-    void saplingGrownLogFollowsConfig() {
-        assertThat(NaturalLogTracker.isProvenanceNatural(NaturalLogTracker.Provenance.SAPLING_GROWN, false, false))
-                .isFalse();
-        assertThat(NaturalLogTracker.isProvenanceNatural(NaturalLogTracker.Provenance.SAPLING_GROWN, false, true))
+    void saplingGrownLogAccepted() {
+        assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.SAPLING_GROWN))
                 .isTrue();
     }
 
     @Test
-    void unknownLegacyLogFollowsConfig() {
-        assertThat(NaturalLogTracker.isProvenanceNatural(NaturalLogTracker.Provenance.UNKNOWN, false, false)).isFalse();
-        assertThat(NaturalLogTracker.isProvenanceNatural(NaturalLogTracker.Provenance.UNKNOWN, true, false)).isTrue();
+    void unknownLegacyLogAccepted() {
+        assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.UNKNOWN)).isTrue();
     }
 }
