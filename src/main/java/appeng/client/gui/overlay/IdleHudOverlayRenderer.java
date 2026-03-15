@@ -10,6 +10,7 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import appeng.client.idle.IdleHudVisibility;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.net.IdleCurrencyClientCache;
+import appeng.idle.net.IdleCurrencyHudValue;
 import appeng.util.ReadableNumberConverter;
 
 public class IdleHudOverlayRenderer {
@@ -49,12 +50,9 @@ public class IdleHudOverlayRenderer {
 
             var value = entry.getValue();
             var balance = ReadableNumberConverter.format(Math.max(0L, value.balance()), 7);
-            var ticksPerUnit = Math.max(0L, value.ticksPerUnit());
-            var progressTicks = Math.max(0L, value.progressTicks());
-            var progressFraction = ticksPerUnit <= 0L ? 0.0 : (double) progressTicks / ticksPerUnit;
-            var clampedProgressFraction = Math.max(0.0, Math.min(1.0, progressFraction));
+            var progressState = getProgressState(value);
 
-            rows.add(new RowModel(currencyName, clampedProgressFraction, formatSeconds(ticksPerUnit / 20.0), balance));
+            rows.add(new RowModel(currencyName, progressState.progressFraction(), progressState.timingText(), balance));
         }
 
         var x = HUD_MARGIN;
@@ -103,6 +101,29 @@ public class IdleHudOverlayRenderer {
         }
 
         return String.format("%.1fs", safeSeconds);
+    }
+
+    static ProgressState getProgressState(IdleCurrencyHudValue value) {
+        var ticks = Math.max(0L, value.progressTicks());
+        var maxTicks = Math.max(1L, value.ticksPerUnit());
+        var fraction = Math.min(1f, ticks / (float) maxTicks);
+
+        if (isCapped(value) || hasInvalidTimingData(value)) {
+            return new ProgressState(0f, "--");
+        }
+
+        return new ProgressState(fraction, formatSeconds(maxTicks / 20.0));
+    }
+
+    private static boolean isCapped(IdleCurrencyHudValue value) {
+        return !Double.isFinite(value.gainPerSecond()) || value.gainPerSecond() <= 0.0;
+    }
+
+    private static boolean hasInvalidTimingData(IdleCurrencyHudValue value) {
+        return value.ticksPerUnit() <= 0L;
+    }
+
+    record ProgressState(float progressFraction, String timingText) {
     }
 
     private record RowModel(Component displayName, double progressFraction, String timePerUnitText,
