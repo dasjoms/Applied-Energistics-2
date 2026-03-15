@@ -58,7 +58,7 @@ public class IdleHudOverlayRenderer {
             var definition = definitions.get(entry.getKey());
             Component currencyName = definition == null
                     ? Component.literal(entry.getKey().id().toString())
-                    : Component.translatable(definition.displayNameKey());
+                    : Component.literal(definition.hudName());
 
             var value = entry.getValue();
             var balance = ReadableNumberConverter.format(Math.max(0L, value.balance()), 7);

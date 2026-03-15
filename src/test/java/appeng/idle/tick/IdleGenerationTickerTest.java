@@ -45,6 +45,7 @@ class IdleGenerationTickerTest {
         var extraDefinition = new CurrencyDefinition(
                 extraId,
                 "gui.ae2.idle.currency.extra_test_currency",
+                "gui.ae2.idle.currency.extra_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 1,
                 true,

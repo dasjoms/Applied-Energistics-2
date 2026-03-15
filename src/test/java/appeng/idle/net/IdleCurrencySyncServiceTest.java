@@ -113,6 +113,7 @@ class IdleCurrencySyncServiceTest {
         withInjectedCurrency(new CurrencyDefinition(
                 HUD_TEST_CURRENCY,
                 "gui.ae2.idle.currency.hud_sync_test_currency",
+                "gui.ae2.idle.currency.hud_sync_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 20,
                 true,
@@ -166,6 +167,7 @@ class IdleCurrencySyncServiceTest {
     void successiveTwoTickHudSnapshotsAdvanceProgressAndEtaWithoutAccrual() throws Exception {
         withInjectedCurrency(new CurrencyDefinition(
                 HUD_TEST_CURRENCY,
+                "gui.ae2.idle.currency.hud_sync_test_currency",
                 "gui.ae2.idle.currency.hud_sync_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 25,
@@ -225,6 +227,7 @@ class IdleCurrencySyncServiceTest {
         withInjectedCurrency(new CurrencyDefinition(
                 HUD_TEST_CURRENCY,
                 "gui.ae2.idle.currency.hud_sync_test_currency",
+                "gui.ae2.idle.currency.hud_sync_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 20,
                 true,
@@ -260,6 +263,7 @@ class IdleCurrencySyncServiceTest {
         withInjectedCurrency(new CurrencyDefinition(
                 HUD_TEST_CURRENCY,
                 "gui.ae2.idle.currency.hud_sync_test_currency",
+                "gui.ae2.idle.currency.hud_sync_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 20,
                 true,
@@ -292,6 +296,7 @@ class IdleCurrencySyncServiceTest {
     void playerLogoutClearsHudCache() throws Exception {
         withInjectedCurrency(new CurrencyDefinition(
                 HUD_TEST_CURRENCY,
+                "gui.ae2.idle.currency.hud_sync_test_currency",
                 "gui.ae2.idle.currency.hud_sync_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 20,

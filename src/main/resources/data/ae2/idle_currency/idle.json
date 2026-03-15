@@ -1,6 +1,7 @@
 {
   "id": "ae2:idle",
   "displayNameKey": "gui.ae2.idle.currency.idle",
+  "hudName": "Overworld",
   "iconItem": "ae2:certus_quartz_crystal",
   "baseTicksPerUnit": 200,
   "visibleByDefault": true

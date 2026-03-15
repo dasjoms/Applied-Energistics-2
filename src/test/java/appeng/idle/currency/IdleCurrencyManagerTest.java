@@ -11,6 +11,7 @@ class IdleCurrencyManagerTest {
 
         assertThat(currencies).containsKey(IdleCurrencies.IDLE);
         assertThat(currencies.get(IdleCurrencies.IDLE).baseTicksPerUnit()).isEqualTo(200L);
+        assertThat(currencies.get(IdleCurrencies.IDLE).hudName()).isEqualTo("Overworld");
     }
 
     @Test

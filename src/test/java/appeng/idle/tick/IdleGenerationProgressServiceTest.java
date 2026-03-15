@@ -30,6 +30,7 @@ class IdleGenerationProgressServiceTest {
         var definition = new CurrencyDefinition(
                 currency,
                 "gui.ae2.idle.currency.progress_test_currency",
+                "gui.ae2.idle.currency.progress_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 10,
                 true,
@@ -53,6 +54,7 @@ class IdleGenerationProgressServiceTest {
         var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "offline_progress_test_currency"));
         var definition = new CurrencyDefinition(
                 currency,
+                "gui.ae2.idle.currency.offline_progress_test_currency",
                 "gui.ae2.idle.currency.offline_progress_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 10,
@@ -80,6 +82,7 @@ class IdleGenerationProgressServiceTest {
         var definition = new CurrencyDefinition(
                 currency,
                 "gui.ae2.idle.currency.online_cap_progress_currency",
+                "gui.ae2.idle.currency.online_cap_progress_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 1,
                 true,
@@ -98,6 +101,7 @@ class IdleGenerationProgressServiceTest {
         var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "fractional_progress_currency"));
         var definition = new CurrencyDefinition(
                 currency,
+                "gui.ae2.idle.currency.fractional_progress_currency",
                 "gui.ae2.idle.currency.fractional_progress_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 2,
@@ -119,6 +123,7 @@ class IdleGenerationProgressServiceTest {
         var definition = new CurrencyDefinition(
                 currency,
                 "gui.ae2.idle.currency.capped_progress_test_currency",
+                "gui.ae2.idle.currency.capped_progress_test_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 1,
                 true,
@@ -137,6 +142,7 @@ class IdleGenerationProgressServiceTest {
         var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "shared_progress_currency"));
         var definition = new CurrencyDefinition(
                 currency,
+                "gui.ae2.idle.currency.shared_progress_currency",
                 "gui.ae2.idle.currency.shared_progress_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 10,
@@ -175,6 +181,7 @@ class IdleGenerationProgressServiceTest {
         var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "active_denied_currency"));
         var definition = new CurrencyDefinition(
                 currency,
+                "gui.ae2.idle.currency.active_denied_currency",
                 "gui.ae2.idle.currency.active_denied_currency",
                 ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
                 10,

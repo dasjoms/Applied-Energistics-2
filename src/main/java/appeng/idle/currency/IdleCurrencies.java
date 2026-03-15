@@ -14,6 +14,7 @@ public final class IdleCurrencies {
             new CurrencyDefinition(
                     IDLE,
                     "gui.ae2.idle.currency.idle",
+                    "Overworld",
                     AppEng.makeId("certus_quartz_crystal"),
                     200L,
                     true,

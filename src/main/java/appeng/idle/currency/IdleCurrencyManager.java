@@ -100,6 +100,7 @@ public final class IdleCurrencyManager extends SimpleJsonResourceReloadListener 
         }
 
         var displayNameKey = GsonHelper.getAsString(json, "displayNameKey");
+        var hudName = GsonHelper.getAsString(json, "hudName", displayNameKey);
 
         var iconItemString = GsonHelper.getAsString(json, "iconItem");
         var iconItem = ResourceLocation.tryParse(iconItemString);
@@ -121,7 +122,8 @@ public final class IdleCurrencyManager extends SimpleJsonResourceReloadListener 
         }
 
         try {
-            return new CurrencyDefinition(id, displayNameKey, iconItem, baseTicksPerUnit, visibleByDefault, caps);
+            return new CurrencyDefinition(id, displayNameKey, hudName, iconItem, baseTicksPerUnit, visibleByDefault,
+                    caps);
         } catch (IllegalArgumentException ex) {
             throw new JsonParseException(ex.getMessage());
         }
