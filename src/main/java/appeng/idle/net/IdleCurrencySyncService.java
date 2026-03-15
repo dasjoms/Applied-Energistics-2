@@ -130,6 +130,7 @@ public final class IdleCurrencySyncService {
 
     private static Map<CurrencyId, IdleCurrencyHudValue> snapshotHudValues(ServerPlayer player) {
         var data = PlayerIdleDataManager.get(player);
+        var elapsedTicksSinceBoundary = elapsedTicksSinceLastAccrualBoundary(player);
 
         var hudValues = new LinkedHashMap<CurrencyId, IdleCurrencyHudValue>();
         for (var currency : currenciesToGenerate()) {
@@ -142,8 +143,10 @@ public final class IdleCurrencySyncService {
 
             var gainPerSecond = gainPerSecond(currency, baseTicksPerUnit, totalMultiplier);
             var ticksPerUnit = ticksPerUnit(baseTicksPerUnit, totalMultiplier);
-            var progressTicks = ticksPerUnit <= 0L ? 0L
-                    : Math.min(Math.max(0L, data.getGenerationProgressTicks(currency)), ticksPerUnit - 1L);
+            var progressTicks = projectDisplayProgressTicks(
+                    data.getGenerationProgressTicks(currency),
+                    ticksPerUnit,
+                    elapsedTicksSinceBoundary);
             var secondsToNext = secondsToNext(progressTicks, ticksPerUnit);
 
             hudValues.put(currency,
@@ -151,6 +154,35 @@ public final class IdleCurrencySyncService {
         }
 
         return hudValues;
+    }
+
+    static long elapsedTicksSinceLastAccrualBoundary(ServerPlayer player) {
+        if (!PlayerIdleDataManager.isPassiveGenerationEnabled(player)) {
+            return 0L;
+        }
+
+        var intervalTicks = AEConfig.instance().getIdleGenerationIntervalTicks();
+        if (intervalTicks <= 0) {
+            return 0L;
+        }
+
+        var server = player.getServer();
+        if (server == null) {
+            return 0L;
+        }
+
+        return Math.floorMod(server.getTickCount(), intervalTicks);
+    }
+
+    static long projectDisplayProgressTicks(long baselineProgressTicks, long ticksPerUnit,
+            long elapsedTicksSinceBoundary) {
+        if (ticksPerUnit <= 0L) {
+            return 0L;
+        }
+
+        var clampedBaseline = Math.min(Math.max(0L, baselineProgressTicks), ticksPerUnit - 1L);
+        var clampedElapsed = Math.max(0L, elapsedTicksSinceBoundary);
+        return (clampedBaseline + clampedElapsed) % ticksPerUnit;
     }
 
     private static double gainPerSecond(CurrencyId currency, long baseTicksPerUnit, double totalMultiplier) {
