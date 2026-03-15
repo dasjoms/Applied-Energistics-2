@@ -4,18 +4,24 @@ import java.util.Objects;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
+import appeng.idle.reward.natural.NaturalLogTracker;
 import appeng.idle.tick.IdleGenerationProgressService;
 
 /**
  * Awards active idle progress when eligible players break blocks matching reward definitions.
  */
 public final class BlockBreakRewardHandler {
+    private static final ResourceLocation BREAK_NATURAL_LOG_REWARD_ID = ResourceLocation
+            .fromNamespaceAndPath("ae2", "break_natural_log_idle");
+
     private BlockBreakRewardHandler() {
     }
 
@@ -49,6 +55,12 @@ public final class BlockBreakRewardHandler {
                 continue;
             }
 
+            if (requiresNaturalLog(reward)
+                    && (!(level instanceof ServerLevel serverLevel)
+                            || !NaturalLogTracker.isNaturallyGeneratedLog(serverLevel, event.getPos(), brokenState))) {
+                continue;
+            }
+
             if (!RewardEligibilityService.canReceiveActiveReward(player, reward)) {
                 continue;
             }
@@ -56,6 +68,14 @@ public final class BlockBreakRewardHandler {
             IdleGenerationProgressService.grantActiveProgressTicks(player, reward.currencyId(),
                     reward.progressTicksAwarded(), "BLOCK_BREAK:" + reward.id());
         }
+
+        if (level instanceof ServerLevel serverLevel) {
+            NaturalLogTracker.onBlockRemovedOrChanged(serverLevel, event.getPos(), brokenState);
+        }
+    }
+
+    private static boolean requiresNaturalLog(RewardDefinition reward) {
+        return BREAK_NATURAL_LOG_REWARD_ID.equals(reward.id());
     }
 
     static boolean matchesBlockCondition(RewardDefinition reward, BlockState brokenState) {
