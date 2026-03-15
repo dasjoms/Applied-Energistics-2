@@ -10,6 +10,8 @@ import net.minecraft.server.level.ServerPlayer;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.reward.RewardDefinition;
+import appeng.idle.reward.RewardEligibilityService;
 
 /**
  * Converts accumulated progress ticks into whole currency units while persisting remainder progress.
@@ -51,6 +53,11 @@ public final class IdleGenerationProgressService {
 
     public static boolean grantActiveProgressTicks(ServerPlayer player, CurrencyId currency, long progressTicks,
             String source) {
+        return grantActiveProgressTicks(player, currency, progressTicks, source, null);
+    }
+
+    public static boolean grantActiveProgressTicks(ServerPlayer player, CurrencyId currency, long progressTicks,
+            String source, RewardDefinition rewardDefinition) {
         Objects.requireNonNull(player, "player");
         Objects.requireNonNull(currency, "currency");
         Objects.requireNonNull(source, "source");
@@ -59,7 +66,10 @@ public final class IdleGenerationProgressService {
             throw new IllegalArgumentException("progressTicks must be > 0.");
         }
 
-        if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
+        var eligible = rewardDefinition == null
+                ? RewardEligibilityService.canReceiveActiveReward(player)
+                : RewardEligibilityService.canReceiveActiveReward(player, rewardDefinition);
+        if (!eligible) {
             return false;
         }
 

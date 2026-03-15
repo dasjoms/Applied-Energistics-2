@@ -22,6 +22,8 @@ import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.reward.RewardDefinition;
+import appeng.idle.reward.RewardTriggerType;
 
 class IdleGenerationProgressServiceTest {
     @Test
@@ -172,6 +174,51 @@ class IdleGenerationProgressServiceTest {
                         eq(Map.of(currency, 1L)),
                         eq("ACTIVE_TEST")));
                 assertThat(data.getGenerationProgressTicks(currency)).isEqualTo(5L);
+            }
+        });
+    }
+
+    @Test
+    void activeProgressDeniedWhenRewardUpgradeGateIsMissing() throws Exception {
+        var currency = new CurrencyId(ResourceLocation.fromNamespaceAndPath("ae2", "active_denied_gated_currency"));
+        var definition = new CurrencyDefinition(
+                currency,
+                "gui.ae2.idle.currency.active_denied_gated_currency",
+                "gui.ae2.idle.currency.active_denied_gated_currency",
+                ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+                10,
+                true,
+                null);
+        var reward = new RewardDefinition(
+                ResourceLocation.fromNamespaceAndPath("ae2", "gated_reward"),
+                RewardTriggerType.BLOCK_BREAK,
+                currency,
+                10L,
+                new RewardDefinition.BlockFilterCondition(
+                        ResourceLocation.fromNamespaceAndPath("minecraft", "stone"),
+                        null),
+                ResourceLocation.fromNamespaceAndPath("ae2", "missing_gate"));
+
+        withInjectedCurrency(definition, () -> {
+            var player = mock(ServerPlayer.class);
+            when(player.getUUID()).thenReturn(UUID.randomUUID());
+
+            var data = new PlayerIdleData();
+
+            try (MockedStatic<PlayerIdleDataManager> manager = mockStatic(PlayerIdleDataManager.class)) {
+                manager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
+                manager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+
+                var granted = IdleGenerationProgressService.grantActiveProgressTicks(
+                        player,
+                        currency,
+                        10L,
+                        "ACTIVE_DENIED_GATED",
+                        reward);
+
+                assertThat(granted).isFalse();
+                manager.verify(() -> PlayerIdleDataManager.addGeneratedBalances(eq(player), any(), any()),
+                        org.mockito.Mockito.never());
             }
         });
     }
