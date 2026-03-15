@@ -1,0 +1,21 @@
+{
+  "id": "ae2:noop_gated_reward",
+  "triggerType": "block_break",
+  "currencyId": "ae2:idle",
+  "progressTicksAwarded": 7,
+  "conditions": {
+    "block": "minecraft:stone"
+  },
+  "upgradeGateId": "ae2:test_gate",
+  "upgradeGateMinLevel": 2,
+  "cooldownWindowTicks": 1200,
+  "environment": {
+    "dimension": "minecraft:overworld",
+    "biome": "minecraft:plains"
+  },
+  "caps": {
+    "daily": 10,
+    "interval": 3,
+    "intervalWindowTicks": 24000
+  }
+}

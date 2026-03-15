@@ -42,7 +42,8 @@ class BlockBreakRewardHandlerTest {
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
                     .thenReturn(List.of(reward));
-            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(player, reward))
+            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(eq(player), eq(reward),
+                    any(RewardTriggerContext.class)))
                     .thenReturn(true);
 
             BlockBreakRewardHandler.onBlockBreak(event);
@@ -97,7 +98,8 @@ class BlockBreakRewardHandlerTest {
                     .when(() -> NaturalLogTracker.isNaturallyGeneratedLog(any(ServerLevel.class), any(BlockPos.class),
                             any(BlockState.class)))
                     .thenReturn(true);
-            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(player, reward))
+            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(eq(player), eq(reward),
+                    any(RewardTriggerContext.class)))
                     .thenReturn(true);
 
             BlockBreakRewardHandler.onBlockBreak(event);
@@ -122,7 +124,8 @@ class BlockBreakRewardHandlerTest {
                         IdleGenerationProgressService.class)) {
             rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
                     .thenReturn(List.of(reward));
-            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(player, reward))
+            eligibilityService.when(() -> RewardEligibilityService.canReceiveActiveReward(eq(player), eq(reward),
+                    any(RewardTriggerContext.class)))
                     .thenReturn(false);
 
             BlockBreakRewardHandler.onBlockBreak(event);

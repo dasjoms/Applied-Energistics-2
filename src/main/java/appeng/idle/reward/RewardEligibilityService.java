@@ -22,6 +22,21 @@ public final class RewardEligibilityService {
      * Current policy requires the idle visor to be actively equipped at trigger time. Having the visor unlocked alone
      * is insufficient.
      */
+    public static boolean canReceiveActiveReward(ServerPlayer player, RewardDefinition reward,
+            RewardTriggerContext context) {
+        Objects.requireNonNull(reward, "reward");
+        Objects.requireNonNull(context, "context");
+
+        if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
+            return false;
+        }
+
+        return passesUpgradeGate(player, reward)
+                && passesCooldownWindow(player, reward, context)
+                && passesEnvironmentPredicate(reward, context)
+                && passesRewardCaps(player, reward, context);
+    }
+
     public static boolean canReceiveActiveReward(ServerPlayer player, RewardDefinition reward) {
         Objects.requireNonNull(reward, "reward");
 
@@ -46,6 +61,20 @@ public final class RewardEligibilityService {
         }
 
         var ownedUpgradeLevels = PlayerIdleDataManager.get(player).ownedUpgradeLevelsView();
-        return ownedUpgradeLevels.getOrDefault(reward.upgradeGateId(), 0) > 0;
+        return ownedUpgradeLevels.getOrDefault(reward.upgradeGateId(), 0) >= reward.upgradeGateMinLevel();
+    }
+
+    private static boolean passesCooldownWindow(ServerPlayer player, RewardDefinition reward,
+            RewardTriggerContext context) {
+        return true;
+    }
+
+    private static boolean passesEnvironmentPredicate(RewardDefinition reward, RewardTriggerContext context) {
+        return true;
+    }
+
+    private static boolean passesRewardCaps(ServerPlayer player, RewardDefinition reward,
+            RewardTriggerContext context) {
+        return true;
     }
 }

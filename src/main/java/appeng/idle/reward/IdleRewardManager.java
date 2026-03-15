@@ -121,9 +121,89 @@ public final class IdleRewardManager extends SimpleJsonResourceReloadListener {
         }
 
         var conditions = parseConditions(triggerType, json);
-        var upgradeGateId = parseOptionalResourceLocation(json, "upgradeGateId");
+        var upgradeGate = parseUpgradeGate(json);
+        var cooldownWindowTicks = parseOptionalPositiveLong(json, "cooldownWindowTicks");
+        var environmentPredicate = parseEnvironmentPredicate(json);
+        var caps = parseRewardCaps(json);
 
-        return new RewardDefinition(id, triggerType, currencyId, progressTicksAwarded, conditions, upgradeGateId);
+        return new RewardDefinition(id, triggerType, currencyId, progressTicksAwarded, conditions, upgradeGate,
+                cooldownWindowTicks, environmentPredicate, caps);
+    }
+
+    private static @Nullable RewardDefinition.UpgradeGate parseUpgradeGate(JsonObject json) {
+        if (!json.has("upgradeGateId")) {
+            return null;
+        }
+
+        var gateId = parseOptionalResourceLocation(json, "upgradeGateId");
+        if (gateId == null) {
+            return null;
+        }
+
+        var minLevel = GsonHelper.getAsInt(json, "upgradeGateMinLevel", 1);
+        if (minLevel <= 0) {
+            throw new JsonParseException("upgradeGateMinLevel must be > 0");
+        }
+
+        return new RewardDefinition.UpgradeGate(gateId, minLevel);
+    }
+
+    private static @Nullable Long parseOptionalPositiveLong(JsonObject json, String fieldName) {
+        if (!json.has(fieldName)) {
+            return null;
+        }
+
+        var value = GsonHelper.getAsLong(json, fieldName);
+        if (value <= 0L) {
+            throw new JsonParseException(fieldName + " must be > 0");
+        }
+
+        return value;
+    }
+
+    private static @Nullable Integer parseOptionalPositiveInt(JsonObject json, String fieldName) {
+        if (!json.has(fieldName)) {
+            return null;
+        }
+
+        var value = GsonHelper.getAsInt(json, fieldName);
+        if (value <= 0) {
+            throw new JsonParseException(fieldName + " must be > 0");
+        }
+
+        return value;
+    }
+
+    private static @Nullable RewardDefinition.EnvironmentPredicate parseEnvironmentPredicate(JsonObject json) {
+        if (!json.has("environment")) {
+            return null;
+        }
+
+        var environment = GsonHelper.getAsJsonObject(json, "environment");
+        var dimensionId = parseOptionalResourceLocation(environment, "dimension");
+        var biomeId = parseOptionalResourceLocation(environment, "biome");
+        var biomeTagId = parseOptionalResourceLocation(environment, "biomeTag");
+        if (dimensionId == null && biomeId == null && biomeTagId == null) {
+            return null;
+        }
+
+        return new RewardDefinition.EnvironmentPredicate(dimensionId, biomeId, biomeTagId);
+    }
+
+    private static @Nullable RewardDefinition.RewardCaps parseRewardCaps(JsonObject json) {
+        if (!json.has("caps")) {
+            return null;
+        }
+
+        var caps = GsonHelper.getAsJsonObject(json, "caps");
+        var dailyCap = parseOptionalPositiveInt(caps, "daily");
+        var intervalCap = parseOptionalPositiveInt(caps, "interval");
+        var intervalWindowTicks = parseOptionalPositiveLong(caps, "intervalWindowTicks");
+        if (dailyCap == null && intervalCap == null && intervalWindowTicks == null) {
+            return null;
+        }
+
+        return new RewardDefinition.RewardCaps(dailyCap, intervalCap, intervalWindowTicks);
     }
 
     private static @Nullable RewardDefinition.BlockFilterCondition parseConditions(RewardTriggerType triggerType,
