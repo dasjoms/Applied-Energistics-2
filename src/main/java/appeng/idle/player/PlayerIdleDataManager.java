@@ -241,11 +241,24 @@ public final class PlayerIdleDataManager {
             return;
         }
 
-        if (!AEItems.IDLE_VISOR.is(event.getTo())) {
+        if (event.getSlot() != EquipmentSlot.HEAD) {
             return;
         }
 
-        unlockIdleGeneration(player);
+        var equippedIdleVisor = AEItems.IDLE_VISOR.is(event.getTo());
+        var removedIdleVisor = AEItems.IDLE_VISOR.is(event.getFrom()) && !equippedIdleVisor;
+
+        if (!equippedIdleVisor && !removedIdleVisor) {
+            return;
+        }
+
+        if (equippedIdleVisor) {
+            unlockIdleGeneration(player);
+            IdleCurrencySyncService.sendHudSnapshot(player);
+            return;
+        }
+
+        IdleCurrencySyncService.sendEmptyHudSnapshot(player);
     }
 
     public static void handlePlayerLoggedIn(PlayerLoggedInEvent event) {

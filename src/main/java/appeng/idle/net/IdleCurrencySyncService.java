@@ -93,6 +93,11 @@ public final class IdleCurrencySyncService {
         PacketDistributor.sendToPlayer(player, new IdleCurrencyHudSnapshotPacket(snapshotHudValues(player)));
     }
 
+    public static void sendEmptyHudSnapshot(ServerPlayer player) {
+        Objects.requireNonNull(player, "player");
+        PacketDistributor.sendToPlayer(player, new IdleCurrencyHudSnapshotPacket(Map.of()));
+    }
+
     public static void sendDelta(ServerPlayer player, Map<CurrencyId, Long> changedBalances) {
         sendDelta(player, changedBalances, false);
     }
