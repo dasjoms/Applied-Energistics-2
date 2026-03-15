@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import appeng.client.idle.IdleHudVisibility;
+import appeng.core.AppEng;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.net.IdleCurrencyClientCache;
 import appeng.idle.net.IdleCurrencyHudValue;
@@ -21,6 +24,14 @@ public class IdleHudOverlayRenderer {
     private static final int HUD_MARGIN = 6;
     private static final int COLUMN_SPACING = 8;
     private static final int BAR_HEIGHT = 6;
+    private static final boolean USE_TEXTURED_BAR_SKIN = false;
+
+    private static final ResourceLocation BAR_SKIN_TEXTURE = AppEng.makeId("textures/guis/inscriber.png");
+    private static final int BAR_TEXTURE_U = 177;
+    private static final int BAR_TEXTURE_BACKGROUND_V = 68;
+    private static final int BAR_TEXTURE_FILL_V = 75;
+    private static final int BAR_TEXTURE_WIDTH = 14;
+    private static final int BAR_TEXTURE_HEIGHT = 6;
 
     public void onRenderGui(RenderGuiEvent.Post event) {
         if (!IdleHudVisibility.shouldShow()) {
@@ -75,22 +86,55 @@ public class IdleHudOverlayRenderer {
             if (barWidth > 0) {
                 var barTop = y + Math.max(0, (font.lineHeight - BAR_HEIGHT) / 2);
                 var barBottom = barTop + BAR_HEIGHT;
-                guiGraphics.fill(barLeft, barTop, barRight, barBottom, COLOR_BAR_BACKGROUND);
+                drawBarBackground(guiGraphics, barLeft, barTop, barWidth);
 
-                var fillWidth = (int) Math.floor(barWidth * row.progressFraction());
-                if (fillWidth <= 0 && row.progressFraction() > 0.0) {
-                    fillWidth = 1;
-                }
+                var fillWidth = getFillWidth(barWidth, row.progressFraction());
 
                 if (fillWidth > 0) {
-                    guiGraphics.fill(barLeft, barTop, barLeft + Math.min(barWidth, fillWidth), barBottom,
-                            COLOR_BAR_FILL);
+                    drawBarFill(guiGraphics, barLeft, barTop, fillWidth);
                 }
             }
 
             guiGraphics.drawString(font, row.timePerUnitText(), timeX, y, COLOR_LINE, true);
             guiGraphics.drawString(font, row.balanceText(), balanceX, y, COLOR_LINE, true);
             y += font.lineHeight;
+        }
+    }
+
+    static int getFillWidth(int barWidth, double progressFraction) {
+        var fillWidth = (int) Math.floor(barWidth * progressFraction);
+        if (fillWidth <= 0 && progressFraction > 0.0) {
+            fillWidth = 1;
+        }
+
+        return Math.min(barWidth, fillWidth);
+    }
+
+    private static void drawBarBackground(GuiGraphics guiGraphics, int x, int y, int width) {
+        if (USE_TEXTURED_BAR_SKIN) {
+            blitBarTexture(guiGraphics, x, y, width, BAR_TEXTURE_BACKGROUND_V);
+            return;
+        }
+
+        guiGraphics.fill(x, y, x + width, y + BAR_HEIGHT, COLOR_BAR_BACKGROUND);
+    }
+
+    private static void drawBarFill(GuiGraphics guiGraphics, int x, int y, int width) {
+        if (USE_TEXTURED_BAR_SKIN) {
+            blitBarTexture(guiGraphics, x, y, width, BAR_TEXTURE_FILL_V);
+            return;
+        }
+
+        guiGraphics.fill(x, y, x + width, y + BAR_HEIGHT, COLOR_BAR_FILL);
+    }
+
+    private static void blitBarTexture(GuiGraphics guiGraphics, int x, int y, int width, int sourceV) {
+        var blitted = 0;
+        while (blitted < width) {
+            var segmentWidth = Math.min(BAR_TEXTURE_WIDTH, width - blitted);
+            guiGraphics.blit(BAR_SKIN_TEXTURE, x + blitted, y, BAR_TEXTURE_U, sourceV, segmentWidth,
+                    BAR_TEXTURE_HEIGHT);
+            blitted += segmentWidth;
         }
     }
 

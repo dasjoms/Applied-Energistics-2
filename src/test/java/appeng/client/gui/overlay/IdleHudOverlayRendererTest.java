@@ -9,6 +9,14 @@ import appeng.idle.net.IdleCurrencyHudValue;
 class IdleHudOverlayRendererTest {
 
     @Test
+    void getFillWidthReservesAtLeastOnePixelForVisibleProgress() {
+        assertThat(IdleHudOverlayRenderer.getFillWidth(20, 0.0)).isEqualTo(0);
+        assertThat(IdleHudOverlayRenderer.getFillWidth(20, 0.01)).isEqualTo(1);
+        assertThat(IdleHudOverlayRenderer.getFillWidth(20, 0.5)).isEqualTo(10);
+        assertThat(IdleHudOverlayRenderer.getFillWidth(20, 2.0)).isEqualTo(20);
+    }
+
+    @Test
     void getProgressStateNormalizesTicksToPerCurrencyFraction() {
         var fastCurrency = new IdleCurrencyHudValue(0L, 1.0, 10L, 20L, 1L);
         var slowCurrency = new IdleCurrencyHudValue(0L, 1.0, 10L, 200L, 10L);
