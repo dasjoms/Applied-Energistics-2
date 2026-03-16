@@ -11,6 +11,8 @@ import net.minecraft.server.level.ServerLevel;
 import appeng.idle.reward.natural.NaturalLogTracker;
 
 public final class TimberChopService {
+    private static final int OVERSIZED_COMPONENT_SAMPLE_LIMIT = 128;
+
     private TimberChopService() {
     }
 
@@ -53,7 +55,7 @@ public final class TimberChopService {
                         var immutableCandidate = candidate.immutable();
                         visited.add(immutableCandidate);
                         if (visited.size() > maxAllowedLogs) {
-                            return TimberChopResult.exceedsLimit();
+                            return TimberChopResult.exceedsLimit(sampleForOversizedComponent(visited));
                         }
 
                         frontier.addLast(immutableCandidate);
@@ -70,25 +72,47 @@ public final class TimberChopService {
         return NaturalLogTracker.isEligibleLogForReward(level, pos, state);
     }
 
-    public record TimberChopResult(Status status, List<BlockPos> collectedPositions) {
+    private static List<BlockPos> sampleForOversizedComponent(Set<BlockPos> visited) {
+        if (visited.isEmpty()) {
+            return List.of();
+        }
+
+        var sampled = new java.util.ArrayList<BlockPos>(Math.min(visited.size(), OVERSIZED_COMPONENT_SAMPLE_LIMIT));
+        for (var pos : visited) {
+            sampled.add(pos);
+            if (sampled.size() >= OVERSIZED_COMPONENT_SAMPLE_LIMIT) {
+                break;
+            }
+        }
+
+        return List.copyOf(sampled);
+    }
+
+    public record TimberChopResult(Status status, List<BlockPos> collectedPositions,
+            List<BlockPos> oversizedComponentSamplePositions) {
         public TimberChopResult {
             collectedPositions = List.copyOf(collectedPositions);
+            oversizedComponentSamplePositions = List.copyOf(oversizedComponentSamplePositions);
         }
 
         public static TimberChopResult disabledNoUpgrade() {
-            return new TimberChopResult(Status.DISABLED_NO_UPGRADE, List.of());
+            return new TimberChopResult(Status.DISABLED_NO_UPGRADE, List.of(), List.of());
         }
 
         public static TimberChopResult ineligibleOrNonLog() {
-            return new TimberChopResult(Status.INELIGIBLE_OR_NON_LOG, List.of());
+            return new TimberChopResult(Status.INELIGIBLE_OR_NON_LOG, List.of(), List.of());
+        }
+
+        public static TimberChopResult exceedsLimit(List<BlockPos> oversizedComponentSamplePositions) {
+            return new TimberChopResult(Status.EXCEEDS_LIMIT, List.of(), oversizedComponentSamplePositions);
         }
 
         public static TimberChopResult exceedsLimit() {
-            return new TimberChopResult(Status.EXCEEDS_LIMIT, List.of());
+            return exceedsLimit(List.of());
         }
 
         public static TimberChopResult withinLimit(List<BlockPos> collectedPositions) {
-            return new TimberChopResult(Status.WITHIN_LIMIT, collectedPositions);
+            return new TimberChopResult(Status.WITHIN_LIMIT, collectedPositions, List.of());
         }
     }
 
