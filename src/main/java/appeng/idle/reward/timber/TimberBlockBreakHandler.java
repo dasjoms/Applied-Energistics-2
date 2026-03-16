@@ -94,6 +94,7 @@ public final class TimberBlockBreakHandler {
         if (targetSignature != null) {
             var lastWarnedTarget = LAST_WARNED_OVERSIZED_TARGET.get(playerUuid);
             if (lastWarnedTarget != null && lastWarnedTarget.matches(targetSignature)) {
+                LAST_WARNED_OVERSIZED_TARGET.put(playerUuid, targetSignature);
                 return;
             }
 
