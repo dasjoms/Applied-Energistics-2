@@ -22,7 +22,8 @@
     "TextureAtlasMixin",
     "PonderWorldMixin",
     "ModelBakeryMixin",
-    "VariantDeserializerMixin"
+    "VariantDeserializerMixin",
+    "ItemInHandRendererMixin"
   ],
   "server": [],
   "injectors": {
