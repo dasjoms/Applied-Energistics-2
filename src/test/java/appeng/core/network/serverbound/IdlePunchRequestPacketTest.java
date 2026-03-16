@@ -12,6 +12,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 
 import appeng.idle.combat.IdleCombatHandler;
 import appeng.util.CodecTestUtil;
@@ -20,7 +21,7 @@ class IdlePunchRequestPacketTest {
 
     @Test
     void streamCodecRoundTripRetainsTargetEntityId() {
-        var original = new IdlePunchRequestPacket(42);
+        var original = new IdlePunchRequestPacket(42, InteractionHand.OFF_HAND);
 
         CodecTestUtil.testRoundtrip(IdlePunchRequestPacket.STREAM_CODEC, original);
 
@@ -30,17 +31,18 @@ class IdlePunchRequestPacketTest {
         var decoded = IdlePunchRequestPacket.STREAM_CODEC.decode(buffer);
 
         org.assertj.core.api.Assertions.assertThat(decoded.targetEntityId()).isEqualTo(42);
+        org.assertj.core.api.Assertions.assertThat(decoded.hand()).isEqualTo(InteractionHand.OFF_HAND);
     }
 
     @Test
     void handleOnServerDelegatesToIdleCombatHandler() {
         var player = mock(ServerPlayer.class);
-        var packet = new IdlePunchRequestPacket(77);
+        var packet = new IdlePunchRequestPacket(77, InteractionHand.MAIN_HAND);
 
         try (MockedStatic<IdleCombatHandler> combatHandler = Mockito.mockStatic(IdleCombatHandler.class)) {
             packet.handleOnServer(player);
 
-            combatHandler.verify(() -> IdleCombatHandler.handlePunchRequest(player, 77));
+            combatHandler.verify(() -> IdleCombatHandler.handlePunchRequest(player, 77, InteractionHand.MAIN_HAND));
         }
     }
 }

@@ -23,7 +23,7 @@ class IdlePunchAnimationComponentTest {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(100L, 101L);
 
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.MAIN_HAND);
         IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.MAIN_HAND, 7L);
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
@@ -36,7 +36,7 @@ class IdlePunchAnimationComponentTest {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(200L, 201L);
 
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.MAIN_HAND);
         IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.OFF_HAND, 8L);
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
@@ -49,13 +49,13 @@ class IdlePunchAnimationComponentTest {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(300L, 301L);
 
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player);
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.MAIN_HAND);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
         IdlePunchAnimationComponent.resetServerStateTracking();
 
         assertThat(IdlePunchAnimationComponent.getExpectedNextHand()).isEqualTo(InteractionHand.MAIN_HAND);
 
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.MAIN_HAND);
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
     }

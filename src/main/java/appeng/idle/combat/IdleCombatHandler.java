@@ -41,18 +41,22 @@ public final class IdleCombatHandler {
             return;
         }
 
-        if (tryPerformUnarmedPunch(player, target)) {
+        if (tryPerformUnarmedPunch(player, target, null)) {
             event.setCanceled(true);
         }
     }
 
     public static void handlePunchRequest(ServerPlayer player, int targetEntityId) {
+        handlePunchRequest(player, targetEntityId, null);
+    }
+
+    public static void handlePunchRequest(ServerPlayer player, int targetEntityId, InteractionHand hand) {
         var target = player.serverLevel().getEntity(targetEntityId);
         if (target == null) {
             return;
         }
 
-        tryPerformUnarmedPunch(player, target);
+        tryPerformUnarmedPunch(player, target, hand);
     }
 
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -84,7 +88,7 @@ public final class IdleCombatHandler {
         PLAYER_COMBAT_STATES.remove(playerId);
     }
 
-    private static boolean tryPerformUnarmedPunch(ServerPlayer player, Entity target) {
+    private static boolean tryPerformUnarmedPunch(ServerPlayer player, Entity target, InteractionHand requestedHand) {
         if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
             return false;
         }
@@ -119,7 +123,7 @@ public final class IdleCombatHandler {
             return false;
         }
 
-        var hand = state.nextHand();
+        var hand = requestedHand == null ? state.nextHand() : requestedHand;
         player.swing(hand, true);
         if (player.connection != null) {
             PacketDistributor.sendToPlayer(player, new IdlePunchSwingPacket(player.getId(), hand, gameTime));
@@ -127,7 +131,7 @@ public final class IdleCombatHandler {
 
         var baseIntervalTicks = getBaseUnarmedPunchIntervalTicks(player);
         var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
-        PLAYER_COMBAT_STATES.put(player.getUUID(), state.advance(gameTime + intervalTicks));
+        PLAYER_COMBAT_STATES.put(player.getUUID(), state.advance(hand, gameTime + intervalTicks));
         return true;
     }
 
@@ -160,8 +164,8 @@ public final class IdleCombatHandler {
             return new CombatState(InteractionHand.MAIN_HAND, 0);
         }
 
-        private CombatState advance(long nextAllowedTick) {
-            var next = nextHand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+        private CombatState advance(InteractionHand usedHand, long nextAllowedTick) {
+            var next = usedHand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
             return new CombatState(next, nextAllowedTick);
         }
     }
