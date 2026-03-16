@@ -18,6 +18,8 @@ import appeng.server.ISubCommand;
 
 /**
  * Dev-only helper for QA to inspect idle natural-log provenance at a target block.
+ * <p>
+ * Natural-log rewards now allow unknown/worldgen/sapling/non-player placements and deny only player-placed logs.
  */
 public class IdleLogProvenanceCommand implements ISubCommand {
     @Override
@@ -48,6 +50,7 @@ public class IdleLogProvenanceCommand implements ISubCommand {
 
         source.sendSuccess(() -> Component.literal("Idle log provenance at " + pos + ": block="
                 + state.getBlock().builtInRegistryHolder().key().location() + ", provenance=" + provenance
-                + ", rewardEligible=" + rewardEligible), false);
+                + ", rewardEligible=" + rewardEligible
+                + " (only PLAYER_PLACED is denied)"), false);
     }
 }

@@ -16,25 +16,25 @@ import net.minecraft.world.level.block.state.BlockState;
 
 class NaturalLogTrackerPolicyTest {
     @Test
-    void placedLogDenied() {
+    void playerPlacedLogsAreDenied() {
         assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.PLAYER_PLACED))
                 .isFalse();
     }
 
     @Test
-    void worldgenLogAccepted() {
+    void worldgenLogsAreAllowed() {
         assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.NATURAL_WORLDGEN))
                 .isTrue();
     }
 
     @Test
-    void saplingGrownLogAccepted() {
+    void saplingGrownLogsAreAllowed() {
         assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.SAPLING_GROWN))
                 .isTrue();
     }
 
     @Test
-    void unknownLegacyLogAccepted() {
+    void unknownProvenanceLogsAreAllowed() {
         assertThat(NaturalLogTracker.isProvenanceEligibleForReward(NaturalLogTracker.Provenance.UNKNOWN)).isTrue();
     }
 
@@ -49,7 +49,7 @@ class NaturalLogTrackerPolicyTest {
     }
 
     @Test
-    void nonPlayerPlacementStaysEligibleForNaturalLogRewards() {
+    void nonPlayerPlacementsAreAllowed() {
         var nonPlayer = mock(Entity.class);
 
         assertThat(NaturalLogTracker.shouldMarkPlayerPlaced(mockLogState(), nonPlayer)).isFalse();
