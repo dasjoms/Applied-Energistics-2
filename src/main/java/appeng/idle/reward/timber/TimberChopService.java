@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 
 import appeng.idle.reward.natural.NaturalLogTracker;
@@ -34,24 +33,32 @@ public final class TimberChopService {
 
         while (!frontier.isEmpty()) {
             var current = frontier.removeFirst();
-            for (var direction : Direction.values()) {
-                var candidate = current.relative(direction);
-                if (visited.contains(candidate)) {
-                    continue;
-                }
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) {
+                            continue;
+                        }
 
-                var candidateState = level.getBlockState(candidate);
-                if (!isEligibleLog(level, candidate, candidateState)) {
-                    continue;
-                }
+                        var candidate = current.offset(dx, dy, dz);
+                        if (visited.contains(candidate)) {
+                            continue;
+                        }
 
-                var immutableCandidate = candidate.immutable();
-                visited.add(immutableCandidate);
-                if (visited.size() > maxAllowedLogs) {
-                    return TimberChopResult.exceedsLimit();
-                }
+                        var candidateState = level.getBlockState(candidate);
+                        if (!isEligibleLog(level, candidate, candidateState)) {
+                            continue;
+                        }
 
-                frontier.addLast(immutableCandidate);
+                        var immutableCandidate = candidate.immutable();
+                        visited.add(immutableCandidate);
+                        if (visited.size() > maxAllowedLogs) {
+                            return TimberChopResult.exceedsLimit();
+                        }
+
+                        frontier.addLast(immutableCandidate);
+                    }
+                }
             }
         }
 

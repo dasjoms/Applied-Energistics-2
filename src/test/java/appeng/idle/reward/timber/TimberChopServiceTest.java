@@ -143,6 +143,60 @@ class TimberChopServiceTest {
         }
     }
 
+    @Test
+    void diagonalOnlyConnectionIncluded() {
+        var start = new BlockPos(0, 0, 0);
+        var diagonal = new BlockPos(1, 1, 1);
+
+        var level = mockLevelWithStates(new HashMap<>() {
+            {
+                put(start, Blocks.OAK_LOG.defaultBlockState());
+                put(diagonal, Blocks.OAK_LOG.defaultBlockState());
+            }
+        });
+
+        try (MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class)) {
+            naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
+                    .thenAnswer(invocation -> {
+                        var state = invocation.getArgument(2, BlockState.class);
+                        return state.is(BlockTags.LOGS);
+                    });
+
+            var result = TimberChopService.collectEligibleLogs(level, start, 2);
+
+            assertThat(result.status()).isEqualTo(TimberChopService.Status.WITHIN_LIMIT);
+            assertThat(result.collectedPositions()).containsExactlyInAnyOrder(start, diagonal);
+        }
+    }
+
+    @Test
+    void diagonalChainCanExceedLimit() {
+        var start = new BlockPos(0, 0, 0);
+        var diagonalOne = new BlockPos(1, 1, 1);
+        var diagonalTwo = new BlockPos(2, 2, 2);
+
+        var level = mockLevelWithStates(new HashMap<>() {
+            {
+                put(start, Blocks.OAK_LOG.defaultBlockState());
+                put(diagonalOne, Blocks.OAK_LOG.defaultBlockState());
+                put(diagonalTwo, Blocks.OAK_LOG.defaultBlockState());
+            }
+        });
+
+        try (MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class)) {
+            naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
+                    .thenAnswer(invocation -> {
+                        var state = invocation.getArgument(2, BlockState.class);
+                        return state.is(BlockTags.LOGS);
+                    });
+
+            var result = TimberChopService.collectEligibleLogs(level, start, 2);
+
+            assertThat(result.status()).isEqualTo(TimberChopService.Status.EXCEEDS_LIMIT);
+            assertThat(result.collectedPositions()).isEmpty();
+        }
+    }
+
     private static ServerLevel mockLevelWithStates(HashMap<BlockPos, BlockState> states) {
         var level = mock(ServerLevel.class);
         when(level.getBlockState(any())).thenAnswer(invocation -> {
