@@ -48,17 +48,14 @@ public final class IdlePunchAttackHook {
             return;
         }
 
-        if (!IdleCurrencyClientCache.isIdlePunchEligible()) {
-            return;
-        }
-
         event.setCanceled(true);
         PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId()));
     }
 
-    private static boolean shouldTakeOverAttackInput(Player player) {
+    static boolean shouldTakeOverAttackInput(Player player) {
         return AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD))
                 && player.getMainHandItem().isEmpty()
-                && player.getOffhandItem().isEmpty();
+                && player.getOffhandItem().isEmpty()
+                && IdleCurrencyClientCache.isIdlePunchEligible();
     }
 }
