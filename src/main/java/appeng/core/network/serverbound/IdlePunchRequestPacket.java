@@ -12,7 +12,7 @@ import appeng.idle.combat.IdleCombatHandler;
 /**
  * Requests the server to perform an idle unarmed punch on the currently targeted entity.
  */
-public record IdlePunchRequestPacket(int targetEntityId, InteractionHand hand) implements ServerboundPacket {
+public record IdlePunchRequestPacket(int targetEntityId, InteractionHand requestedHand) implements ServerboundPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, IdlePunchRequestPacket> STREAM_CODEC = StreamCodec
             .ofMember(IdlePunchRequestPacket::write, IdlePunchRequestPacket::decode);
 
@@ -29,11 +29,11 @@ public record IdlePunchRequestPacket(int targetEntityId, InteractionHand hand) i
 
     public void write(RegistryFriendlyByteBuf data) {
         data.writeVarInt(targetEntityId);
-        data.writeEnum(hand);
+        data.writeEnum(requestedHand);
     }
 
     @Override
     public void handleOnServer(ServerPlayer player) {
-        IdleCombatHandler.handlePunchRequest(player, targetEntityId, hand);
+        IdleCombatHandler.handlePunchRequest(player, targetEntityId, requestedHand);
     }
 }
