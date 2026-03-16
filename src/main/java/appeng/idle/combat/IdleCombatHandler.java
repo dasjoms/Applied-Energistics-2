@@ -64,17 +64,17 @@ public final class IdleCombatHandler {
     }
 
     /**
-     * Reset hand-alternation and cooldown state when a player respawns after death.
+     * Reset per-hand cooldown state when a player respawns after death.
      * <p>
      * We intentionally reset after death so every new life starts from a deterministic combat baseline (main hand
-     * first) instead of carrying over pre-death alternation state.
+     * ready) instead of carrying over pre-death cooldown state.
      */
     public static void onPlayerClone(PlayerEvent.Clone event) {
         if (!event.isWasDeath()) {
             return;
         }
 
-        // Clear both references so post-death clones always start with fresh hand alternation/cooldown state,
+        // Clear both references so post-death clones always start with fresh hand cooldown state,
         // regardless of whether the original and cloned player objects share the same UUID instance.
         resetCombatState(event.getOriginal().getUUID());
         resetCombatState(event.getEntity().getUUID());
@@ -113,8 +113,9 @@ public final class IdleCombatHandler {
         }
 
         var gameTime = player.serverLevel().getGameTime();
+        var hand = requestedHand == null ? InteractionHand.MAIN_HAND : requestedHand;
         var state = PLAYER_COMBAT_STATES.computeIfAbsent(player.getUUID(), id -> CombatState.initial());
-        if (gameTime < state.nextAllowedTick()) {
+        if (gameTime < state.nextAllowedTick(hand)) {
             return false;
         }
 
@@ -123,15 +124,15 @@ public final class IdleCombatHandler {
             return false;
         }
 
-        var hand = requestedHand == null ? state.nextHand() : requestedHand;
         player.swing(hand, true);
         if (player.connection != null) {
-            PacketDistributor.sendToPlayer(player, new IdlePunchSwingPacket(player.getId(), hand, gameTime));
+            var sequence = gameTime;
+            PacketDistributor.sendToPlayer(player, new IdlePunchSwingPacket(player.getId(), hand, sequence));
         }
 
         var baseIntervalTicks = getBaseUnarmedPunchIntervalTicks(player);
         var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
-        PLAYER_COMBAT_STATES.put(player.getUUID(), state.advance(hand, gameTime + intervalTicks));
+        PLAYER_COMBAT_STATES.put(player.getUUID(), state.withNextAllowedTick(hand, gameTime + intervalTicks));
         return true;
     }
 
@@ -143,7 +144,7 @@ public final class IdleCombatHandler {
 
         // Vanilla attack strength recovers over a period of 20 / attackSpeed ticks.
         var cooldownPeriodTicks = Math.round(ATTACK_COOLDOWN_TICKS / attackSpeed);
-        return Math.max(1L, cooldownPeriodTicks);
+        return Math.max(1L, cooldownPeriodTicks * 2L);
     }
 
     private static Entity resolveTarget(ServerPlayer player, Entity eventTarget) {
@@ -159,14 +160,21 @@ public final class IdleCombatHandler {
         return null;
     }
 
-    private record CombatState(InteractionHand nextHand, long nextAllowedTick) {
+    private record CombatState(long nextAllowedMainTick, long nextAllowedOffTick) {
         private static CombatState initial() {
-            return new CombatState(InteractionHand.MAIN_HAND, 0);
+            return new CombatState(0, 0);
         }
 
-        private CombatState advance(InteractionHand usedHand, long nextAllowedTick) {
-            var next = usedHand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-            return new CombatState(next, nextAllowedTick);
+        private long nextAllowedTick(InteractionHand hand) {
+            return hand == InteractionHand.MAIN_HAND ? nextAllowedMainTick : nextAllowedOffTick;
+        }
+
+        private CombatState withNextAllowedTick(InteractionHand hand, long nextAllowedTick) {
+            if (hand == InteractionHand.MAIN_HAND) {
+                return new CombatState(nextAllowedTick, nextAllowedOffTick);
+            }
+
+            return new CombatState(nextAllowedMainTick, nextAllowedTick);
         }
     }
 }
