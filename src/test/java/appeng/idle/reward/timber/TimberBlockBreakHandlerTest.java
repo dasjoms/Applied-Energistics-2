@@ -109,6 +109,25 @@ class TimberBlockBreakHandlerTest {
     }
 
     @Test
+    void skipsTimberWhenPlayerIsNotActiveRewardEligible() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(ServerLevel.class);
+        var event = blockBreakEvent(level, player, BlockPos.ZERO, logState());
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(false);
+
+            TimberBlockBreakHandler.onBlockBreak(event);
+
+            upgradeHooks.verify(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class)), never());
+            chopService.verify(() -> TimberChopService.collectEligibleLogs(any(), any(), anyInt()), never());
+            verify(event, never()).setCanceled(true);
+        }
+    }
+
+    @Test
     void skipsTimberWhenCapIsOneOrLess() {
         var player = mock(ServerPlayer.class);
         var level = mock(ServerLevel.class);
