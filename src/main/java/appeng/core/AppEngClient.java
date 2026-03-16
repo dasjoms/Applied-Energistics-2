@@ -112,6 +112,7 @@ import appeng.core.network.serverbound.UpdateHoldingCtrlPacket;
 import appeng.entity.TinyTNTPrimedRenderer;
 import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.BlockAttackHook;
+import appeng.hooks.IdlePunchAttackHook;
 import appeng.hooks.RenderBlockOutlineHook;
 import appeng.init.client.InitAdditionalModels;
 import appeng.init.client.InitBlockColors;
@@ -176,6 +177,7 @@ public class AppEngClient extends AppEngBase {
         modEventBus.addListener(this::enqueueImcMessages);
 
         BlockAttackHook.install();
+        IdlePunchAttackHook.install();
         RenderBlockOutlineHook.install();
         guide = createGuide();
 

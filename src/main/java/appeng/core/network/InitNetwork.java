@@ -31,6 +31,7 @@ import appeng.core.network.serverbound.ConfirmAutoCraftPacket;
 import appeng.core.network.serverbound.FillCraftingGridFromRecipePacket;
 import appeng.core.network.serverbound.GuiActionPacket;
 import appeng.core.network.serverbound.HotkeyPacket;
+import appeng.core.network.serverbound.IdlePunchRequestPacket;
 import appeng.core.network.serverbound.InventoryActionPacket;
 import appeng.core.network.serverbound.MEInteractionPacket;
 import appeng.core.network.serverbound.MouseWheelPacket;
@@ -80,6 +81,7 @@ public class InitNetwork {
         serverbound(registrar, FillCraftingGridFromRecipePacket.TYPE, FillCraftingGridFromRecipePacket.STREAM_CODEC);
         serverbound(registrar, GuiActionPacket.TYPE, GuiActionPacket.STREAM_CODEC);
         serverbound(registrar, HotkeyPacket.TYPE, HotkeyPacket.STREAM_CODEC);
+        serverbound(registrar, IdlePunchRequestPacket.TYPE, IdlePunchRequestPacket.STREAM_CODEC);
         serverbound(registrar, InventoryActionPacket.TYPE, InventoryActionPacket.STREAM_CODEC);
         serverbound(registrar, MEInteractionPacket.TYPE, MEInteractionPacket.STREAM_CODEC);
         serverbound(registrar, MouseWheelPacket.TYPE, MouseWheelPacket.STREAM_CODEC);
