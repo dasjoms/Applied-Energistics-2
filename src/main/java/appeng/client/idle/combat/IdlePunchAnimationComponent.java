@@ -15,6 +15,7 @@ public final class IdlePunchAnimationComponent {
     private static InteractionHand activeHand = InteractionHand.MAIN_HAND;
     private static long swingStartTick = Long.MIN_VALUE;
     private static int swingDurationTicks;
+    private static long lastConfirmedSequence = Long.MIN_VALUE;
 
     private IdlePunchAnimationComponent() {
     }
@@ -38,6 +39,17 @@ public final class IdlePunchAnimationComponent {
         if (isAnimationActive(player) && isAnimationFinished(player.level().getGameTime())) {
             reset();
         }
+    }
+
+    public static void applyServerConfirmedSwing(Player player, InteractionHand hand, long sequence) {
+        if (sequence < lastConfirmedSequence) {
+            return;
+        }
+
+        lastConfirmedSequence = sequence;
+        activeHand = hand;
+        swingStartTick = player.level().getGameTime();
+        swingDurationTicks = getSwingDurationTicks(player);
     }
 
     public static boolean shouldRenderForHand(Player player, InteractionHand hand) {
@@ -92,5 +104,6 @@ public final class IdlePunchAnimationComponent {
         activeHand = InteractionHand.MAIN_HAND;
         swingStartTick = Long.MIN_VALUE;
         swingDurationTicks = 0;
+        lastConfirmedSequence = Long.MIN_VALUE;
     }
 }

@@ -12,7 +12,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.EntityHitResult;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
+import appeng.idle.net.IdlePunchSwingPacket;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
@@ -117,7 +119,11 @@ public final class IdleCombatHandler {
             return false;
         }
 
-        player.swing(state.nextHand(), true);
+        var hand = state.nextHand();
+        player.swing(hand, true);
+        if (player.connection != null) {
+            PacketDistributor.sendToPlayer(player, new IdlePunchSwingPacket(player.getId(), hand, gameTime));
+        }
 
         var baseIntervalTicks = getBaseUnarmedPunchIntervalTicks(player);
         var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
