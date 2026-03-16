@@ -160,62 +160,56 @@ class IdleCombatHandlerTest {
     }
 
     @Test
-    void resetsAlternationAfterDeathRespawnClone() {
+    void resetsAlternationAfterDeathRespawnCloneForNewPlayerInstance() {
         var fixture = combatFixture();
+        var clonedPlayer = clonePlayer(fixture, fixture.player().getUUID());
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
-            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
-            dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
-            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
-                    .thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
-                    .thenReturn(5L);
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+            stubCombatPrerequisites(dataManager, upgradeHooks, clonedPlayer);
 
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
 
             var cloneEvent = mock(PlayerEvent.Clone.class);
             when(cloneEvent.isWasDeath()).thenReturn(true);
             when(cloneEvent.getOriginal()).thenReturn(fixture.player());
-            when(cloneEvent.getEntity()).thenReturn(fixture.player());
+            when(cloneEvent.getEntity()).thenReturn(clonedPlayer);
             IdleCombatHandler.onPlayerClone(cloneEvent);
 
-            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
+            IdleCombatHandler.handlePunchRequest(clonedPlayer, fixture.targetEntityId());
 
-            verify(fixture.player(), times(2)).swing(InteractionHand.MAIN_HAND, true);
-            verify(fixture.player(), never()).swing(InteractionHand.OFF_HAND, true);
+            verify(fixture.player()).swing(InteractionHand.MAIN_HAND, true);
+            verify(clonedPlayer).swing(InteractionHand.MAIN_HAND, true);
+            verify(clonedPlayer, never()).swing(InteractionHand.OFF_HAND, true);
         }
     }
 
     @Test
-    void doesNotResetAlternationOnNonDeathClone() {
+    void doesNotResetAlternationOnNonDeathCloneForNewPlayerInstance() {
         var fixture = combatFixture();
+        var clonedPlayer = clonePlayer(fixture, fixture.player().getUUID());
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
-            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
-            dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
-            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
-                    .thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
-                    .thenReturn(5L);
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+            stubCombatPrerequisites(dataManager, upgradeHooks, clonedPlayer);
 
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
 
             var cloneEvent = mock(PlayerEvent.Clone.class);
             when(cloneEvent.isWasDeath()).thenReturn(false);
             when(cloneEvent.getOriginal()).thenReturn(fixture.player());
-            when(cloneEvent.getEntity()).thenReturn(fixture.player());
+            when(cloneEvent.getEntity()).thenReturn(clonedPlayer);
             IdleCombatHandler.onPlayerClone(cloneEvent);
 
-            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
+            IdleCombatHandler.handlePunchRequest(clonedPlayer, fixture.targetEntityId());
 
             verify(fixture.player()).swing(InteractionHand.MAIN_HAND, true);
-            verify(fixture.player()).swing(InteractionHand.OFF_HAND, true);
+            verify(clonedPlayer).swing(InteractionHand.OFF_HAND, true);
+            verify(clonedPlayer, never()).swing(InteractionHand.MAIN_HAND, true);
         }
     }
 
@@ -264,6 +258,23 @@ class IdleCombatHandlerTest {
         }
     }
 
+    private static ServerPlayer clonePlayer(CombatFixture fixture, UUID uuid) {
+        var clonedPlayer = mock(ServerPlayer.class);
+        initializePlayer(clonedPlayer, fixture.level(), fixture.target(), uuid);
+        return clonedPlayer;
+    }
+
+    private static void stubCombatPrerequisites(MockedStatic<PlayerIdleDataManager> dataManager,
+            MockedStatic<IdleUpgradeHooks> upgradeHooks,
+            ServerPlayer player) {
+        dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
+        dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
+        upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
+        upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class))).thenReturn(true);
+        upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
+                .thenReturn(5L);
+    }
+
     private static CombatFixture combatFixture() {
         var level = mock(ServerLevel.class);
         var player = mock(ServerPlayer.class);
@@ -273,16 +284,8 @@ class IdleCombatHandlerTest {
         var uuid = UUID.randomUUID();
         var targetEntityId = 1234;
 
-        when(player.level()).thenReturn(level);
-        when(player.serverLevel()).thenReturn(level);
         when(level.isClientSide()).thenReturn(false);
-        when(player.getUUID()).thenReturn(uuid);
-        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
-        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        when(player.getAttributeValue(Attributes.ATTACK_DAMAGE)).thenReturn(4.0);
-        when(player.distanceToSqr((Entity) target)).thenReturn(4.0);
-        when(player.hasLineOfSight(target)).thenReturn(true);
-        when(player.canAttack(target)).thenReturn(true);
+        initializePlayer(player, level, target, uuid);
 
         when(target.isAlive()).thenReturn(true);
         when(target.level()).thenReturn((Level) level);
@@ -293,6 +296,18 @@ class IdleCombatHandlerTest {
         when(damageSources.playerAttack(player)).thenReturn(damageSource);
 
         return new CombatFixture(level, player, target, targetEntityId);
+    }
+
+    private static void initializePlayer(ServerPlayer player, ServerLevel level, LivingEntity target, UUID uuid) {
+        when(player.level()).thenReturn(level);
+        when(player.serverLevel()).thenReturn(level);
+        when(player.getUUID()).thenReturn(uuid);
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getAttributeValue(Attributes.ATTACK_DAMAGE)).thenReturn(4.0);
+        when(player.distanceToSqr((Entity) target)).thenReturn(4.0);
+        when(player.hasLineOfSight(target)).thenReturn(true);
+        when(player.canAttack(target)).thenReturn(true);
     }
 
     private record CombatFixture(ServerLevel level, ServerPlayer player, LivingEntity target, int targetEntityId) {

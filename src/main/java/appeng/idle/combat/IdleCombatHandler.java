@@ -54,7 +54,7 @@ public final class IdleCombatHandler {
     }
 
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        PLAYER_COMBAT_STATES.remove(event.getEntity().getUUID());
+        resetCombatState(event.getEntity().getUUID());
     }
 
     /**
@@ -68,12 +68,18 @@ public final class IdleCombatHandler {
             return;
         }
 
-        PLAYER_COMBAT_STATES.remove(event.getOriginal().getUUID());
-        PLAYER_COMBAT_STATES.remove(event.getEntity().getUUID());
+        // Clear both references so post-death clones always start with fresh hand alternation/cooldown state,
+        // regardless of whether the original and cloned player objects share the same UUID instance.
+        resetCombatState(event.getOriginal().getUUID());
+        resetCombatState(event.getEntity().getUUID());
     }
 
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        PLAYER_COMBAT_STATES.remove(event.getEntity().getUUID());
+        resetCombatState(event.getEntity().getUUID());
+    }
+
+    private static void resetCombatState(UUID playerId) {
+        PLAYER_COMBAT_STATES.remove(playerId);
     }
 
     private static boolean tryPerformUnarmedPunch(ServerPlayer player, Entity target) {
