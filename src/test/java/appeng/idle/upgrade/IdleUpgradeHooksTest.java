@@ -118,6 +118,32 @@ class IdleUpgradeHooksTest {
     }
 
     @Test
+    void combatUpgradeOwnershipRequiresAtLeastOneLevel() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 0));
+
+        var hasCombatUpgrade = IdleUpgradeHooks.hasCombatUpgrade(data);
+
+        assertThat(hasCombatUpgrade).isFalse();
+    }
+
+    @Test
+    void combatUpgradeOwnershipIsTrueWhenOwned() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 1));
+
+        var hasCombatUpgrade = IdleUpgradeHooks.hasCombatUpgrade(data);
+
+        assertThat(hasCombatUpgrade).isTrue();
+    }
+
+    @Test
     void timberLogLimitIsZeroWhenUpgradeIsNotOwned() {
         var data = new PlayerIdleData(
                 Map.of(),
@@ -168,6 +194,41 @@ class IdleUpgradeHooksTest {
         var timberLogLimit = IdleUpgradeHooks.getTimberLogLimit(data);
 
         assertThat(timberLogLimit).isEqualTo(0);
+    }
+
+    @Test
+    void unarmedPunchIntervalUsesCooldownMultiplierAndRoundsDown() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 2));
+
+        var interval = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(data, 10);
+
+        assertThat(interval).isEqualTo(9);
+    }
+
+    @Test
+    void unarmedPunchIntervalNeverDropsBelowOneTick() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 1000));
+
+        var interval = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(data, 1);
+
+        assertThat(interval).isEqualTo(1);
+    }
+
+    @Test
+    void unarmedPunchIntervalFallsBackToOneTickForInvalidBase() {
+        var data = new PlayerIdleData();
+
+        var interval = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(data, 0);
+
+        assertThat(interval).isEqualTo(1);
     }
 
 }

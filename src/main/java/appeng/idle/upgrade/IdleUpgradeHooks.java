@@ -87,6 +87,11 @@ public final class IdleUpgradeHooks {
         return false;
     }
 
+    public static boolean hasCombatUpgrade(PlayerIdleData data) {
+        var ownedLevels = data.ownedUpgradeLevelsView().get(IdleUpgrades.COMBAT_1.id());
+        return ownedLevels != null && ownedLevels > 0;
+    }
+
     /**
      * Computes the effective cooldown multiplier for unarmed punches.
      * <p>
@@ -119,6 +124,19 @@ public final class IdleUpgradeHooks {
         }
 
         return totalMultiplier > 0.0 && Double.isFinite(totalMultiplier) ? totalMultiplier : 1.0;
+    }
+
+    public static long getUnarmedPunchIntervalTicks(PlayerIdleData data, long baseIntervalTicks) {
+        if (baseIntervalTicks <= 0) {
+            return 1;
+        }
+
+        var effectiveTicks = Math.floor(baseIntervalTicks * getUnarmedPunchCooldownMultiplier(data));
+        if (!Double.isFinite(effectiveTicks)) {
+            return baseIntervalTicks;
+        }
+
+        return Math.max(1L, (long) effectiveTicks);
     }
 
     public static int getTimberLogLimit(PlayerIdleData data) {
