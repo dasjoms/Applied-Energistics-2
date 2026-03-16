@@ -1,9 +1,7 @@
 package appeng.idle.reward.timber;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -28,8 +26,6 @@ public final class TimberBlockBreakHandler {
     private static final int MAX_OVERSIZED_TARGETS_PER_PLAYER = 64;
     private static final ThreadLocal<Boolean> TIMBER_IN_PROGRESS = ThreadLocal.withInitial(() -> false);
     private static final HashMap<UUID, Long> LAST_LIMIT_EXCEEDED_MESSAGE_TICKS = new HashMap<>();
-    private static final int TREE_SIGNATURE_SAMPLE_LOG_LIMIT = 512;
-    private static final int TREE_SIGNATURE_MIN_HASH_COUNT = 4;
     private static final HashMap<UUID, List<OversizedTargetSuppressionEntry>> WARNED_OVERSIZED_TARGETS = new HashMap<>();
 
     private TimberBlockBreakHandler() {
@@ -65,7 +61,8 @@ public final class TimberBlockBreakHandler {
 
         var timberResult = TimberChopService.collectEligibleLogs(level, event.getPos(), timberLogCap);
         if (timberResult.status() == TimberChopService.Status.EXCEEDS_LIMIT) {
-            maybeNotifyTimberLimitExceeded(player, level, event.getPos(), level.getGameTime());
+            maybeNotifyTimberLimitExceeded(player, level, timberResult.oversizedComponentSamplePositions(),
+                    level.getGameTime());
             return;
         }
 
@@ -94,10 +91,10 @@ public final class TimberBlockBreakHandler {
         WARNED_OVERSIZED_TARGETS.clear();
     }
 
-    private static void maybeNotifyTimberLimitExceeded(ServerPlayer player, ServerLevel level, BlockPos brokenPos,
-            long gameTime) {
+    private static void maybeNotifyTimberLimitExceeded(ServerPlayer player, ServerLevel level,
+            List<BlockPos> oversizedComponentSamplePositions, long gameTime) {
         var playerUuid = player.getUUID();
-        var targetSignature = TreeSignature.from(level, brokenPos);
+        var targetSignature = TreeSignature.from(level, oversizedComponentSamplePositions);
         if (targetSignature != null) {
             var perPlayerTargets = WARNED_OVERSIZED_TARGETS.computeIfAbsent(playerUuid, ignored -> new ArrayList<>());
             cleanupExpiredTargets(perPlayerTargets, gameTime);
@@ -172,14 +169,13 @@ public final class TimberBlockBreakHandler {
         private static final long FNV64_OFFSET_BASIS = 0xcbf29ce484222325L;
         private static final long FNV64_PRIME = 0x100000001b3L;
 
-        private static TreeSignature from(ServerLevel level, BlockPos brokenPos) {
+        private static TreeSignature from(ServerLevel level, List<BlockPos> sampledLogs) {
             var dimensionLocation = level.dimension() != null ? level.dimension().location() : null;
             if (dimensionLocation == null) {
                 return null;
             }
 
-            var sampledLogs = sampleConnectedLogs(level, brokenPos);
-            if (sampledLogs.isEmpty()) {
+            if (sampledLogs == null || sampledLogs.isEmpty()) {
                 return null;
             }
 
@@ -212,51 +208,6 @@ public final class TimberBlockBreakHandler {
             return sharedHashes >= 3;
         }
 
-        private static List<BlockPos> sampleConnectedLogs(ServerLevel level, BlockPos brokenPos) {
-            var visited = new HashSet<BlockPos>();
-            var frontier = new ArrayDeque<BlockPos>();
-
-            var start = brokenPos.immutable();
-            visited.add(start);
-            frontier.add(start);
-
-            while (!frontier.isEmpty() && visited.size() < TREE_SIGNATURE_SAMPLE_LOG_LIMIT) {
-                var current = frontier.removeFirst();
-                for (int dx = -1; dx <= 1; dx++) {
-                    for (int dy = -1; dy <= 1; dy++) {
-                        for (int dz = -1; dz <= 1; dz++) {
-                            if (dx == 0 && dy == 0 && dz == 0) {
-                                continue;
-                            }
-
-                            var candidate = current.offset(dx, dy, dz);
-                            if (visited.contains(candidate)) {
-                                continue;
-                            }
-
-                            if (!isLog(level, candidate)) {
-                                continue;
-                            }
-
-                            var immutableCandidate = candidate.immutable();
-                            visited.add(immutableCandidate);
-                            frontier.addLast(immutableCandidate);
-                            if (visited.size() >= TREE_SIGNATURE_SAMPLE_LOG_LIMIT) {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return List.copyOf(visited);
-        }
-
-        private static boolean isLog(ServerLevel level, BlockPos pos) {
-            var state = level.getBlockState(pos);
-            return state != null && state.is(BlockTags.LOGS);
-        }
-
         private static long mixPos(BlockPos pos) {
             long hash = FNV64_OFFSET_BASIS;
             hash = fnv1a(hash, pos.getX());
@@ -278,12 +229,12 @@ public final class TimberBlockBreakHandler {
         }
 
         private static void insertMinHash(long[] minHashes, long hash) {
-            for (int i = 0; i < TREE_SIGNATURE_MIN_HASH_COUNT; i++) {
+            for (int i = 0; i < minHashes.length; i++) {
                 if (hash >= minHashes[i]) {
                     continue;
                 }
 
-                for (int j = TREE_SIGNATURE_MIN_HASH_COUNT - 1; j > i; j--) {
+                for (int j = minHashes.length - 1; j > i; j--) {
                     minHashes[j] = minHashes[j - 1];
                 }
                 minHashes[i] = hash;

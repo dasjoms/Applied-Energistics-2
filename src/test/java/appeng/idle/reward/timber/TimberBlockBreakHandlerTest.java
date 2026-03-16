@@ -10,9 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +90,7 @@ class TimberBlockBreakHandlerTest {
     }
 
     @Test
-    void suppressesOversizedTreeRetriesAfterOneLogWasRemoved() {
+    void suppressesRepeatedWarningForSameOversizedTree() {
         var player = mock(ServerPlayer.class);
         var level = mock(ServerLevel.class);
         var firstPos = new BlockPos(3, 80, 3);
@@ -100,24 +98,15 @@ class TimberBlockBreakHandlerTest {
         var firstEvent = blockBreakEvent(level, player, firstPos, logState());
         var secondEvent = blockBreakEvent(level, player, secondPos, logState());
 
-        when(level.getGameTime()).thenReturn(100L, 150L, 190L);
+        when(level.getGameTime()).thenReturn(100L, 110L);
         when(player.getUUID()).thenReturn(UUID.randomUUID());
 
-        var logPositions = new AtomicReference<>(Set.of(
+        var oversizedSample = List.of(
                 new BlockPos(3, 80, 3),
                 new BlockPos(3, 81, 3),
                 new BlockPos(3, 82, 3),
                 new BlockPos(3, 83, 3),
-                new BlockPos(4, 83, 3),
-                new BlockPos(2, 83, 3),
-                new BlockPos(3, 83, 4),
-                new BlockPos(3, 83, 2)));
-        var nonLogState = nonLogState();
-        var logState = logState();
-        when(level.getBlockState(any(BlockPos.class))).thenAnswer(invocation -> {
-            var pos = invocation.getArgument(0, BlockPos.class);
-            return logPositions.get().contains(pos) ? logState : nonLogState;
-        });
+                new BlockPos(4, 83, 3));
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
@@ -126,22 +115,11 @@ class TimberBlockBreakHandlerTest {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(firstPos), eq(8)))
-                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(oversizedSample));
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(secondPos), eq(8)))
-                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(oversizedSample));
 
             TimberBlockBreakHandler.onBlockBreak(firstEvent);
-
-            logPositions.set(Set.of(
-                    new BlockPos(3, 81, 3),
-                    new BlockPos(3, 82, 3),
-                    new BlockPos(3, 83, 3),
-                    new BlockPos(4, 83, 3),
-                    new BlockPos(2, 83, 3),
-                    new BlockPos(3, 83, 4),
-                    new BlockPos(3, 83, 2)));
-
-            TimberBlockBreakHandler.onBlockBreak(secondEvent);
             TimberBlockBreakHandler.onBlockBreak(secondEvent);
 
             verify(player, times(1)).displayClientMessage(
@@ -151,7 +129,7 @@ class TimberBlockBreakHandlerTest {
     }
 
     @Test
-    void allowsMessageForDifferentOversizedTreeOrChunk() {
+    void allowsMessageForDifferentOversizedTree() {
         var player = mock(ServerPlayer.class);
         var level = mock(ServerLevel.class);
         var firstPos = new BlockPos(3, 80, 3);
@@ -169,18 +147,54 @@ class TimberBlockBreakHandlerTest {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(firstPos), eq(8)))
-                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(List.of(
+                            new BlockPos(3, 80, 3),
+                            new BlockPos(3, 81, 3),
+                            new BlockPos(3, 82, 3),
+                            new BlockPos(3, 83, 3))));
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(secondPos), eq(8)))
-                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
-
-            var belowState = mock(BlockState.class);
-            when(belowState.is(BlockTags.LOGS)).thenReturn(false);
-            when(level.getMinBuildHeight()).thenReturn(0);
-            when(level.getBlockState(eq(new BlockPos(3, 79, 3)))).thenReturn(belowState);
-            when(level.getBlockState(eq(new BlockPos(40, 79, 40)))).thenReturn(belowState);
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(List.of(
+                            new BlockPos(40, 80, 40),
+                            new BlockPos(40, 81, 40),
+                            new BlockPos(40, 82, 40),
+                            new BlockPos(40, 83, 40))));
 
             TimberBlockBreakHandler.onBlockBreak(firstEvent);
             TimberBlockBreakHandler.onBlockBreak(secondEvent);
+
+            verify(player, times(2)).displayClientMessage(
+                    Component.translatable("message.ae2.idle.timber.limit_exceeded"),
+                    true);
+        }
+    }
+
+    @Test
+    void allowsWarningAgainAfterOversizedSuppressionExpires() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(ServerLevel.class);
+        var pos = new BlockPos(3, 80, 3);
+        var event = blockBreakEvent(level, player, pos, logState());
+
+        when(level.getGameTime()).thenReturn(100L, 100L + (20 * 30) + 1);
+        when(player.getUUID()).thenReturn(UUID.randomUUID());
+
+        var oversizedSample = List.of(
+                new BlockPos(3, 80, 3),
+                new BlockPos(3, 81, 3),
+                new BlockPos(3, 82, 3),
+                new BlockPos(3, 83, 3));
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(pos), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(oversizedSample));
+
+            TimberBlockBreakHandler.onBlockBreak(event);
+            TimberBlockBreakHandler.onBlockBreak(event);
 
             verify(player, times(2)).displayClientMessage(
                     Component.translatable("message.ae2.idle.timber.limit_exceeded"),
@@ -250,13 +264,6 @@ class TimberBlockBreakHandlerTest {
 
             chopService.verify(() -> TimberChopService.collectEligibleLogs(any(), any(), anyInt()), never());
         }
-    }
-
-    private static BlockState nonLogState() {
-        var state = mock(BlockState.class);
-        when(state.isAir()).thenReturn(false);
-        when(state.is(BlockTags.LOGS)).thenReturn(false);
-        return state;
     }
 
     private static BlockState logState() {

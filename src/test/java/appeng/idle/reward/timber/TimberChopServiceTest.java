@@ -13,7 +13,6 @@ import org.mockito.MockedStatic;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -34,7 +33,7 @@ class TimberChopServiceTest {
             naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
                     .thenAnswer(invocation -> {
                         var state = invocation.getArgument(2, BlockState.class);
-                        return state.is(BlockTags.LOGS);
+                        return state.is(Blocks.OAK_LOG);
                     });
 
             var result = TimberChopService.collectEligibleLogs(level, new BlockPos(0, 0, 0), 3);
@@ -60,13 +59,14 @@ class TimberChopServiceTest {
             naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
                     .thenAnswer(invocation -> {
                         var state = invocation.getArgument(2, BlockState.class);
-                        return state.is(BlockTags.LOGS);
+                        return state.is(Blocks.OAK_LOG);
                     });
 
             var result = TimberChopService.collectEligibleLogs(level, new BlockPos(0, 0, 0), 3);
 
             assertThat(result.status()).isEqualTo(TimberChopService.Status.EXCEEDS_LIMIT);
             assertThat(result.collectedPositions()).isEmpty();
+            assertThat(result.oversizedComponentSamplePositions()).isNotEmpty();
         }
     }
 
@@ -89,7 +89,7 @@ class TimberChopServiceTest {
                     .thenAnswer(invocation -> {
                         var pos = invocation.getArgument(1, BlockPos.class);
                         var state = invocation.getArgument(2, BlockState.class);
-                        return state.is(BlockTags.LOGS) && !playerPlaced.equals(pos);
+                        return state.is(Blocks.OAK_LOG) && !playerPlaced.equals(pos);
                     });
 
             var result = TimberChopService.collectEligibleLogs(level, start, 10);
@@ -159,7 +159,7 @@ class TimberChopServiceTest {
             naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
                     .thenAnswer(invocation -> {
                         var state = invocation.getArgument(2, BlockState.class);
-                        return state.is(BlockTags.LOGS);
+                        return state.is(Blocks.OAK_LOG);
                     });
 
             var result = TimberChopService.collectEligibleLogs(level, start, 2);
@@ -187,13 +187,14 @@ class TimberChopServiceTest {
             naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
                     .thenAnswer(invocation -> {
                         var state = invocation.getArgument(2, BlockState.class);
-                        return state.is(BlockTags.LOGS);
+                        return state.is(Blocks.OAK_LOG);
                     });
 
             var result = TimberChopService.collectEligibleLogs(level, start, 2);
 
             assertThat(result.status()).isEqualTo(TimberChopService.Status.EXCEEDS_LIMIT);
             assertThat(result.collectedPositions()).isEmpty();
+            assertThat(result.oversizedComponentSamplePositions()).isNotEmpty();
         }
     }
 
