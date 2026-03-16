@@ -1,8 +1,11 @@
 package appeng.idle.reward.timber;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -25,7 +28,9 @@ public final class TimberBlockBreakHandler {
     private static final int MAX_OVERSIZED_TARGETS_PER_PLAYER = 64;
     private static final ThreadLocal<Boolean> TIMBER_IN_PROGRESS = ThreadLocal.withInitial(() -> false);
     private static final HashMap<UUID, Long> LAST_LIMIT_EXCEEDED_MESSAGE_TICKS = new HashMap<>();
-    private static final HashMap<UUID, HashMap<OversizedTargetKey, Long>> WARNED_OVERSIZED_TARGETS = new HashMap<>();
+    private static final int TREE_SIGNATURE_SAMPLE_LOG_LIMIT = 512;
+    private static final int TREE_SIGNATURE_MIN_HASH_COUNT = 4;
+    private static final HashMap<UUID, List<OversizedTargetSuppressionEntry>> WARNED_OVERSIZED_TARGETS = new HashMap<>();
 
     private TimberBlockBreakHandler() {
     }
@@ -92,17 +97,18 @@ public final class TimberBlockBreakHandler {
     private static void maybeNotifyTimberLimitExceeded(ServerPlayer player, ServerLevel level, BlockPos brokenPos,
             long gameTime) {
         var playerUuid = player.getUUID();
-        var targetKey = OversizedTargetKey.from(level, brokenPos);
-        if (targetKey != null) {
-            var perPlayerTargets = WARNED_OVERSIZED_TARGETS.computeIfAbsent(playerUuid, ignored -> new HashMap<>());
+        var targetSignature = TreeSignature.from(level, brokenPos);
+        if (targetSignature != null) {
+            var perPlayerTargets = WARNED_OVERSIZED_TARGETS.computeIfAbsent(playerUuid, ignored -> new ArrayList<>());
             cleanupExpiredTargets(perPlayerTargets, gameTime);
 
-            var previousWarnTick = perPlayerTargets.get(targetKey);
-            if (previousWarnTick != null && gameTime - previousWarnTick < OVERSIZED_TARGET_SUPPRESSION_TICKS) {
+            if (isAlreadySuppressed(perPlayerTargets, targetSignature)) {
                 return;
             }
 
-            perPlayerTargets.put(targetKey, gameTime);
+            perPlayerTargets.add(new OversizedTargetSuppressionEntry(
+                    targetSignature,
+                    gameTime + OVERSIZED_TARGET_SUPPRESSION_TICKS));
             trimTargetsToMaxEntries(perPlayerTargets);
         } else {
             var previousMessageTick = LAST_LIMIT_EXCEEDED_MESSAGE_TICKS.get(playerUuid);
@@ -117,63 +123,172 @@ public final class TimberBlockBreakHandler {
         player.displayClientMessage(Component.translatable(LIMIT_EXCEEDED_MESSAGE_KEY), true);
     }
 
-    private static void cleanupExpiredTargets(HashMap<OversizedTargetKey, Long> perPlayerTargets, long gameTime) {
-        Iterator<Map.Entry<OversizedTargetKey, Long>> iterator = perPlayerTargets.entrySet().iterator();
+    private static boolean isAlreadySuppressed(List<OversizedTargetSuppressionEntry> perPlayerTargets,
+            TreeSignature targetSignature) {
+        for (var entry : perPlayerTargets) {
+            if (entry.signature().matches(targetSignature)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void cleanupExpiredTargets(List<OversizedTargetSuppressionEntry> perPlayerTargets, long gameTime) {
+        Iterator<OversizedTargetSuppressionEntry> iterator = perPlayerTargets.iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
-            if (gameTime - entry.getValue() >= OVERSIZED_TARGET_SUPPRESSION_TICKS) {
+            if (entry.expiresAtTick() <= gameTime) {
                 iterator.remove();
             }
         }
     }
 
-    private static void trimTargetsToMaxEntries(HashMap<OversizedTargetKey, Long> perPlayerTargets) {
+    private static void trimTargetsToMaxEntries(List<OversizedTargetSuppressionEntry> perPlayerTargets) {
         if (perPlayerTargets.size() <= MAX_OVERSIZED_TARGETS_PER_PLAYER) {
             return;
         }
 
-        OversizedTargetKey oldestKey = null;
-        long oldestTick = Long.MAX_VALUE;
-        for (var entry : perPlayerTargets.entrySet()) {
-            if (entry.getValue() < oldestTick) {
-                oldestTick = entry.getValue();
-                oldestKey = entry.getKey();
+        int oldestIndex = -1;
+        long oldestExpiryTick = Long.MAX_VALUE;
+        for (int i = 0; i < perPlayerTargets.size(); i++) {
+            var expiresAt = perPlayerTargets.get(i).expiresAtTick();
+            if (expiresAt < oldestExpiryTick) {
+                oldestExpiryTick = expiresAt;
+                oldestIndex = i;
             }
         }
 
-        if (oldestKey != null) {
-            perPlayerTargets.remove(oldestKey);
+        if (oldestIndex >= 0) {
+            perPlayerTargets.remove(oldestIndex);
         }
     }
 
-    private record OversizedTargetKey(ResourceLocation dimension, int chunkX, int chunkZ, BlockPos canonicalSeedPos) {
-        private static OversizedTargetKey from(ServerLevel level, BlockPos brokenPos) {
+    private record OversizedTargetSuppressionEntry(TreeSignature signature, long expiresAtTick) {
+    }
+
+    private record TreeSignature(ResourceLocation dimension, long hashA, long hashB, long hashC, long hashD) {
+
+        private static final long FNV64_OFFSET_BASIS = 0xcbf29ce484222325L;
+        private static final long FNV64_PRIME = 0x100000001b3L;
+
+        private static TreeSignature from(ServerLevel level, BlockPos brokenPos) {
             var dimensionLocation = level.dimension() != null ? level.dimension().location() : null;
             if (dimensionLocation == null) {
                 return null;
             }
 
-            return new OversizedTargetKey(
-                    dimensionLocation,
-                    brokenPos.getX() >> 4,
-                    brokenPos.getZ() >> 4,
-                    findCanonicalSeedLogPos(level, brokenPos));
-        }
-
-        private static BlockPos findCanonicalSeedLogPos(ServerLevel level, BlockPos brokenPos) {
-            var current = brokenPos.immutable();
-            var minBuildHeight = level.getMinBuildHeight();
-            while (current.getY() > minBuildHeight) {
-                var below = current.below();
-                var belowState = level.getBlockState(below);
-                if (!belowState.is(BlockTags.LOGS)) {
-                    break;
-                }
-
-                current = below.immutable();
+            var sampledLogs = sampleConnectedLogs(level, brokenPos);
+            if (sampledLogs.isEmpty()) {
+                return null;
             }
 
-            return current;
+            long[] minHashes = { Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE };
+            for (var logPos : sampledLogs) {
+                insertMinHash(minHashes, mixPos(logPos));
+            }
+
+            return new TreeSignature(dimensionLocation, minHashes[0], minHashes[1], minHashes[2], minHashes[3]);
+        }
+
+        private boolean matches(TreeSignature other) {
+            if (!dimension.equals(other.dimension)) {
+                return false;
+            }
+
+            int sharedHashes = 0;
+            long[] ownHashes = { hashA, hashB, hashC, hashD };
+            long[] otherHashes = { other.hashA, other.hashB, other.hashC, other.hashD };
+
+            for (var ownHash : ownHashes) {
+                for (var otherHash : otherHashes) {
+                    if (ownHash == otherHash) {
+                        sharedHashes++;
+                        break;
+                    }
+                }
+            }
+
+            return sharedHashes >= 3;
+        }
+
+        private static List<BlockPos> sampleConnectedLogs(ServerLevel level, BlockPos brokenPos) {
+            var visited = new HashSet<BlockPos>();
+            var frontier = new ArrayDeque<BlockPos>();
+
+            var start = brokenPos.immutable();
+            visited.add(start);
+            frontier.add(start);
+
+            while (!frontier.isEmpty() && visited.size() < TREE_SIGNATURE_SAMPLE_LOG_LIMIT) {
+                var current = frontier.removeFirst();
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dz = -1; dz <= 1; dz++) {
+                            if (dx == 0 && dy == 0 && dz == 0) {
+                                continue;
+                            }
+
+                            var candidate = current.offset(dx, dy, dz);
+                            if (visited.contains(candidate)) {
+                                continue;
+                            }
+
+                            if (!isLog(level, candidate)) {
+                                continue;
+                            }
+
+                            var immutableCandidate = candidate.immutable();
+                            visited.add(immutableCandidate);
+                            frontier.addLast(immutableCandidate);
+                            if (visited.size() >= TREE_SIGNATURE_SAMPLE_LOG_LIMIT) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return List.copyOf(visited);
+        }
+
+        private static boolean isLog(ServerLevel level, BlockPos pos) {
+            var state = level.getBlockState(pos);
+            return state != null && state.is(BlockTags.LOGS);
+        }
+
+        private static long mixPos(BlockPos pos) {
+            long hash = FNV64_OFFSET_BASIS;
+            hash = fnv1a(hash, pos.getX());
+            hash = fnv1a(hash, pos.getY());
+            hash = fnv1a(hash, pos.getZ());
+            return hash;
+        }
+
+        private static long fnv1a(long hash, int value) {
+            hash ^= (value) & 0xFFL;
+            hash *= FNV64_PRIME;
+            hash ^= (value >> 8) & 0xFFL;
+            hash *= FNV64_PRIME;
+            hash ^= (value >> 16) & 0xFFL;
+            hash *= FNV64_PRIME;
+            hash ^= (value >> 24) & 0xFFL;
+            hash *= FNV64_PRIME;
+            return hash;
+        }
+
+        private static void insertMinHash(long[] minHashes, long hash) {
+            for (int i = 0; i < TREE_SIGNATURE_MIN_HASH_COUNT; i++) {
+                if (hash >= minHashes[i]) {
+                    continue;
+                }
+
+                for (int j = TREE_SIGNATURE_MIN_HASH_COUNT - 1; j > i; j--) {
+                    minHashes[j] = minHashes[j - 1];
+                }
+                minHashes[i] = hash;
+                return;
+            }
         }
     }
 }

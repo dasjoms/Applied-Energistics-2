@@ -10,7 +10,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -90,13 +92,32 @@ class TimberBlockBreakHandlerTest {
     }
 
     @Test
-    void suppressesSameOversizedTreeRetriesPerPlayer() {
+    void suppressesOversizedTreeRetriesAfterOneLogWasRemoved() {
         var player = mock(ServerPlayer.class);
         var level = mock(ServerLevel.class);
-        var event = blockBreakEvent(level, player, new BlockPos(3, 80, 3), logState());
+        var firstPos = new BlockPos(3, 80, 3);
+        var secondPos = new BlockPos(3, 81, 3);
+        var firstEvent = blockBreakEvent(level, player, firstPos, logState());
+        var secondEvent = blockBreakEvent(level, player, secondPos, logState());
 
         when(level.getGameTime()).thenReturn(100L, 150L, 190L);
         when(player.getUUID()).thenReturn(UUID.randomUUID());
+
+        var logPositions = new AtomicReference<>(Set.of(
+                new BlockPos(3, 80, 3),
+                new BlockPos(3, 81, 3),
+                new BlockPos(3, 82, 3),
+                new BlockPos(3, 83, 3),
+                new BlockPos(4, 83, 3),
+                new BlockPos(2, 83, 3),
+                new BlockPos(3, 83, 4),
+                new BlockPos(3, 83, 2)));
+        var nonLogState = nonLogState();
+        var logState = logState();
+        when(level.getBlockState(any(BlockPos.class))).thenAnswer(invocation -> {
+            var pos = invocation.getArgument(0, BlockPos.class);
+            return logPositions.get().contains(pos) ? logState : nonLogState;
+        });
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
@@ -104,17 +125,24 @@ class TimberBlockBreakHandlerTest {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
-            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(new BlockPos(3, 80, 3)), eq(8)))
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(firstPos), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(secondPos), eq(8)))
                     .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
 
-            var belowState = mock(BlockState.class);
-            when(belowState.is(BlockTags.LOGS)).thenReturn(false);
-            when(level.getMinBuildHeight()).thenReturn(0);
-            when(level.getBlockState(eq(new BlockPos(3, 79, 3)))).thenReturn(belowState);
+            TimberBlockBreakHandler.onBlockBreak(firstEvent);
 
-            TimberBlockBreakHandler.onBlockBreak(event);
-            TimberBlockBreakHandler.onBlockBreak(event);
-            TimberBlockBreakHandler.onBlockBreak(event);
+            logPositions.set(Set.of(
+                    new BlockPos(3, 81, 3),
+                    new BlockPos(3, 82, 3),
+                    new BlockPos(3, 83, 3),
+                    new BlockPos(4, 83, 3),
+                    new BlockPos(2, 83, 3),
+                    new BlockPos(3, 83, 4),
+                    new BlockPos(3, 83, 2)));
+
+            TimberBlockBreakHandler.onBlockBreak(secondEvent);
+            TimberBlockBreakHandler.onBlockBreak(secondEvent);
 
             verify(player, times(1)).displayClientMessage(
                     Component.translatable("message.ae2.idle.timber.limit_exceeded"),
@@ -222,6 +250,13 @@ class TimberBlockBreakHandlerTest {
 
             chopService.verify(() -> TimberChopService.collectEligibleLogs(any(), any(), anyInt()), never());
         }
+    }
+
+    private static BlockState nonLogState() {
+        var state = mock(BlockState.class);
+        when(state.isAir()).thenReturn(false);
+        when(state.is(BlockTags.LOGS)).thenReturn(false);
+        return state;
     }
 
     private static BlockState logState() {
