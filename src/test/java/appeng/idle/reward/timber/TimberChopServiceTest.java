@@ -144,6 +144,37 @@ class TimberChopServiceTest {
     }
 
     @Test
+    void oversizedComponentSampleIsDeterministicallySorted() {
+        var start = new BlockPos(0, 0, 0);
+        var first = new BlockPos(-1, -1, -1);
+        var second = new BlockPos(-1, -1, 0);
+        var third = new BlockPos(-1, -1, 1);
+
+        var level = mockLevelWithStates(new HashMap<>() {
+            {
+                put(start, Blocks.OAK_LOG.defaultBlockState());
+                put(first, Blocks.OAK_LOG.defaultBlockState());
+                put(second, Blocks.OAK_LOG.defaultBlockState());
+                put(third, Blocks.OAK_LOG.defaultBlockState());
+            }
+        });
+
+        try (MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class)) {
+            naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
+                    .thenAnswer(invocation -> {
+                        var state = invocation.getArgument(2, BlockState.class);
+                        return state.is(Blocks.OAK_LOG);
+                    });
+
+            var result = TimberChopService.collectEligibleLogs(level, start, 3);
+
+            assertThat(result.status()).isEqualTo(TimberChopService.Status.EXCEEDS_LIMIT);
+            assertThat(result.collectedPositions()).isEmpty();
+            assertThat(result.oversizedComponentSamplePositions()).containsExactly(first, second, third, start);
+        }
+    }
+
+    @Test
     void diagonalOnlyConnectionIncluded() {
         var start = new BlockPos(0, 0, 0);
         var diagonal = new BlockPos(1, 1, 1);

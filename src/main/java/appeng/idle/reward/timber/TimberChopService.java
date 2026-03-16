@@ -77,15 +77,22 @@ public final class TimberChopService {
             return List.of();
         }
 
-        var sampled = new java.util.ArrayList<BlockPos>(Math.min(visited.size(), OVERSIZED_COMPONENT_SAMPLE_LIMIT));
-        for (var pos : visited) {
-            sampled.add(pos);
-            if (sampled.size() >= OVERSIZED_COMPONENT_SAMPLE_LIMIT) {
-                break;
-            }
-        }
+        return visited.stream()
+                .sorted((a, b) -> {
+                    var compareX = Integer.compare(a.getX(), b.getX());
+                    if (compareX != 0) {
+                        return compareX;
+                    }
 
-        return List.copyOf(sampled);
+                    var compareY = Integer.compare(a.getY(), b.getY());
+                    if (compareY != 0) {
+                        return compareY;
+                    }
+
+                    return Integer.compare(a.getZ(), b.getZ());
+                })
+                .limit(OVERSIZED_COMPONENT_SAMPLE_LIMIT)
+                .toList();
     }
 
     public record TimberChopResult(Status status, List<BlockPos> collectedPositions,
