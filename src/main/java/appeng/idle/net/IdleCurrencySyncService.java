@@ -25,6 +25,7 @@ import appeng.idle.generation.IdleGenerationCapService;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.tick.IdleGenerationMath;
+import appeng.idle.upgrade.IdleUpgradeHooks;
 
 /**
  * Server->client idle currency synchronization.
@@ -87,7 +88,8 @@ public final class IdleCurrencySyncService {
     private static void sendHeartbeat(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
         PacketDistributor.sendToPlayer(player,
-                new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
+                new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player),
+                        isIdlePunchEligible(player)));
 
         if (shouldReceiveHudHeartbeat(player)) {
             sendHudSnapshot(player);
@@ -97,7 +99,8 @@ public final class IdleCurrencySyncService {
     public static void sendSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
         PacketDistributor.sendToPlayer(player,
-                new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player)));
+                new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player),
+                        isIdlePunchEligible(player)));
         if (shouldReceiveHudHeartbeat(player)) {
             sendHudSnapshot(player);
         }
@@ -141,7 +144,12 @@ public final class IdleCurrencySyncService {
         }
 
         PacketDistributor.sendToPlayer(player,
-                new IdleCurrencyDeltaPacket(new LinkedHashMap<>(changedBalances), new LinkedHashMap<>(rates)));
+                new IdleCurrencyDeltaPacket(new LinkedHashMap<>(changedBalances), new LinkedHashMap<>(rates),
+                        isIdlePunchEligible(player)));
+    }
+
+    private static boolean isIdlePunchEligible(ServerPlayer player) {
+        return IdleUpgradeHooks.hasCombatUpgrade(PlayerIdleDataManager.get(player));
     }
 
     private static Map<CurrencyId, Long> snapshotBalances(ServerPlayer player) {
