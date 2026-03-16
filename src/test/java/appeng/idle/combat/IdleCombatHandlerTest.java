@@ -108,7 +108,7 @@ class IdleCombatHandlerTest {
     }
 
     @Test
-    void tracksCooldownPerHandAndLeavesOtherHandAvailable() {
+    void offHandCanAttackWhileMainHandCoolingAndViceVersa() {
         var fixture = combatFixture();
         when(fixture.level().getGameTime()).thenReturn(100L, 102L, 103L, 106L);
 
@@ -130,6 +130,32 @@ class IdleCombatHandlerTest {
             verify(fixture.target(), times(3)).hurt(any(), anyFloat());
             verify(fixture.player(), times(2)).swing(InteractionHand.MAIN_HAND, true);
             verify(fixture.player()).swing(InteractionHand.OFF_HAND, true);
+        }
+    }
+
+    @Test
+    void repeatedClicksOnSameHandRespectDoubledBaseCooldown() {
+        var fixture = combatFixture();
+        when(fixture.player().getAttributeValue(Attributes.ATTACK_SPEED)).thenReturn(4.0);
+        when(fixture.level().getGameTime()).thenReturn(100L, 109L, 110L);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
+            dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
+            upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
+                    .thenReturn(true);
+            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
+                    .thenAnswer(invocation -> invocation.getArgument(1));
+
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.MAIN_HAND);
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.MAIN_HAND);
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.MAIN_HAND);
+
+            verify(fixture.target(), times(2)).hurt(any(), anyFloat());
+            verify(fixture.player(), times(2)).swing(InteractionHand.MAIN_HAND, true);
+            verify(fixture.player(), never()).swing(InteractionHand.OFF_HAND, true);
         }
     }
 
@@ -160,7 +186,7 @@ class IdleCombatHandlerTest {
     }
 
     @Test
-    void resetsAlternationAfterDeathRespawnCloneForNewPlayerInstance() {
+    void resetsCooldownAfterDeathRespawnCloneForNewPlayerInstance() {
         var fixture = combatFixture();
         var clonedPlayer = clonePlayer(fixture, fixture.player().getUUID());
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
@@ -180,14 +206,12 @@ class IdleCombatHandlerTest {
 
             IdleCombatHandler.handlePunchRequest(clonedPlayer, fixture.targetEntityId());
 
-            verify(fixture.player()).swing(InteractionHand.MAIN_HAND, true);
-            verify(clonedPlayer).swing(InteractionHand.MAIN_HAND, true);
-            verify(clonedPlayer, never()).swing(InteractionHand.OFF_HAND, true);
+            verify(fixture.target(), times(2)).hurt(any(), anyFloat());
         }
     }
 
     @Test
-    void doesNotResetCooldownOnNonDeathCloneForNewPlayerInstance() {
+    void keepsCooldownStateOnNonDeathCloneForNewPlayerInstance() {
         var fixture = combatFixture();
         var clonedPlayer = clonePlayer(fixture, fixture.player().getUUID());
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
@@ -207,9 +231,7 @@ class IdleCombatHandlerTest {
 
             IdleCombatHandler.handlePunchRequest(clonedPlayer, fixture.targetEntityId());
 
-            verify(fixture.player()).swing(InteractionHand.MAIN_HAND, true);
-            verify(clonedPlayer).swing(InteractionHand.MAIN_HAND, true);
-            verify(clonedPlayer, never()).swing(InteractionHand.OFF_HAND, true);
+            verify(fixture.target(), times(2)).hurt(any(), anyFloat());
         }
     }
 
@@ -236,8 +258,7 @@ class IdleCombatHandlerTest {
 
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
 
-            verify(fixture.player(), times(2)).swing(InteractionHand.MAIN_HAND, true);
-            verify(fixture.player(), never()).swing(InteractionHand.OFF_HAND, true);
+            verify(fixture.target(), times(2)).hurt(any(), anyFloat());
         }
     }
 
