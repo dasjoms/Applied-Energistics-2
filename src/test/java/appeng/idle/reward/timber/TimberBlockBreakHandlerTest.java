@@ -22,6 +22,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
@@ -47,6 +48,7 @@ class TimberBlockBreakHandlerTest {
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
                 MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(BlockPos.ZERO), eq(8)))
@@ -72,6 +74,7 @@ class TimberBlockBreakHandlerTest {
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
                 MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(BlockPos.ZERO), eq(8)))
@@ -98,6 +101,7 @@ class TimberBlockBreakHandlerTest {
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
                 MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(new BlockPos(3, 80, 3)), eq(8)))
@@ -133,6 +137,7 @@ class TimberBlockBreakHandlerTest {
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
                 MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(firstPos), eq(8)))
@@ -166,6 +171,7 @@ class TimberBlockBreakHandlerTest {
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
                 MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
             chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(origin), eq(8)))
@@ -208,6 +214,7 @@ class TimberBlockBreakHandlerTest {
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
                 MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(1);
 
@@ -231,6 +238,7 @@ class TimberBlockBreakHandlerTest {
         when(event.isCanceled()).thenReturn(false);
         when(event.getLevel()).thenReturn(level);
         when(level.isClientSide()).thenReturn(false);
+        when(level.dimension()).thenReturn(Level.OVERWORLD);
         when(event.getPlayer()).thenReturn(player);
         when(event.getPos()).thenReturn(pos);
         when(event.getState()).thenReturn(state);
