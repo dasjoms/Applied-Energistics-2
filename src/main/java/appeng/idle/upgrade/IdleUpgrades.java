@@ -38,10 +38,27 @@ public final class IdleUpgrades {
                 }
             });
 
+    public static final UpgradeDefinition COMBAT_1 = new UpgradeDefinition(
+            id("combat_1"),
+            5,
+            new CostBundle(Map.of(IdleCurrencies.IDLE, 200L)),
+            new UpgradeEffects() {
+                @Override
+                public boolean enablesUnarmedDualPunch() {
+                    return true;
+                }
+
+                @Override
+                public double unarmedPunchCooldownMultiplier() {
+                    return 0.95;
+                }
+            });
+
     private static final Map<ResourceLocation, UpgradeDefinition> DEFINITIONS = Map.of(
             NO_OP.id(), NO_OP,
             OFFLINE_EFFICIENCY_1.id(), OFFLINE_EFFICIENCY_1,
-            TIMBER_1.id(), TIMBER_1);
+            TIMBER_1.id(), TIMBER_1,
+            COMBAT_1.id(), COMBAT_1);
 
     private IdleUpgrades() {
     }

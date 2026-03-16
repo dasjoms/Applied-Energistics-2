@@ -53,6 +53,71 @@ class IdleUpgradeHooksTest {
     }
 
     @Test
+    void unarmedDualPunchIsDisabledWhenCombatUpgradeIsNotOwned() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of());
+
+        var dualPunchEnabled = IdleUpgradeHooks.isUnarmedDualPunchEnabled(data);
+
+        assertThat(dualPunchEnabled).isFalse();
+    }
+
+    @Test
+    void unarmedDualPunchIsEnabledWhenCombatUpgradeIsOwned() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 1));
+
+        var dualPunchEnabled = IdleUpgradeHooks.isUnarmedDualPunchEnabled(data);
+
+        assertThat(dualPunchEnabled).isTrue();
+    }
+
+    @Test
+    void unarmedPunchCooldownMultiplierDefaultsToIdentityWhenUpgradeIsAbsent() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of());
+
+        var cooldownMultiplier = IdleUpgradeHooks.getUnarmedPunchCooldownMultiplier(data);
+
+        assertThat(cooldownMultiplier).isEqualTo(1.0);
+    }
+
+    @Test
+    void unarmedPunchCooldownMultiplierStacksPerOwnedLevel() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 2));
+
+        var cooldownMultiplier = IdleUpgradeHooks.getUnarmedPunchCooldownMultiplier(data);
+
+        assertThat(cooldownMultiplier).isEqualTo(0.9025);
+    }
+
+    @Test
+    void unarmedPunchCooldownMultiplierCapsAtDefinitionMaxLevel() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 1000));
+
+        var cooldownMultiplier = IdleUpgradeHooks.getUnarmedPunchCooldownMultiplier(data);
+
+        assertThat(cooldownMultiplier).isCloseTo(0.7737809375, org.assertj.core.data.Offset.offset(1.0E-12));
+    }
+
+    @Test
     void timberLogLimitIsZeroWhenUpgradeIsNotOwned() {
         var data = new PlayerIdleData(
                 Map.of(),

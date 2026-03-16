@@ -20,4 +20,12 @@ public interface UpgradeEffects {
     default int timberLogLimitPerLevel() {
         return 0;
     }
+
+    default boolean enablesUnarmedDualPunch() {
+        return false;
+    }
+
+    default double unarmedPunchCooldownMultiplier() {
+        return 1.0;
+    }
 }
