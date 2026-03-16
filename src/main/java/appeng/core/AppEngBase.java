@@ -201,6 +201,8 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(IdleRewardManager::onAddReloadListener);
         NeoForge.EVENT_BUS.addListener(IdleCombatHandler::onAttackEntity);
         NeoForge.EVENT_BUS.addListener(IdleCombatHandler::onPlayerLoggedOut);
+        NeoForge.EVENT_BUS.addListener(IdleCombatHandler::onPlayerClone);
+        NeoForge.EVENT_BUS.addListener(IdleCombatHandler::onPlayerChangedDimension);
         NeoForge.EVENT_BUS.addListener(TimberBlockBreakHandler::onBlockBreak);
         NeoForge.EVENT_BUS.addListener(BlockBreakRewardHandler::onBlockBreak);
         NeoForge.EVENT_BUS.addListener(NaturalLogTracker::onEntityPlace);

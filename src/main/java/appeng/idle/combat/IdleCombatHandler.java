@@ -57,6 +57,25 @@ public final class IdleCombatHandler {
         PLAYER_COMBAT_STATES.remove(event.getEntity().getUUID());
     }
 
+    /**
+     * Reset hand-alternation and cooldown state when a player respawns after death.
+     * <p>
+     * We intentionally reset after death so every new life starts from a deterministic combat baseline (main hand
+     * first) instead of carrying over pre-death alternation state.
+     */
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        if (!event.isWasDeath()) {
+            return;
+        }
+
+        PLAYER_COMBAT_STATES.remove(event.getOriginal().getUUID());
+        PLAYER_COMBAT_STATES.remove(event.getEntity().getUUID());
+    }
+
+    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        PLAYER_COMBAT_STATES.remove(event.getEntity().getUUID());
+    }
+
     private static boolean tryPerformUnarmedPunch(ServerPlayer player, Entity target) {
         if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
             return false;
