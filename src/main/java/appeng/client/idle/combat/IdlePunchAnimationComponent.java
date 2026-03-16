@@ -71,8 +71,23 @@ public final class IdlePunchAnimationComponent {
         reset();
     }
 
-    public static boolean shouldRenderForHand(Player player, InteractionHand hand) {
-        return isIdlePunchMode(player) && isAnimationActive(player) && activeHand == hand;
+    public static boolean isIdlePunchMode(Player player) {
+        return AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD))
+                && player.getMainHandItem().isEmpty()
+                && player.getOffhandItem().isEmpty()
+                && IdleCurrencyClientCache.isIdlePunchEligible();
+    }
+
+    public static boolean isSwingActiveForHand(Player player, InteractionHand hand) {
+        return isAnimationActive(player) && activeHand == hand;
+    }
+
+    public static boolean shouldRenderIdleHand(Player player, InteractionHand hand) {
+        if (!isIdlePunchMode(player)) {
+            return false;
+        }
+
+        return hand == InteractionHand.OFF_HAND || isSwingActiveForHand(player, hand);
     }
 
     public static InteractionHand getActiveHand() {
@@ -89,13 +104,6 @@ public final class IdlePunchAnimationComponent {
 
     public static boolean isAnimationActive(Player player) {
         return swingStartTick != Long.MIN_VALUE && !isAnimationFinished(player.level().getGameTime());
-    }
-
-    private static boolean isIdlePunchMode(Player player) {
-        return AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD))
-                && player.getMainHandItem().isEmpty()
-                && player.getOffhandItem().isEmpty()
-                && IdleCurrencyClientCache.isIdlePunchEligible();
     }
 
     private static boolean isAnimationFinished(long gameTime) {
