@@ -1,8 +1,6 @@
 package appeng.idle.reward.timber;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,11 +20,9 @@ import appeng.idle.upgrade.IdleUpgradeHooks;
 public final class TimberBlockBreakHandler {
     private static final String LIMIT_EXCEEDED_MESSAGE_KEY = "message.ae2.idle.timber.limit_exceeded";
     private static final long LIMIT_EXCEEDED_MESSAGE_COOLDOWN_TICKS = 40;
-    private static final long OVERSIZED_TARGET_SUPPRESSION_TICKS = 20 * 30;
-    private static final int MAX_OVERSIZED_TARGETS_PER_PLAYER = 64;
     private static final ThreadLocal<Boolean> TIMBER_IN_PROGRESS = ThreadLocal.withInitial(() -> false);
     private static final HashMap<UUID, Long> LAST_LIMIT_EXCEEDED_MESSAGE_TICKS = new HashMap<>();
-    private static final HashMap<UUID, List<OversizedTargetSuppressionEntry>> WARNED_OVERSIZED_TARGETS = new HashMap<>();
+    private static final HashMap<UUID, TreeSignature> LAST_WARNED_OVERSIZED_TARGET = new HashMap<>();
 
     private TimberBlockBreakHandler() {
     }
@@ -88,7 +84,7 @@ public final class TimberBlockBreakHandler {
 
     static void resetLimitExceededCooldownsForTests() {
         LAST_LIMIT_EXCEEDED_MESSAGE_TICKS.clear();
-        WARNED_OVERSIZED_TARGETS.clear();
+        LAST_WARNED_OVERSIZED_TARGET.clear();
     }
 
     private static void maybeNotifyTimberLimitExceeded(ServerPlayer player, ServerLevel level,
@@ -96,17 +92,12 @@ public final class TimberBlockBreakHandler {
         var playerUuid = player.getUUID();
         var targetSignature = TreeSignature.from(level, oversizedComponentSamplePositions);
         if (targetSignature != null) {
-            var perPlayerTargets = WARNED_OVERSIZED_TARGETS.computeIfAbsent(playerUuid, ignored -> new ArrayList<>());
-            cleanupExpiredTargets(perPlayerTargets, gameTime);
-
-            if (isAlreadySuppressed(perPlayerTargets, targetSignature)) {
+            var lastWarnedTarget = LAST_WARNED_OVERSIZED_TARGET.get(playerUuid);
+            if (lastWarnedTarget != null && lastWarnedTarget.matches(targetSignature)) {
                 return;
             }
 
-            perPlayerTargets.add(new OversizedTargetSuppressionEntry(
-                    targetSignature,
-                    gameTime + OVERSIZED_TARGET_SUPPRESSION_TICKS));
-            trimTargetsToMaxEntries(perPlayerTargets);
+            LAST_WARNED_OVERSIZED_TARGET.put(playerUuid, targetSignature);
         } else {
             var previousMessageTick = LAST_LIMIT_EXCEEDED_MESSAGE_TICKS.get(playerUuid);
             if (previousMessageTick != null
@@ -118,50 +109,6 @@ public final class TimberBlockBreakHandler {
         }
 
         player.displayClientMessage(Component.translatable(LIMIT_EXCEEDED_MESSAGE_KEY), true);
-    }
-
-    private static boolean isAlreadySuppressed(List<OversizedTargetSuppressionEntry> perPlayerTargets,
-            TreeSignature targetSignature) {
-        for (var entry : perPlayerTargets) {
-            if (entry.signature().matches(targetSignature)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static void cleanupExpiredTargets(List<OversizedTargetSuppressionEntry> perPlayerTargets, long gameTime) {
-        Iterator<OversizedTargetSuppressionEntry> iterator = perPlayerTargets.iterator();
-        while (iterator.hasNext()) {
-            var entry = iterator.next();
-            if (entry.expiresAtTick() <= gameTime) {
-                iterator.remove();
-            }
-        }
-    }
-
-    private static void trimTargetsToMaxEntries(List<OversizedTargetSuppressionEntry> perPlayerTargets) {
-        if (perPlayerTargets.size() <= MAX_OVERSIZED_TARGETS_PER_PLAYER) {
-            return;
-        }
-
-        int oldestIndex = -1;
-        long oldestExpiryTick = Long.MAX_VALUE;
-        for (int i = 0; i < perPlayerTargets.size(); i++) {
-            var expiresAt = perPlayerTargets.get(i).expiresAtTick();
-            if (expiresAt < oldestExpiryTick) {
-                oldestExpiryTick = expiresAt;
-                oldestIndex = i;
-            }
-        }
-
-        if (oldestIndex >= 0) {
-            perPlayerTargets.remove(oldestIndex);
-        }
-    }
-
-    private record OversizedTargetSuppressionEntry(TreeSignature signature, long expiresAtTick) {
     }
 
     private record TreeSignature(ResourceLocation dimension, long hashA, long hashB, long hashC, long hashD) {
