@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.Map;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -26,6 +27,7 @@ import appeng.idle.currency.CurrencyId;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradePurchaseService;
+import appeng.idle.upgrade.IdleUpgrades;
 import appeng.server.ISubCommand;
 
 /**
@@ -68,6 +70,23 @@ public class IdleCurrencyCommand implements ISubCommand {
                                     return 1;
                                 }))));
 
+        builder.then(literal("setupgrade")
+                .then(argument("player", EntityArgument.player())
+                        .then(argument("upgrade", ResourceLocationArgument.id())
+                                .then(argument("level", IntegerArgumentType.integer(0))
+                                        .executes(ctx -> {
+                                            setUpgradeLevel(ctx, ResourceLocationArgument.getId(ctx, "upgrade"));
+                                            return 1;
+                                        })))));
+
+        builder.then(literal("settimber")
+                .then(argument("player", EntityArgument.player())
+                        .then(argument("level", IntegerArgumentType.integer(0))
+                                .executes(ctx -> {
+                                    setUpgradeLevel(ctx, IdleUpgrades.TIMBER_1.id());
+                                    return 1;
+                                }))));
+
         builder.then(literal("setlastseen")
                 .then(argument("player", EntityArgument.player())
                         .then(argument("epochSeconds", LongArgumentType.longArg(0L))
@@ -88,7 +107,9 @@ public class IdleCurrencyCommand implements ISubCommand {
     @Override
     public void call(MinecraftServer srv, CommandContext<CommandSourceStack> ctx, CommandSourceStack sender) {
         sender.sendSuccess(
-                () -> Component.literal("Usage: /ae2 idlecurrency <balance|grant|purchase|setlastseen|catchup> ..."),
+                () -> Component
+                        .literal(
+                                "Usage: /ae2 idlecurrency <balance|grant|purchase|setupgrade|settimber|setlastseen|catchup> ..."),
                 false);
     }
 
@@ -149,6 +170,43 @@ public class IdleCurrencyCommand implements ISubCommand {
             case INSUFFICIENT_FUNDS -> "Purchase rejected for " + playerName + ": insufficient idle currency for "
                     + upgradeId + ".";
         };
+    }
+
+    private static void setUpgradeLevel(CommandContext<CommandSourceStack> ctx, ResourceLocation upgradeId)
+            throws CommandSyntaxException {
+        var player = EntityArgument.getPlayer(ctx, "player");
+        var level = IntegerArgumentType.getInteger(ctx, "level");
+
+        var validation = validateSetupgradeRequest(upgradeId, level);
+        if (validation != null) {
+            ctx.getSource().sendFailure(Component.literal(buildSetupgradeFailureMessage(
+                    player.getGameProfile().getName(),
+                    upgradeId,
+                    validation)));
+            return;
+        }
+
+        PlayerIdleDataManager.setUpgradeLevel(player, upgradeId, level);
+        ctx.getSource().sendSuccess(
+                () -> Component
+                        .literal(buildSetupgradeSuccessMessage(player.getGameProfile().getName(), upgradeId, level)),
+                true);
+    }
+
+    static String buildSetupgradeSuccessMessage(String playerName, ResourceLocation upgradeId, int level) {
+        return "Set " + upgradeId + " for " + playerName + " to level " + level + ".";
+    }
+
+    static String buildSetupgradeFailureMessage(String playerName, ResourceLocation upgradeId, String reason) {
+        return "Set-upgrade rejected for " + playerName + ": " + reason + " (" + upgradeId + ").";
+    }
+
+    static String validateSetupgradeRequest(ResourceLocation upgradeId, int level) {
+        var definition = IdleUpgrades.get(upgradeId);
+        if (definition != null && level > definition.maxLevel()) {
+            return "level " + level + " exceeds max level " + definition.maxLevel();
+        }
+        return null;
     }
 
     private static void setLastSeen(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
