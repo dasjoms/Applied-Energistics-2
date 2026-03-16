@@ -980,6 +980,7 @@
   "key.ae2.portable_item_cell": "Open Portable Item Cell",
   "key.ae2.wireless_terminal": "Open Wireless Terminal",
   "key.toggle_focus.desc": "Toggle search box focus",
+  "message.ae2.idle.timber.limit_exceeded": "This tree is too large for your current Timber level. Increase Timber to enable auto-chop.",
   "stat.ae2.items_extracted": "Items extracted from ME Storage",
   "stat.ae2.items_inserted": "Items added to ME Storage",
   "theoneprobe.ae2.channels": "%1$d Channels",

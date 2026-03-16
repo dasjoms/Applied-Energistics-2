@@ -122,6 +122,8 @@ public class LocalizationProvider implements IAE2DataProvider {
         add("gui.ae2.idle.hud.progress", "[%1$s/%2$s]");
         add("gui.ae2.idle.hud.eta", " ETA %1$ss");
         add("gui.ae2.idle.hud.line", "%1$s: %2$s (+%3$s) %4$s%5$s");
+        add("message.ae2.idle.timber.limit_exceeded",
+                "This tree is too large for your current Timber level. Increase Timber to enable auto-chop.");
         add("gui.ae2.PatternEncoding.primary_processing_result_hint",
                 "Can be requested through the automated crafting system.");
         add("gui.ae2.PatternEncoding.primary_processing_result_tooltip", "Primary Processing Result");
