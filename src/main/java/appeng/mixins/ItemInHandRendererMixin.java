@@ -45,18 +45,21 @@ public class ItemInHandRendererMixin {
             return;
         }
 
-        if (!IdlePunchAnimationComponent.shouldRenderForHand(player, hand)) {
+        if (!IdlePunchAnimationComponent.shouldRenderIdleHand(player, hand)) {
             return;
         }
 
-        var gameTime = player.level().getGameTime();
-        var duration = IdlePunchAnimationComponent.getSwingDurationTicks();
-        if (duration <= 0) {
-            return;
-        }
+        var idleSwingProgress = 0.0F;
+        if (IdlePunchAnimationComponent.isSwingActiveForHand(player, hand)) {
+            var gameTime = player.level().getGameTime();
+            var duration = IdlePunchAnimationComponent.getSwingDurationTicks();
+            if (duration <= 0) {
+                return;
+            }
 
-        var elapsed = (gameTime - IdlePunchAnimationComponent.getSwingStartTick()) + partialTick;
-        var idleSwingProgress = Mth.clamp((float) elapsed / duration, 0.0F, 1.0F);
+            var elapsed = (gameTime - IdlePunchAnimationComponent.getSwingStartTick()) + partialTick;
+            idleSwingProgress = Mth.clamp((float) elapsed / duration, 0.0F, 1.0F);
+        }
 
         var mainHand = hand == InteractionHand.MAIN_HAND;
         var humanoidArm = mainHand ? player.getMainArm() : player.getMainArm().getOpposite();
