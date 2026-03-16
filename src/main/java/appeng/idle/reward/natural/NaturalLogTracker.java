@@ -21,7 +21,7 @@ import appeng.core.worlddata.AESavedData;
 /**
  * Tracks log provenance for idle natural-log rewards.
  * <p>
- * Player-placed logs are denied; all other provenance states are accepted.
+ * Player-placed logs are denied; unknown, worldgen, sapling-grown, and non-player placements are accepted.
  */
 public final class NaturalLogTracker {
     private static final String DATA_NAME = AppEng.MOD_ID + "_natural_log_tracker";

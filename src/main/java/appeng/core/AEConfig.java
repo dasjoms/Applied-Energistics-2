@@ -254,25 +254,6 @@ public final class AEConfig {
         return common.idleOfflineMaxSeconds.get();
     }
 
-    /**
-     * Policy toggle for legacy or otherwise untracked logs.
-     * <p>
-     * When disabled (default), unknown provenance logs do not count as natural and therefore do not qualify for
-     * natural-log idle rewards.
-     */
-    public boolean isIdleNaturalLogUnknownCounts() {
-        return common.idleNaturalLogUnknownCounts.get();
-    }
-
-    /**
-     * Policy toggle for logs generated from sapling growth.
-     * <p>
-     * When disabled (default), sapling-grown logs are treated as non-natural for strict worldgen-only behavior.
-     */
-    public boolean isIdleNaturalLogSaplingGrownCounts() {
-        return common.idleNaturalLogSaplingGrownCounts.get();
-    }
-
     public boolean isSpatialAnchorEnablesRandomTicks() {
         return common.spatialAnchorEnableRandomTicks.get();
     }
@@ -562,8 +543,6 @@ public final class AEConfig {
         public final IntValue idleHudSyncIntervalTicks;
         public final DoubleValue idleOfflineBasePercent;
         public final IntValue idleOfflineMaxSeconds;
-        public final BooleanValue idleNaturalLogUnknownCounts;
-        public final BooleanValue idleNaturalLogSaplingGrownCounts;
         public final BooleanValue debugTools;
         public final BooleanValue matterCannonBlockDamage;
         public final BooleanValue tinyTntBlockDamage;
@@ -658,10 +637,6 @@ public final class AEConfig {
                     "Base percentage of online idle generation that applies while a player is offline.");
             idleOfflineMaxSeconds = define(builder, "offlineMaxSeconds", 86400, 0, Integer.MAX_VALUE,
                     "Maximum number of offline seconds that can be converted into catch-up generation on login.");
-            idleNaturalLogUnknownCounts = define(builder, "naturalLogUnknownCounts", false,
-                    "Whether logs with unknown provenance should count as natural for idle natural-log rewards.");
-            idleNaturalLogSaplingGrownCounts = define(builder, "naturalLogSaplingGrownCounts", false,
-                    "Whether sapling-grown logs should count as natural for idle natural-log rewards.");
             builder.pop();
 
             builder.push("crafting");

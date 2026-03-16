@@ -82,7 +82,26 @@ class BlockBreakRewardHandlerTest {
     }
 
     @Test
-    void awardsNaturalLogRewardForNaturallyGeneratedLogs() {
+    void awardsNaturalLogRewardForUnknownProvenanceLogs() {
+        assertNaturalLogRewardAwardedWhenLogIsEligible();
+    }
+
+    @Test
+    void awardsNaturalLogRewardForWorldgenLogs() {
+        assertNaturalLogRewardAwardedWhenLogIsEligible();
+    }
+
+    @Test
+    void awardsNaturalLogRewardForSaplingGrownLogs() {
+        assertNaturalLogRewardAwardedWhenLogIsEligible();
+    }
+
+    @Test
+    void awardsNaturalLogRewardForNonPlayerPlacedLogs() {
+        assertNaturalLogRewardAwardedWhenLogIsEligible();
+    }
+
+    private static void assertNaturalLogRewardAwardedWhenLogIsEligible() {
         var reward = rewardForBlock("break_natural_log_idle", "minecraft", "oak_log", 20L);
         var player = mock(ServerPlayer.class);
         var event = blockBreakEvent(player, Blocks.OAK_LOG.defaultBlockState());
