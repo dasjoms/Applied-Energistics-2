@@ -50,7 +50,7 @@ public final class IdleUpgrades {
 
                 @Override
                 public double unarmedPunchCooldownMultiplier() {
-                    return 0.95;
+                    return 0.9;
                 }
             });
 
