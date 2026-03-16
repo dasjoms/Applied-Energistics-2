@@ -67,6 +67,22 @@ public final class IdleUpgradeHooks {
         return multiplier > 0.0 && Double.isFinite(multiplier) ? multiplier : 1.0;
     }
 
+    public static int getTimberLogLimit(PlayerIdleData data) {
+        var timberDefinition = IdleUpgrades.TIMBER_1;
+        var ownedLevels = data.ownedUpgradeLevelsView().get(timberDefinition.id());
+        if (ownedLevels == null || ownedLevels <= 0) {
+            return 0;
+        }
+
+        var levels = Math.min(ownedLevels, timberDefinition.maxLevel());
+        var perLevelLimit = timberDefinition.effects().timberLogLimitPerLevel();
+        if (perLevelLimit <= 0) {
+            return 0;
+        }
+
+        return perLevelLimit * levels;
+    }
+
     public static boolean trySpendForUpgrade(PlayerIdleData data, CostBundle upgradeCost) {
         return CurrencyTransactionService.trySpend(data, upgradeCost, SpendReason.UPGRADE_PURCHASE);
     }

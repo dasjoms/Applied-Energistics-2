@@ -16,4 +16,8 @@ public interface UpgradeEffects {
     default double offlinePercentBonus() {
         return 0.0;
     }
+
+    default int timberLogLimitPerLevel() {
+        return 0;
+    }
 }

@@ -51,4 +51,58 @@ class IdleUpgradeHooksTest {
 
         assertThat(multiplier).isEqualTo(1.5);
     }
+
+    @Test
+    void timberLogLimitIsZeroWhenUpgradeIsNotOwned() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of());
+
+        var timberLogLimit = IdleUpgradeHooks.getTimberLogLimit(data);
+
+        assertThat(timberLogLimit).isEqualTo(0);
+    }
+
+    @Test
+    void timberLogLimitScalesByOwnedLevels() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.TIMBER_1.id(), 1));
+
+        var timberLogLimit = IdleUpgradeHooks.getTimberLogLimit(data);
+
+        assertThat(timberLogLimit).isEqualTo(10);
+    }
+
+    @Test
+    void timberLogLimitCapsAtDefinitionMaxLevel() {
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.TIMBER_1.id(), 1000));
+
+        var timberLogLimit = IdleUpgradeHooks.getTimberLogLimit(data);
+
+        assertThat(timberLogLimit).isEqualTo(50);
+    }
+
+    @Test
+    void unknownUpgradesDoNotAffectTimberLogLimit() {
+        var unknown = ResourceLocation.fromNamespaceAndPath("ae2", "unknown_upgrade");
+        var data = new PlayerIdleData(
+                Map.of(),
+                0L,
+                PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(unknown, 100));
+
+        var timberLogLimit = IdleUpgradeHooks.getTimberLogLimit(data);
+
+        assertThat(timberLogLimit).isEqualTo(0);
+    }
+
 }

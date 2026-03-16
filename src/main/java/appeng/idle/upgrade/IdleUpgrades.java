@@ -27,9 +27,21 @@ public final class IdleUpgrades {
                 }
             });
 
+    public static final UpgradeDefinition TIMBER_1 = new UpgradeDefinition(
+            id("timber_1"),
+            5,
+            new CostBundle(Map.of(IdleCurrencies.IDLE, 100L)),
+            new UpgradeEffects() {
+                @Override
+                public int timberLogLimitPerLevel() {
+                    return 10;
+                }
+            });
+
     private static final Map<ResourceLocation, UpgradeDefinition> DEFINITIONS = Map.of(
             NO_OP.id(), NO_OP,
-            OFFLINE_EFFICIENCY_1.id(), OFFLINE_EFFICIENCY_1);
+            OFFLINE_EFFICIENCY_1.id(), OFFLINE_EFFICIENCY_1,
+            TIMBER_1.id(), TIMBER_1);
 
     private IdleUpgrades() {
     }
