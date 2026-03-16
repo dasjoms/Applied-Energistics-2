@@ -67,6 +67,60 @@ public final class IdleUpgradeHooks {
         return multiplier > 0.0 && Double.isFinite(multiplier) ? multiplier : 1.0;
     }
 
+    public static boolean isUnarmedDualPunchEnabled(PlayerIdleData data) {
+        for (var ownedUpgrade : data.ownedUpgradeLevelsView().entrySet()) {
+            var definition = IdleUpgrades.get(ownedUpgrade.getKey());
+            if (definition == null) {
+                continue;
+            }
+
+            var levels = Math.min(ownedUpgrade.getValue(), definition.maxLevel());
+            if (levels <= 0) {
+                continue;
+            }
+
+            if (definition.effects().enablesUnarmedDualPunch()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Computes the effective cooldown multiplier for unarmed punches.
+     * <p>
+     * Policy: Each owned level multiplies the running cooldown multiplier by that definition's per-level multiplier,
+     * and owned levels are capped to each definition's max level. Invalid (non-finite or non-positive) per-level
+     * multipliers are ignored.
+     */
+    public static double getUnarmedPunchCooldownMultiplier(PlayerIdleData data) {
+        var totalMultiplier = 1.0;
+
+        for (var ownedUpgrade : data.ownedUpgradeLevelsView().entrySet()) {
+            var definition = IdleUpgrades.get(ownedUpgrade.getKey());
+            if (definition == null) {
+                continue;
+            }
+
+            var levels = Math.min(ownedUpgrade.getValue(), definition.maxLevel());
+            if (levels <= 0) {
+                continue;
+            }
+
+            var levelMultiplier = definition.effects().unarmedPunchCooldownMultiplier();
+            if (levelMultiplier <= 0.0 || !Double.isFinite(levelMultiplier)) {
+                continue;
+            }
+
+            for (var i = 0; i < levels; i++) {
+                totalMultiplier *= levelMultiplier;
+            }
+        }
+
+        return totalMultiplier > 0.0 && Double.isFinite(totalMultiplier) ? totalMultiplier : 1.0;
+    }
+
     public static int getTimberLogLimit(PlayerIdleData data) {
         var timberDefinition = IdleUpgrades.TIMBER_1;
         var ownedLevels = data.ownedUpgradeLevelsView().get(timberDefinition.id());
