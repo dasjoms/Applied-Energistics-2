@@ -8,7 +8,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 
 import appeng.idle.reward.natural.NaturalLogTracker;
 
@@ -61,7 +60,7 @@ public final class TimberChopService {
 
     private static boolean isEligibleLog(ServerLevel level, BlockPos pos,
             net.minecraft.world.level.block.state.BlockState state) {
-        return state.is(BlockTags.LOGS) && NaturalLogTracker.isEligibleLogForReward(level, pos, state);
+        return NaturalLogTracker.isEligibleLogForReward(level, pos, state);
     }
 
     public record TimberChopResult(Status status, List<BlockPos> collectedPositions) {

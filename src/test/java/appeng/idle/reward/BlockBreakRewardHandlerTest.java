@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -126,6 +127,37 @@ class BlockBreakRewardHandlerTest {
                     eq(reward.currencyId()),
                     eq(reward.progressTicksAwarded()),
                     eq("BLOCK_BREAK:" + reward.id())));
+        }
+    }
+
+    @Test
+    void awardsNaturalLogRewardForEachLogBrokenByTimberChain() {
+        var reward = rewardForBlock("break_natural_log_idle", "minecraft", "oak_log", 20L);
+        var player = mock(ServerPlayer.class);
+        var originBreak = blockBreakEvent(player, Blocks.OAK_LOG.defaultBlockState());
+        var chainedBreak = blockBreakEvent(player, Blocks.OAK_LOG.defaultBlockState());
+
+        try (MockedStatic<IdleRewardManager> rewardManager = mockStatic(IdleRewardManager.class);
+                MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class);
+                MockedStatic<PlayerIdleDataManager> idleDataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleGenerationProgressService> progressService = mockStatic(
+                        IdleGenerationProgressService.class)) {
+            rewardManager.when(() -> IdleRewardManager.getByTrigger(RewardTriggerType.BLOCK_BREAK))
+                    .thenReturn(List.of(reward));
+            naturalLogTracker
+                    .when(() -> NaturalLogTracker.isEligibleLogForReward(any(ServerLevel.class), any(BlockPos.class),
+                            any(BlockState.class)))
+                    .thenReturn(true);
+            mockActiveEligibility(idleDataManager, player, true);
+
+            BlockBreakRewardHandler.onBlockBreak(originBreak);
+            BlockBreakRewardHandler.onBlockBreak(chainedBreak);
+
+            progressService.verify(() -> IdleGenerationProgressService.grantActiveProgressTicks(
+                    eq(player),
+                    eq(reward.currencyId()),
+                    eq(reward.progressTicksAwarded()),
+                    eq("BLOCK_BREAK:" + reward.id())), times(2));
         }
     }
 
