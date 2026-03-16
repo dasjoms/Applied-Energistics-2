@@ -54,7 +54,6 @@ public final class TimberBlockBreakHandler {
         var timberResult = TimberChopService.collectEligibleLogs(level, event.getPos(), timberLogCap);
         if (timberResult.status() == TimberChopService.Status.EXCEEDS_LIMIT) {
             maybeNotifyTimberLimitExceeded(player, level.getGameTime());
-            event.setCanceled(true);
             return;
         }
 
