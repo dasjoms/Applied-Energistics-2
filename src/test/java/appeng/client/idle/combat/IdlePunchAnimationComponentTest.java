@@ -28,7 +28,6 @@ class IdlePunchAnimationComponentTest {
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
         assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(100L);
-        assertThat(IdlePunchAnimationComponent.getExpectedNextHand()).isEqualTo(InteractionHand.OFF_HAND);
     }
 
     @Test
@@ -41,23 +40,32 @@ class IdlePunchAnimationComponentTest {
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
         assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(201L);
-        assertThat(IdlePunchAnimationComponent.getExpectedNextHand()).isEqualTo(InteractionHand.MAIN_HAND);
     }
 
     @Test
-    void resetServerStateTrackingRestartsPredictionFromMainHand() {
+    void olderServerSequenceIsIgnored() {
         var fixture = createFixture();
-        when(fixture.level.getGameTime()).thenReturn(300L, 301L);
+        when(fixture.level.getGameTime()).thenReturn(400L, 401L, 402L);
 
         IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.MAIN_HAND);
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
-        IdlePunchAnimationComponent.resetServerStateTracking();
-
-        assertThat(IdlePunchAnimationComponent.getExpectedNextHand()).isEqualTo(InteractionHand.MAIN_HAND);
-
-        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.MAIN_HAND);
+        IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.MAIN_HAND, 10L);
+        IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.OFF_HAND, 9L);
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(400L);
+    }
+
+    @Test
+    void resetServerStateTrackingClearsPendingPrediction() {
+        var fixture = createFixture();
+        when(fixture.level.getGameTime()).thenReturn(300L, 301L, 302L);
+
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
+        IdlePunchAnimationComponent.resetServerStateTracking();
+        IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.MAIN_HAND, 1L);
+
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(301L);
     }
 
     private static Fixture createFixture() {
