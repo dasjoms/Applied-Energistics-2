@@ -41,7 +41,9 @@ public final class IdleCombatHandler {
             return;
         }
 
-        if (tryPerformUnarmedPunch(player, target, null)) {
+        // This event path is an attack-key fallback for cases where client interception did not run.
+        // Force OFF_HAND so it cannot reintroduce legacy hand-alternation behavior.
+        if (tryPerformUnarmedPunch(player, target, InteractionHand.OFF_HAND)) {
             event.setCanceled(true);
         }
     }
