@@ -10,6 +10,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import appeng.client.idle.combat.IdlePunchAnimationComponent;
 import appeng.core.definitions.AEItems;
 import appeng.core.network.serverbound.IdlePunchRequestPacket;
 import appeng.idle.net.IdleCurrencyClientCache;
@@ -49,6 +50,7 @@ public final class IdlePunchAttackHook {
         }
 
         event.setCanceled(true);
+        IdlePunchAnimationComponent.startPredictedSwing(player);
         PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId()));
     }
 

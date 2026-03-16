@@ -13,6 +13,8 @@ import appeng.idle.net.IdleCurrencyClientCache;
  */
 public final class IdlePunchAnimationComponent {
     private static InteractionHand activeHand = InteractionHand.MAIN_HAND;
+    private static InteractionHand nextPredictedHand = InteractionHand.MAIN_HAND;
+    private static InteractionHand pendingPredictedHand;
     private static long swingStartTick = Long.MIN_VALUE;
     private static int swingDurationTicks;
     private static long lastConfirmedSequence = Long.MIN_VALUE;
@@ -47,9 +49,34 @@ public final class IdlePunchAnimationComponent {
         }
 
         lastConfirmedSequence = sequence;
+        var predictedHand = pendingPredictedHand;
+        pendingPredictedHand = null;
+        nextPredictedHand = getOtherHand(hand);
+
+        if (predictedHand == hand && isAnimationActive(player) && activeHand == hand) {
+            return;
+        }
+
         activeHand = hand;
         swingStartTick = player.level().getGameTime();
         swingDurationTicks = getSwingDurationTicks(player);
+    }
+
+    public static void startPredictedSwing(Player player) {
+        var hand = nextPredictedHand;
+        pendingPredictedHand = hand;
+        nextPredictedHand = getOtherHand(hand);
+        activeHand = hand;
+        swingStartTick = player.level().getGameTime();
+        swingDurationTicks = getSwingDurationTicks(player);
+    }
+
+    public static InteractionHand getExpectedNextHand() {
+        return nextPredictedHand;
+    }
+
+    public static void resetServerStateTracking() {
+        reset();
     }
 
     public static boolean shouldRenderForHand(Player player, InteractionHand hand) {
@@ -83,6 +110,10 @@ public final class IdlePunchAnimationComponent {
         return swingDurationTicks <= 0 || gameTime - swingStartTick >= swingDurationTicks;
     }
 
+    private static InteractionHand getOtherHand(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+    }
+
     private static int getSwingDurationTicks(Player player) {
         var duration = 6;
         if (player.hasEffect(MobEffects.DIG_SPEED)) {
@@ -102,6 +133,8 @@ public final class IdlePunchAnimationComponent {
 
     private static void reset() {
         activeHand = InteractionHand.MAIN_HAND;
+        nextPredictedHand = InteractionHand.MAIN_HAND;
+        pendingPredictedHand = null;
         swingStartTick = Long.MIN_VALUE;
         swingDurationTicks = 0;
         lastConfirmedSequence = Long.MIN_VALUE;

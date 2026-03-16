@@ -63,6 +63,7 @@ import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import guideme.Guide;
@@ -193,6 +194,23 @@ public class AppEngClient extends AppEngBase {
         NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn evt) -> {
             PendingCraftingJobs.clearPendingJobs();
             PinnedKeys.clearPinnedKeys();
+            IdlePunchAnimationComponent.resetServerStateTracking();
+        });
+
+        NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut evt) -> {
+            IdlePunchAnimationComponent.resetServerStateTracking();
+        });
+
+        NeoForge.EVENT_BUS.addListener((PlayerEvent.Clone evt) -> {
+            if (evt.getEntity().level().isClientSide() && evt.isWasDeath()) {
+                IdlePunchAnimationComponent.resetServerStateTracking();
+            }
+        });
+
+        NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerChangedDimensionEvent evt) -> {
+            if (evt.getEntity().level().isClientSide()) {
+                IdlePunchAnimationComponent.resetServerStateTracking();
+            }
         });
 
         NeoForge.EVENT_BUS.addListener((ClientTickEvent.Post e) -> {
