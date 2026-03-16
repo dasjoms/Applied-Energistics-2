@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -79,7 +80,78 @@ class TimberBlockBreakHandlerTest {
             TimberBlockBreakHandler.onBlockBreak(event);
             TimberBlockBreakHandler.onBlockBreak(event);
 
-            verify(player).displayClientMessage(Component.translatable("message.ae2.idle.timber.limit_exceeded"), true);
+            verify(player, times(1)).displayClientMessage(
+                    Component.translatable("message.ae2.idle.timber.limit_exceeded"),
+                    true);
+        }
+    }
+
+    @Test
+    void suppressesSameOversizedTreeRetriesPerPlayer() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(ServerLevel.class);
+        var event = blockBreakEvent(level, player, new BlockPos(3, 80, 3), logState());
+
+        when(level.getGameTime()).thenReturn(100L, 150L, 190L);
+        when(player.getUUID()).thenReturn(UUID.randomUUID());
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(new BlockPos(3, 80, 3)), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+
+            var belowState = mock(BlockState.class);
+            when(belowState.is(BlockTags.LOGS)).thenReturn(false);
+            when(level.getMinBuildHeight()).thenReturn(0);
+            when(level.getBlockState(eq(new BlockPos(3, 79, 3)))).thenReturn(belowState);
+
+            TimberBlockBreakHandler.onBlockBreak(event);
+            TimberBlockBreakHandler.onBlockBreak(event);
+            TimberBlockBreakHandler.onBlockBreak(event);
+
+            verify(player, times(1)).displayClientMessage(
+                    Component.translatable("message.ae2.idle.timber.limit_exceeded"),
+                    true);
+        }
+    }
+
+    @Test
+    void allowsMessageForDifferentOversizedTreeOrChunk() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(ServerLevel.class);
+        var firstPos = new BlockPos(3, 80, 3);
+        var secondPos = new BlockPos(40, 80, 40);
+        var firstEvent = blockBreakEvent(level, player, firstPos, logState());
+        var secondEvent = blockBreakEvent(level, player, secondPos, logState());
+
+        when(level.getGameTime()).thenReturn(100L, 110L);
+        when(player.getUUID()).thenReturn(UUID.randomUUID());
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(firstPos), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(secondPos), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit());
+
+            var belowState = mock(BlockState.class);
+            when(belowState.is(BlockTags.LOGS)).thenReturn(false);
+            when(level.getMinBuildHeight()).thenReturn(0);
+            when(level.getBlockState(eq(new BlockPos(3, 79, 3)))).thenReturn(belowState);
+            when(level.getBlockState(eq(new BlockPos(40, 79, 40)))).thenReturn(belowState);
+
+            TimberBlockBreakHandler.onBlockBreak(firstEvent);
+            TimberBlockBreakHandler.onBlockBreak(secondEvent);
+
+            verify(player, times(2)).displayClientMessage(
+                    Component.translatable("message.ae2.idle.timber.limit_exceeded"),
+                    true);
         }
     }
 
