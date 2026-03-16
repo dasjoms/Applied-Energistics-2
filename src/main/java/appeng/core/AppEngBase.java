@@ -72,6 +72,7 @@ import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.reward.BlockBreakRewardHandler;
 import appeng.idle.reward.IdleRewardManager;
 import appeng.idle.reward.natural.NaturalLogTracker;
+import appeng.idle.reward.timber.TimberBlockBreakHandler;
 import appeng.idle.tick.IdleGenerationTicker;
 import appeng.init.InitAdvancementTriggers;
 import appeng.init.InitCapabilityProviders;
@@ -197,6 +198,7 @@ public abstract class AppEngBase implements AppEng {
         NeoForge.EVENT_BUS.addListener(IdleCurrencySyncService::handleServerTickEnd);
         NeoForge.EVENT_BUS.addListener(IdleCurrencyManager::onAddReloadListener);
         NeoForge.EVENT_BUS.addListener(IdleRewardManager::onAddReloadListener);
+        NeoForge.EVENT_BUS.addListener(TimberBlockBreakHandler::onBlockBreak);
         NeoForge.EVENT_BUS.addListener(BlockBreakRewardHandler::onBlockBreak);
         NeoForge.EVENT_BUS.addListener(NaturalLogTracker::onEntityPlace);
         NeoForge.EVENT_BUS.addListener(IdleGenerationTicker::onServerTickEnd);
