@@ -27,5 +27,6 @@
   "item.ae2.light_gray_lumen_paint_ball": "Light Grey Lumen Paint Ball",
   "item.ae2.light_gray_paint_ball": "Light Grey Paint Ball",
   "item.ae2.light_gray_smart_cable": "Light Grey ME Smart Cable",
-  "item.ae2.light_gray_smart_dense_cable": "Light Grey ME Dense Smart Cable"
+  "item.ae2.light_gray_smart_dense_cable": "Light Grey ME Dense Smart Cable",
+  "message.ae2.idle.timber.limit_exceeded": "This tree is too large for your current Timber upgrade. Upgrade Timber further to chop it."
 }
