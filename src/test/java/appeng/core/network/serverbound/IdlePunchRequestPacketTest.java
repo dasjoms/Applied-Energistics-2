@@ -31,7 +31,7 @@ class IdlePunchRequestPacketTest {
         var decoded = IdlePunchRequestPacket.STREAM_CODEC.decode(buffer);
 
         org.assertj.core.api.Assertions.assertThat(decoded.targetEntityId()).isEqualTo(42);
-        org.assertj.core.api.Assertions.assertThat(decoded.hand()).isEqualTo(InteractionHand.OFF_HAND);
+        org.assertj.core.api.Assertions.assertThat(decoded.requestedHand()).isEqualTo(InteractionHand.OFF_HAND);
     }
 
     @Test
