@@ -101,6 +101,29 @@ class TimberChopServiceTest {
     }
 
     @Test
+    void playerPlacedStartLogDoesNotChain() {
+        var start = new BlockPos(0, 0, 0);
+        var adjacentNatural = new BlockPos(1, 0, 0);
+
+        var level = mockLevelWithStates(new HashMap<>() {
+            {
+                put(start, Blocks.OAK_LOG.defaultBlockState());
+                put(adjacentNatural, Blocks.OAK_LOG.defaultBlockState());
+            }
+        });
+
+        try (MockedStatic<NaturalLogTracker> naturalLogTracker = mockStatic(NaturalLogTracker.class)) {
+            naturalLogTracker.when(() -> NaturalLogTracker.isEligibleLogForReward(any(), any(), any()))
+                    .thenAnswer(invocation -> !start.equals(invocation.getArgument(1, BlockPos.class)));
+
+            var result = TimberChopService.collectEligibleLogs(level, start, 10);
+
+            assertThat(result.status()).isEqualTo(TimberChopService.Status.INELIGIBLE_OR_NON_LOG);
+            assertThat(result.collectedPositions()).isEmpty();
+        }
+    }
+
+    @Test
     void nonLogStartBlockRejected() {
         var start = new BlockPos(0, 0, 0);
         var level = mockLevelWithStates(new HashMap<>() {
