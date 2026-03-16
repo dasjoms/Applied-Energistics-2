@@ -129,6 +129,70 @@ class TimberBlockBreakHandlerTest {
     }
 
     @Test
+    void keepsSuppressingWarningsWhenOversizedSampleEvolvesForSameTree() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(ServerLevel.class);
+        var sameTreePos = new BlockPos(3, 80, 3);
+        var differentTreePos = new BlockPos(40, 80, 40);
+        var sameTreeEvent = blockBreakEvent(level, player, sameTreePos, logState());
+        var differentTreeEvent = blockBreakEvent(level, player, differentTreePos, logState());
+
+        when(level.getGameTime()).thenReturn(100L, 110L, 120L, 130L, 140L);
+        when(player.getUUID()).thenReturn(UUID.randomUUID());
+
+        var sample1 = List.of(
+                new BlockPos(3, 80, 3),
+                new BlockPos(3, 81, 3),
+                new BlockPos(3, 82, 3),
+                new BlockPos(3, 83, 3));
+        var sample2 = List.of(
+                new BlockPos(3, 80, 3),
+                new BlockPos(3, 81, 3),
+                new BlockPos(3, 82, 3),
+                new BlockPos(4, 83, 3));
+        var sample3 = List.of(
+                new BlockPos(3, 80, 3),
+                new BlockPos(3, 81, 3),
+                new BlockPos(3, 82, 3),
+                new BlockPos(4, 84, 3));
+        var sample4 = List.of(
+                new BlockPos(3, 80, 3),
+                new BlockPos(3, 81, 3),
+                new BlockPos(3, 82, 3),
+                new BlockPos(5, 84, 3));
+        var differentTreeSample = List.of(
+                new BlockPos(40, 80, 40),
+                new BlockPos(40, 81, 40),
+                new BlockPos(40, 82, 40),
+                new BlockPos(40, 83, 40));
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<TimberChopService> chopService = Mockito.mockStatic(TimberChopService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(true);
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.getTimberLogLimit(any(PlayerIdleData.class))).thenReturn(8);
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(sameTreePos), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(sample1))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(sample2))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(sample3))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(sample4));
+            chopService.when(() -> TimberChopService.collectEligibleLogs(eq(level), eq(differentTreePos), eq(8)))
+                    .thenReturn(TimberChopService.TimberChopResult.exceedsLimit(differentTreeSample));
+
+            TimberBlockBreakHandler.onBlockBreak(sameTreeEvent);
+            TimberBlockBreakHandler.onBlockBreak(sameTreeEvent);
+            TimberBlockBreakHandler.onBlockBreak(sameTreeEvent);
+            TimberBlockBreakHandler.onBlockBreak(sameTreeEvent);
+            TimberBlockBreakHandler.onBlockBreak(differentTreeEvent);
+
+            verify(player, times(2)).displayClientMessage(
+                    Component.translatable("message.ae2.idle.timber.limit_exceeded"),
+                    true);
+        }
+    }
+
+    @Test
     void allowsMessageForDifferentOversizedTree() {
         var player = mock(ServerPlayer.class);
         var level = mock(ServerLevel.class);
