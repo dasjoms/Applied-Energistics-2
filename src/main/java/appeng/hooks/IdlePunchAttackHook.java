@@ -1,6 +1,7 @@
 package appeng.hooks;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
@@ -30,7 +31,8 @@ public final class IdlePunchAttackHook {
     }
 
     private static void onInteractionKeyMappingTriggered(InputEvent.InteractionKeyMappingTriggered event) {
-        if (!event.isAttack()) {
+        var hand = getIdlePunchHand(event);
+        if (hand == null) {
             return;
         }
 
@@ -50,8 +52,20 @@ public final class IdlePunchAttackHook {
         }
 
         event.setCanceled(true);
-        IdlePunchAnimationComponent.startPredictedSwing(player);
-        PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId()));
+        IdlePunchAnimationComponent.startPredictedSwing(player, hand);
+        PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
+    }
+
+    private static InteractionHand getIdlePunchHand(InputEvent.InteractionKeyMappingTriggered event) {
+        if (event.isAttack()) {
+            return InteractionHand.OFF_HAND;
+        }
+
+        if (event.isUseItem()) {
+            return InteractionHand.MAIN_HAND;
+        }
+
+        return null;
     }
 
     static boolean shouldTakeOverAttackInput(Player player) {

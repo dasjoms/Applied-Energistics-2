@@ -62,8 +62,7 @@ public final class IdlePunchAnimationComponent {
         swingDurationTicks = getSwingDurationTicks(player);
     }
 
-    public static void startPredictedSwing(Player player) {
-        var hand = nextPredictedHand;
+    public static void startPredictedSwing(Player player, InteractionHand hand) {
         pendingPredictedHand = hand;
         nextPredictedHand = getOtherHand(hand);
         activeHand = hand;
