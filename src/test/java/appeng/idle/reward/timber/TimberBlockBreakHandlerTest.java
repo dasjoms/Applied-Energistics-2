@@ -35,7 +35,7 @@ class TimberBlockBreakHandlerTest {
     }
 
     @Test
-    void cancelsBreakWhenConnectedLogsExceedTimberCap() {
+    void doesNotCancelBreakWhenConnectedLogsExceedTimberCap() {
         var player = mock(ServerPlayer.class);
         var level = mock(ServerLevel.class);
         var event = blockBreakEvent(level, player, BlockPos.ZERO, logState());
@@ -53,7 +53,7 @@ class TimberBlockBreakHandlerTest {
 
             TimberBlockBreakHandler.onBlockBreak(event);
 
-            verify(event).setCanceled(true);
+            verify(event, never()).setCanceled(true);
             verify(level, never()).destroyBlock(any(BlockPos.class), eq(true), eq(player));
             verify(player).displayClientMessage(Component.translatable("message.ae2.idle.timber.limit_exceeded"), true);
         }
