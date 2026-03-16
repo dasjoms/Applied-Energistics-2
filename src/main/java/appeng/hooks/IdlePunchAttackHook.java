@@ -12,6 +12,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.core.definitions.AEItems;
 import appeng.core.network.serverbound.IdlePunchRequestPacket;
+import appeng.idle.net.IdleCurrencyClientCache;
 
 /**
  * Intercepts attack input for idle unarmed punching and redirects it to a server-authoritative packet.
@@ -44,6 +45,10 @@ public final class IdlePunchAttackHook {
 
         var target = entityHitResult.getEntity();
         if (!target.isAlive() || player.distanceToSqr(target) > TARGET_PICK_RANGE * TARGET_PICK_RANGE) {
+            return;
+        }
+
+        if (!IdleCurrencyClientCache.isIdlePunchEligible()) {
             return;
         }
 

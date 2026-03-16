@@ -25,7 +25,7 @@ class RequestSpendUpgradePacketTest {
 
     @AfterEach
     void resetClientCache() {
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of());
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
     }
 
     @Test
@@ -62,7 +62,8 @@ class RequestSpendUpgradePacketTest {
     void snapshotPacketCodecRoundTripRetainsBalancesAndRates() {
         var original = new IdleCurrencySnapshotPacket(
                 Map.of(IDLE, 42L, MATTER, 13L),
-                Map.of(IDLE, 5L, MATTER, 8L));
+                Map.of(IDLE, 5L, MATTER, 8L),
+                true);
 
         CodecTestUtil.testRoundtrip(IdleCurrencySnapshotPacket.STREAM_CODEC, original);
 
@@ -73,13 +74,15 @@ class RequestSpendUpgradePacketTest {
 
         assertThat(decoded.balances()).containsExactlyEntriesOf(original.balances());
         assertThat(decoded.rates()).containsExactlyEntriesOf(original.rates());
+        assertThat(decoded.idlePunchEligible()).isTrue();
     }
 
     @Test
     void deltaPacketCodecRoundTripRetainsChangedBalancesAndRefreshedRates() {
         var original = new IdleCurrencyDeltaPacket(
                 Map.of(IDLE, 100L, MATTER, 0L),
-                Map.of(IDLE, 17L));
+                Map.of(IDLE, 17L),
+                false);
 
         CodecTestUtil.testRoundtrip(IdleCurrencyDeltaPacket.STREAM_CODEC, original);
 
@@ -90,6 +93,7 @@ class RequestSpendUpgradePacketTest {
 
         assertThat(decoded.changedBalances()).containsExactlyEntriesOf(original.changedBalances());
         assertThat(decoded.refreshedRates()).containsExactlyEntriesOf(original.refreshedRates());
+        assertThat(decoded.idlePunchEligible()).isFalse();
     }
 
     @Test

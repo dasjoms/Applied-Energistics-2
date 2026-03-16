@@ -13,6 +13,7 @@ public final class IdleCurrencyClientCache {
     private static volatile Map<CurrencyId, Long> balances = Map.of();
     private static volatile Map<CurrencyId, Long> rates = Map.of();
     private static volatile Map<CurrencyId, IdleCurrencyHudValue> hudValues = Map.of();
+    private static volatile boolean idlePunchEligible;
 
     private IdleCurrencyClientCache() {
     }
@@ -33,9 +34,15 @@ public final class IdleCurrencyClientCache {
         return rates;
     }
 
-    public static void applySnapshot(Map<CurrencyId, Long> snapshot, Map<CurrencyId, Long> rateSnapshot) {
+    public static boolean isIdlePunchEligible() {
+        return idlePunchEligible;
+    }
+
+    public static void applySnapshot(Map<CurrencyId, Long> snapshot, Map<CurrencyId, Long> rateSnapshot,
+            boolean idlePunchEligibility) {
         balances = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
         rates = Collections.unmodifiableMap(new LinkedHashMap<>(rateSnapshot));
+        idlePunchEligible = idlePunchEligibility;
     }
 
     public static Map<CurrencyId, IdleCurrencyHudValue> getHudValues() {
@@ -46,7 +53,10 @@ public final class IdleCurrencyClientCache {
         hudValues = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
     }
 
-    public static void applyDelta(Map<CurrencyId, Long> delta, Map<CurrencyId, Long> refreshedRates) {
+    public static void applyDelta(Map<CurrencyId, Long> delta, Map<CurrencyId, Long> refreshedRates,
+            boolean idlePunchEligibility) {
+        idlePunchEligible = idlePunchEligibility;
+
         if (delta.isEmpty() && refreshedRates.isEmpty()) {
             return;
         }

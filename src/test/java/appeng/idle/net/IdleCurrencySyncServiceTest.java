@@ -34,6 +34,7 @@ import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencyManager;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
+import appeng.idle.upgrade.IdleUpgrades;
 
 class IdleCurrencySyncServiceTest {
     private static final CurrencyId HUD_TEST_CURRENCY = new CurrencyId(
@@ -105,6 +106,47 @@ class IdleCurrencySyncServiceTest {
                     argThat(packet -> packet instanceof IdleCurrencySnapshotPacket)), times(1));
             packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
                     argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(1));
+        }
+    }
+
+    @Test
+    void sendSnapshotMarksIdlePunchEligibilityFromCombatUpgradeOwnership() {
+        var player = mock(ServerPlayer.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(ItemStack.EMPTY);
+
+        var data = new PlayerIdleData(Map.of(), 0L, PlayerIdleData.CURRENT_DATA_VERSION,
+                Map.of(IdleUpgrades.COMBAT_1.id(), 1), true);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+            dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+
+            IdleCurrencySyncService.sendSnapshot(player);
+
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCurrencySnapshotPacket snapshot
+                            && snapshot.idlePunchEligible())),
+                    times(1));
+        }
+    }
+
+    @Test
+    void sendDeltaMarksIdlePunchEligibilityFromCombatUpgradeOwnership() {
+        var player = mock(ServerPlayer.class);
+
+        var data = new PlayerIdleData(Map.of(), 0L, PlayerIdleData.CURRENT_DATA_VERSION, Map.of(), true);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+
+            IdleCurrencySyncService.sendDelta(player, Map.of(HUD_TEST_CURRENCY, 3L));
+
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCurrencyDeltaPacket delta
+                            && !delta.idlePunchEligible())),
+                    times(1));
         }
     }
 

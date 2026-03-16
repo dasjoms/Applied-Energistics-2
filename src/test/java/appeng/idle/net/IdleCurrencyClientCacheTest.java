@@ -19,13 +19,13 @@ class IdleCurrencyClientCacheTest {
 
     @AfterEach
     void resetCache() {
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of());
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
     }
 
     @Test
     void snapshotReplacesCacheContents() {
-        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L), Map.of(IDLE, 2L));
-        IdleCurrencyClientCache.applySnapshot(Map.of(MATTER, 5L), Map.of(MATTER, 7L));
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L), Map.of(IDLE, 2L), false);
+        IdleCurrencyClientCache.applySnapshot(Map.of(MATTER, 5L), Map.of(MATTER, 7L), false);
 
         assertThat(IdleCurrencyClientCache.getBalances())
                 .containsExactlyEntriesOf(Map.of(MATTER, 5L));
@@ -37,7 +37,8 @@ class IdleCurrencyClientCacheTest {
     void snapshotAppliesBalancesAndRatesTogether() {
         IdleCurrencyClientCache.applySnapshot(
                 Map.of(IDLE, 40L, MATTER, 15L),
-                Map.of(IDLE, 3L, MATTER, 9L));
+                Map.of(IDLE, 3L, MATTER, 9L),
+                false);
 
         assertThat(IdleCurrencyClientCache.getBalanceMap())
                 .containsExactlyEntriesOf(Map.of(IDLE, 40L, MATTER, 15L));
@@ -47,11 +48,11 @@ class IdleCurrencyClientCacheTest {
 
     @Test
     void deltaMergesBalanceUpdatesAndCanRefreshRates() {
-        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L, MATTER, 3L), Map.of(IDLE, 1L));
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L, MATTER, 3L), Map.of(IDLE, 1L), false);
 
         IdleCurrencyClientCache.applyDelta(Map.of(
                 IDLE, 12L,
-                MATTER, 0L), Map.of(IDLE, 4L, MATTER, 2L));
+                MATTER, 0L), Map.of(IDLE, 4L, MATTER, 2L), true);
 
         assertThat(IdleCurrencyClientCache.getBalances())
                 .containsExactlyEntriesOf(Map.of(IDLE, 12L));
@@ -61,14 +62,14 @@ class IdleCurrencyClientCacheTest {
 
     @Test
     void deltaRemovesBalancesForZeroNegativeAndNullValues() {
-        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L, MATTER, 3L), Map.of(IDLE, 1L, MATTER, 2L));
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L, MATTER, 3L), Map.of(IDLE, 1L, MATTER, 2L), false);
 
         var delta = new LinkedHashMap<CurrencyId, Long>();
         delta.put(IDLE, 0L);
         delta.put(MATTER, null);
         delta.put(currency("flux"), -5L);
 
-        IdleCurrencyClientCache.applyDelta(delta, Map.of());
+        IdleCurrencyClientCache.applyDelta(delta, Map.of(), false);
 
         assertThat(IdleCurrencyClientCache.getBalances()).isEmpty();
         assertThat(IdleCurrencyClientCache.getRates())
@@ -77,12 +78,28 @@ class IdleCurrencyClientCacheTest {
 
     @Test
     void mapAccessorsAreReadOnly() {
-        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L), Map.of(IDLE, 2L));
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 10L), Map.of(IDLE, 2L), false);
 
         assertThatThrownBy(() -> IdleCurrencyClientCache.getBalanceMap().put(MATTER, 5L))
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThatThrownBy(() -> IdleCurrencyClientCache.getRateMap().put(MATTER, 1L))
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void snapshotUpdatesIdlePunchEligibility() {
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 2L), Map.of(IDLE, 1L), true);
+
+        assertThat(IdleCurrencyClientCache.isIdlePunchEligible()).isTrue();
+    }
+
+    @Test
+    void deltaUpdatesIdlePunchEligibilityEvenWhenNoCurrencyChanges() {
+        IdleCurrencyClientCache.applySnapshot(Map.of(IDLE, 2L), Map.of(IDLE, 1L), true);
+
+        IdleCurrencyClientCache.applyDelta(Map.of(), Map.of(), false);
+
+        assertThat(IdleCurrencyClientCache.isIdlePunchEligible()).isFalse();
     }
 
     @Test
