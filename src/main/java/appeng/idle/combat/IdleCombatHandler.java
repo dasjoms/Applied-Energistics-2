@@ -17,7 +17,7 @@ import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
 public final class IdleCombatHandler {
-    private static final long BASE_UNARMED_PUNCH_INTERVAL_TICKS = 10;
+    private static final double ATTACK_COOLDOWN_TICKS = 20.0D;
     private static final double TARGET_PICK_RANGE = 5.0D;
     private static final double TARGET_PICK_RANGE_SQUARED = TARGET_PICK_RANGE * TARGET_PICK_RANGE;
     private static final Map<UUID, CombatState> PLAYER_COMBAT_STATES = new HashMap<>();
@@ -94,9 +94,21 @@ public final class IdleCombatHandler {
 
         player.swing(state.nextHand(), true);
 
-        var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, BASE_UNARMED_PUNCH_INTERVAL_TICKS);
+        var baseIntervalTicks = getBaseUnarmedPunchIntervalTicks(player);
+        var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
         PLAYER_COMBAT_STATES.put(player.getUUID(), state.advance(gameTime + intervalTicks));
         return true;
+    }
+
+    private static long getBaseUnarmedPunchIntervalTicks(ServerPlayer player) {
+        var attackSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED);
+        if (attackSpeed <= 0.0D || !Double.isFinite(attackSpeed)) {
+            return 1L;
+        }
+
+        // Vanilla attack strength recovers over a period of 20 / attackSpeed ticks.
+        var cooldownPeriodTicks = Math.round(ATTACK_COOLDOWN_TICKS / attackSpeed);
+        return Math.max(1L, cooldownPeriodTicks);
     }
 
     private static Entity resolveTarget(ServerPlayer player, Entity eventTarget) {

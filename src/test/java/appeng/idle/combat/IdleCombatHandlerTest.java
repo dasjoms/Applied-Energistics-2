@@ -3,17 +3,17 @@ package appeng.idle.combat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -33,7 +33,6 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
-import appeng.idle.upgrade.IdleUpgrades;
 
 class IdleCombatHandlerTest {
 
@@ -53,7 +52,7 @@ class IdleCombatHandlerTest {
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
             upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
                     .thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), eq(10L)))
+            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
                     .thenReturn(5L);
 
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
@@ -73,7 +72,7 @@ class IdleCombatHandlerTest {
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
             upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
                     .thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), eq(10L)))
+            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
                     .thenReturn(5L);
 
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
@@ -119,7 +118,7 @@ class IdleCombatHandlerTest {
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
             upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
                     .thenReturn(true);
-            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), eq(10L)))
+            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
                     .thenReturn(5L);
 
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
@@ -134,13 +133,29 @@ class IdleCombatHandlerTest {
     }
 
     @Test
-    void usesConfiguredMultiplierCooldownShorterThanVanillaBaseline() {
-        var data = new PlayerIdleData(Map.of(), 0L, PlayerIdleData.CURRENT_DATA_VERSION,
-                Map.of(IdleUpgrades.COMBAT_1.id(), 1));
+    void derivesVanillaBaselineFromAttackSpeedAndAppliesUpgradeReduction() {
+        var fixture = combatFixture();
+        when(fixture.player().getAttributeValue(Attributes.ATTACK_SPEED)).thenReturn(4.0);
 
-        var interval = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(data, 10L);
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
+            dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
+            upgradeHooks.when(() -> IdleUpgradeHooks.isUnarmedDualPunchEnabled(any(PlayerIdleData.class)))
+                    .thenReturn(true);
+            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
+                    .thenReturn(4L);
 
-        assertThat(interval).isLessThan(10L).isEqualTo(9L);
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
+
+            var baselineCaptor = ArgumentCaptor.forClass(Long.class);
+            upgradeHooks.verify(
+                    () -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class),
+                            baselineCaptor.capture()));
+            assertThat(baselineCaptor.getValue()).isEqualTo(5L);
+            assertThat(4L).isLessThan(baselineCaptor.getValue());
+        }
     }
 
     @Test

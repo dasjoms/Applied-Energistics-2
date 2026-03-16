@@ -126,6 +126,13 @@ public final class IdleUpgradeHooks {
         return totalMultiplier > 0.0 && Double.isFinite(totalMultiplier) ? totalMultiplier : 1.0;
     }
 
+    /**
+     * Computes the unarmed punch interval from the vanilla baseline and owned upgrades.
+     * <p>
+     * Baseline is the player's vanilla attack-speed cadence ({@code round(20 / attackSpeed)} ticks). Owning
+     * {@link IdleUpgrades#COMBAT_1} level 1 reduces the resulting interval below that vanilla baseline. The returned
+     * interval is always clamped to at least one tick.
+     */
     public static long getUnarmedPunchIntervalTicks(PlayerIdleData data, long baseIntervalTicks) {
         if (baseIntervalTicks <= 0) {
             return 1;
