@@ -37,6 +37,10 @@ public final class TimberBlockBreakHandler {
             return;
         }
 
+        if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
+            return;
+        }
+
         var brokenState = event.getState();
         if (brokenState == null || brokenState.isAir() || !brokenState.is(BlockTags.LOGS)) {
             return;
