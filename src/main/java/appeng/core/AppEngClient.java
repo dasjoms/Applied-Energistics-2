@@ -82,6 +82,7 @@ import appeng.client.gui.overlay.IdleHudOverlayRenderer;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.guidebook.ConfigValueTagExtension;
 import appeng.client.guidebook.PartAnnotationStrategy;
+import appeng.client.idle.combat.IdlePunchAnimationComponent;
 import appeng.client.render.StorageCellClientTooltipComponent;
 import appeng.client.render.crafting.CraftingMonitorRenderer;
 import appeng.client.render.crafting.MolecularAssemblerRenderer;
@@ -195,7 +196,12 @@ public class AppEngClient extends AppEngBase {
         });
 
         NeoForge.EVENT_BUS.addListener((ClientTickEvent.Post e) -> {
-            tickPinnedKeys(Minecraft.getInstance());
+            var minecraft = Minecraft.getInstance();
+            if (minecraft.player != null) {
+                IdlePunchAnimationComponent.update(minecraft.player);
+            }
+
+            tickPinnedKeys(minecraft);
             Hotkeys.checkHotkeys();
         });
 
