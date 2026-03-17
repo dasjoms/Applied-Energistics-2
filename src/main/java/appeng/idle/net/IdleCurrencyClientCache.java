@@ -14,7 +14,7 @@ public final class IdleCurrencyClientCache {
     private static volatile Map<CurrencyId, Long> rates = Map.of();
     private static volatile Map<CurrencyId, IdleCurrencyHudValue> hudValues = Map.of();
     private static volatile boolean idlePunchEligible;
-    private static volatile IdleCombatHudState combatHudState = IdleCombatHudState.EMPTY;
+    private static volatile IdleCombatHudState combatHudSnapshot = IdleCombatHudState.EMPTY;
 
     private IdleCurrencyClientCache() {
     }
@@ -54,12 +54,24 @@ public final class IdleCurrencyClientCache {
         hudValues = Collections.unmodifiableMap(new LinkedHashMap<>(snapshot));
     }
 
+    public static IdleCombatHudState getCombatHudSnapshot() {
+        return combatHudSnapshot;
+    }
+
     public static IdleCombatHudState getCombatHudState() {
-        return combatHudState;
+        return getCombatHudSnapshot();
+    }
+
+    public static void applyCombatHudSnapshot(IdleCombatHudState snapshot) {
+        combatHudSnapshot = snapshot;
     }
 
     public static void applyCombatHudState(IdleCombatHudState snapshot) {
-        combatHudState = snapshot;
+        applyCombatHudSnapshot(snapshot);
+    }
+
+    public static void clearCombatHudSnapshot() {
+        combatHudSnapshot = IdleCombatHudState.EMPTY;
     }
 
     public static void applyDelta(Map<CurrencyId, Long> delta, Map<CurrencyId, Long> refreshedRates,

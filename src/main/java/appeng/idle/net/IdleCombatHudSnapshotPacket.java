@@ -44,6 +44,6 @@ public record IdleCombatHudSnapshotPacket(IdleCombatHudState state) implements C
     @Override
     @OnlyIn(Dist.CLIENT)
     public void handleOnClient(Player player) {
-        IdleCurrencyClientCache.applyCombatHudState(state);
+        IdleCurrencyClientCache.applyCombatHudSnapshot(state);
     }
 }

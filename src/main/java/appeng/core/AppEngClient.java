@@ -116,6 +116,7 @@ import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.BlockAttackHook;
 import appeng.hooks.IdlePunchAttackHook;
 import appeng.hooks.RenderBlockOutlineHook;
+import appeng.idle.net.IdleCurrencyClientCache;
 import appeng.init.client.InitAdditionalModels;
 import appeng.init.client.InitBlockColors;
 import appeng.init.client.InitBuiltInModels;
@@ -195,21 +196,25 @@ public class AppEngClient extends AppEngBase {
             PendingCraftingJobs.clearPendingJobs();
             PinnedKeys.clearPinnedKeys();
             IdlePunchAnimationComponent.resetServerStateTracking();
+            IdleCurrencyClientCache.clearCombatHudSnapshot();
         });
 
         NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut evt) -> {
             IdlePunchAnimationComponent.resetServerStateTracking();
+            IdleCurrencyClientCache.clearCombatHudSnapshot();
         });
 
         NeoForge.EVENT_BUS.addListener((PlayerEvent.Clone evt) -> {
             if (evt.getEntity().level().isClientSide() && evt.isWasDeath()) {
                 IdlePunchAnimationComponent.resetServerStateTracking();
+                IdleCurrencyClientCache.clearCombatHudSnapshot();
             }
         });
 
         NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerChangedDimensionEvent evt) -> {
             if (evt.getEntity().level().isClientSide()) {
                 IdlePunchAnimationComponent.resetServerStateTracking();
+                IdleCurrencyClientCache.clearCombatHudSnapshot();
             }
         });
 
