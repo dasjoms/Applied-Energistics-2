@@ -27,6 +27,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 
 import appeng.client.idle.combat.IdlePunchAnimationComponent;
 import appeng.core.definitions.AEItems;
+import appeng.idle.net.IdleCombatHudState;
 import appeng.idle.net.IdleCurrencyClientCache;
 
 class IdlePunchAttackHookTest {
@@ -37,6 +38,7 @@ class IdlePunchAttackHookTest {
     @AfterEach
     void resetIdlePunchEligibility() {
         IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
+        IdleCurrencyClientCache.applyCombatHudState(IdleCombatHudState.EMPTY);
         IdlePunchAttackHook.resetClientCooldowns();
         IdlePunchAnimationComponent.resetServerStateTracking();
     }
@@ -47,31 +49,31 @@ class IdlePunchAttackHookTest {
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, false));
 
         assertThat(IdlePunchAttackHook.shouldTakeOverAttackInput(player)).isFalse();
     }
 
     @Test
-    void shouldTakeOverAttackInputWhenVisorHandsAndCombatEligibilityPass() {
+    void shouldTakeOverAttackInputWhenCombatHudReportsIdleCombatMode() {
         var player = mock(Player.class);
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
         assertThat(IdlePunchAttackHook.shouldTakeOverAttackInput(player)).isTrue();
     }
 
     @Test
-    void shouldNotTakeOverAttackInputWithNonEmptyHandsEvenWhenEligible() {
+    void shouldTakeOverAttackInputEvenWithNonEmptyHandsWhenCombatHudReportsModeEnabled() {
         var player = mock(Player.class);
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(new ItemStack(Items.STICK));
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
-        assertThat(IdlePunchAttackHook.shouldTakeOverAttackInput(player)).isFalse();
+        assertThat(IdlePunchAttackHook.shouldTakeOverAttackInput(player)).isTrue();
     }
 
     @Test
@@ -92,7 +94,7 @@ class IdlePunchAttackHookTest {
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
         when(player.distanceToSqr(target)).thenReturn(4.0D);
         when(target.isAlive()).thenReturn(true);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
         var hitResult = new EntityHitResult(target);
 
@@ -105,7 +107,7 @@ class IdlePunchAttackHookTest {
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
         HitResult blockHit = new BlockHitResult(Vec3.ZERO, Direction.UP, BlockPos.ZERO, false);
 
@@ -121,7 +123,7 @@ class IdlePunchAttackHookTest {
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
         var missHit = mock(HitResult.class);
         when(missHit.getType()).thenReturn(Type.MISS);
@@ -140,7 +142,7 @@ class IdlePunchAttackHookTest {
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
         var missHit = mock(HitResult.class);
         when(missHit.getType()).thenReturn(Type.MISS);
@@ -154,7 +156,7 @@ class IdlePunchAttackHookTest {
         when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
         when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
         when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, true));
 
         HitResult blockHit = new BlockHitResult(Vec3.ZERO, Direction.UP, BlockPos.ZERO, false);
 
@@ -166,11 +168,9 @@ class IdlePunchAttackHookTest {
         var player = mock(Player.class);
         var level = mock(net.minecraft.world.level.Level.class);
         when(player.level()).thenReturn(level);
-        when(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED))
-                .thenReturn(4.0D);
-        when(level.getGameTime()).thenReturn(100L, 109L, 110L);
+        when(level.getGameTime()).thenReturn(100L, 110L);
 
-        IdlePunchAttackHook.markClientPunchStarted(player, InteractionHand.MAIN_HAND);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(100L, 10L, 0L, 10L, 10L, true));
 
         assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.MAIN_HAND)).isTrue();
         assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.MAIN_HAND)).isFalse();
@@ -181,11 +181,9 @@ class IdlePunchAttackHookTest {
         var player = mock(Player.class);
         var level = mock(net.minecraft.world.level.Level.class);
         when(player.level()).thenReturn(level);
-        when(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED))
-                .thenReturn(4.0D);
         when(level.getGameTime()).thenReturn(200L, 201L);
 
-        IdlePunchAttackHook.markClientPunchStarted(player, InteractionHand.MAIN_HAND);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(200L, 10L, 0L, 10L, 10L, true));
 
         assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.MAIN_HAND)).isTrue();
         assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.OFF_HAND)).isFalse();
@@ -198,10 +196,7 @@ class IdlePunchAttackHookTest {
         when(player.level()).thenReturn(level);
         when(level.getGameTime()).thenReturn(250L);
 
-        when(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED))
-                .thenReturn(4.0D);
-
-        IdlePunchAttackHook.markClientPunchStarted(player, InteractionHand.OFF_HAND);
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(250L, 0L, 10L, 10L, 10L, true));
         assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.OFF_HAND)).isTrue();
 
         IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, true);

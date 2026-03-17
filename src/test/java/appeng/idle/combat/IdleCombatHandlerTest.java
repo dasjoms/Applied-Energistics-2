@@ -33,6 +33,7 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import appeng.core.AEConfig;
+import appeng.idle.net.IdleCurrencySyncService;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
@@ -44,7 +45,8 @@ class IdleCombatHandlerTest {
         var fixture = combatFixture();
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(false);
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
 
@@ -69,7 +71,8 @@ class IdleCombatHandlerTest {
         var fixture = combatFixture();
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
@@ -96,7 +99,8 @@ class IdleCombatHandlerTest {
         var fixture = combatFixture();
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(false);
@@ -115,7 +119,8 @@ class IdleCombatHandlerTest {
         when(fixture.level().getGameTime()).thenReturn(100L, 102L, 103L, 106L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
@@ -142,7 +147,8 @@ class IdleCombatHandlerTest {
         when(fixture.level().getGameTime()).thenReturn(100L, 109L, 110L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
@@ -167,7 +173,8 @@ class IdleCombatHandlerTest {
         when(fixture.player().getAttributeValue(Attributes.ATTACK_SPEED)).thenReturn(4.0);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
@@ -188,13 +195,42 @@ class IdleCombatHandlerTest {
     }
 
     @Test
+    void sendsImmediateCombatHudSnapshotAfterSuccessfulPunch() {
+        var fixture = combatFixture();
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.OFF_HAND);
+
+            syncService.verify(() -> IdleCurrencySyncService.sendCombatHudSnapshot(fixture.player(), true), times(1));
+        }
+    }
+
+    @Test
+    void sendsEmptyCombatHudSnapshotOnLogout() {
+        var fixture = combatFixture();
+        var logoutEvent = mock(PlayerEvent.PlayerLoggedOutEvent.class);
+        when(logoutEvent.getEntity()).thenReturn(fixture.player());
+
+        try (MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
+            IdleCombatHandler.onPlayerLoggedOut(logoutEvent);
+
+            syncService.verify(() -> IdleCurrencySyncService.sendEmptyCombatHudSnapshot(fixture.player()), times(1));
+        }
+    }
+
+    @Test
     void resetsCooldownAfterDeathRespawnCloneForNewPlayerInstance() {
         var fixture = combatFixture();
         var clonedPlayer = clonePlayer(fixture, fixture.player().getUUID());
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
             stubCombatPrerequisites(dataManager, upgradeHooks, clonedPlayer);
 
@@ -209,6 +245,7 @@ class IdleCombatHandlerTest {
             IdleCombatHandler.handlePunchRequest(clonedPlayer, fixture.targetEntityId());
 
             verify(fixture.target(), times(2)).hurt(any(), anyFloat());
+            syncService.verify(() -> IdleCurrencySyncService.sendEmptyCombatHudSnapshot(clonedPlayer), times(1));
         }
     }
 
@@ -219,7 +256,8 @@ class IdleCombatHandlerTest {
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
             stubCombatPrerequisites(dataManager, upgradeHooks, clonedPlayer);
 
@@ -243,7 +281,8 @@ class IdleCombatHandlerTest {
         when(fixture.level().getGameTime()).thenReturn(100L, 110L);
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
             dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
             upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
@@ -261,6 +300,7 @@ class IdleCombatHandlerTest {
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
 
             verify(fixture.target(), times(2)).hurt(any(), anyFloat());
+            syncService.verify(() -> IdleCurrencySyncService.sendEmptyCombatHudSnapshot(fixture.player()), times(1));
         }
     }
 
@@ -288,7 +328,8 @@ class IdleCombatHandlerTest {
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
-                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
             aeConfig.when(AEConfig::instance).thenReturn(config);
             when(config.isDebugToolsEnabled()).thenReturn(true);
@@ -308,7 +349,8 @@ class IdleCombatHandlerTest {
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
-                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
             aeConfig.when(AEConfig::instance).thenReturn(config);
             when(config.isDebugToolsEnabled()).thenReturn(false);

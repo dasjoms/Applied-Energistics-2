@@ -78,6 +78,7 @@ class IdleCurrencySyncServiceTest {
                 MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
             dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+            stubCombatHudSnapshotPreconditions(player, dataManager);
 
             IdleCurrencySyncService.sendSnapshot(player);
 
@@ -99,6 +100,7 @@ class IdleCurrencySyncServiceTest {
                 MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
             dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+            stubCombatHudSnapshotPreconditions(player, dataManager);
 
             IdleCurrencySyncService.sendSnapshot(player);
 
@@ -121,6 +123,7 @@ class IdleCurrencySyncServiceTest {
                 MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
             dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+            stubCombatHudSnapshotPreconditions(player, dataManager);
 
             IdleCurrencySyncService.sendSnapshot(player);
 
@@ -189,6 +192,7 @@ class IdleCurrencySyncServiceTest {
                         dataManager.when(() -> PlayerIdleDataManager.get(any())).thenReturn(data);
                         dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(any()))
                                 .thenReturn(true);
+                        stubCombatHudSnapshotPreconditions(visorPlayer, dataManager);
 
                         runServerTick(1, server);
                         runServerTick(2, server);
@@ -240,6 +244,7 @@ class IdleCurrencySyncServiceTest {
                         dataManager.when(() -> PlayerIdleDataManager.get(visorPlayer)).thenReturn(data);
                         dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(visorPlayer))
                                 .thenReturn(true);
+                        stubCombatHudSnapshotPreconditions(visorPlayer, dataManager);
 
                         var snapshots = new java.util.ArrayList<IdleCurrencyHudSnapshotPacket>();
                         packets.when(() -> PacketDistributor.sendToPlayer(eq(visorPlayer), any()))
@@ -335,6 +340,60 @@ class IdleCurrencySyncServiceTest {
     }
 
     @Test
+    void sendCombatHudSnapshotForceBypassesCacheDeduplication() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(net.minecraft.server.level.ServerLevel.class);
+        var playerId = UUID.randomUUID();
+        when(player.getUUID()).thenReturn(playerId);
+        when(player.serverLevel()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(40L);
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+
+        var data = new PlayerIdleData();
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(false);
+
+            IdleCurrencySyncService.sendCombatHudSnapshot(player, true);
+            IdleCurrencySyncService.sendCombatHudSnapshot(player, true);
+
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCombatHudSnapshotPacket)), times(2));
+        }
+    }
+
+    @Test
+    void sendEmptyCombatHudSnapshotResetsCombatCache() {
+        var player = mock(ServerPlayer.class);
+        var level = mock(net.minecraft.server.level.ServerLevel.class);
+        var playerId = UUID.randomUUID();
+        when(player.getUUID()).thenReturn(playerId);
+        when(player.serverLevel()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(40L);
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+
+        var data = new PlayerIdleData();
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(false);
+
+            IdleCurrencySyncService.sendCombatHudSnapshot(player);
+            IdleCurrencySyncService.sendCombatHudSnapshot(player);
+            IdleCurrencySyncService.sendEmptyCombatHudSnapshot(player);
+            IdleCurrencySyncService.sendCombatHudSnapshot(player);
+
+            packets.verify(() -> PacketDistributor.sendToPlayer(eq(player),
+                    argThat(packet -> packet instanceof IdleCombatHudSnapshotPacket)), times(3));
+        }
+    }
+
+    @Test
     void playerLogoutClearsHudCache() throws Exception {
         withInjectedCurrency(new CurrencyDefinition(
                 HUD_TEST_CURRENCY,
@@ -369,6 +428,16 @@ class IdleCurrencySyncServiceTest {
                                 argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(2));
                     }
                 });
+    }
+
+    private static void stubCombatHudSnapshotPreconditions(ServerPlayer player,
+            MockedStatic<PlayerIdleDataManager> dataManager) {
+        var level = mock(net.minecraft.server.level.ServerLevel.class);
+        when(player.serverLevel()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(0L);
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(false);
     }
 
     private static void runServerTick(int tickCount, MinecraftServer server) {

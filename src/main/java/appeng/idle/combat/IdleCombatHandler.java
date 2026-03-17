@@ -17,6 +17,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.core.AEConfig;
 import appeng.idle.net.IdleCombatHudState;
+import appeng.idle.net.IdleCurrencySyncService;
 import appeng.idle.net.IdlePunchSwingPacket;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
@@ -66,7 +67,12 @@ public final class IdleCombatHandler {
     }
 
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        resetCombatState(event.getEntity().getUUID());
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        resetCombatState(player.getUUID());
+        IdleCurrencySyncService.sendEmptyCombatHudSnapshot(player);
     }
 
     /**
@@ -83,11 +89,21 @@ public final class IdleCombatHandler {
         // Clear both references so post-death clones always start with fresh hand cooldown state,
         // regardless of whether the original and cloned player objects share the same UUID instance.
         resetCombatState(event.getOriginal().getUUID());
-        resetCombatState(event.getEntity().getUUID());
+        if (event.getEntity() instanceof ServerPlayer player) {
+            resetCombatState(player.getUUID());
+            IdleCurrencySyncService.sendEmptyCombatHudSnapshot(player);
+        } else {
+            resetCombatState(event.getEntity().getUUID());
+        }
     }
 
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        resetCombatState(event.getEntity().getUUID());
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        resetCombatState(player.getUUID());
+        IdleCurrencySyncService.sendEmptyCombatHudSnapshot(player);
     }
 
     private static void resetCombatState(UUID playerId) {
@@ -147,6 +163,7 @@ public final class IdleCombatHandler {
 
         var intervalTicks = getPunchIntervalTicks(player, idleData);
         PLAYER_COMBAT_STATES.put(player.getUUID(), state.withNextAllowedTick(hand, gameTime + intervalTicks));
+        IdleCurrencySyncService.sendCombatHudSnapshot(player, true);
         return true;
     }
 
