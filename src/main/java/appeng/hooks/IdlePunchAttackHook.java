@@ -57,6 +57,7 @@ public final class IdlePunchAttackHook {
         }
 
         if (!shouldSuppressVanillaAttackSwing(player, minecraft.hitResult)) {
+            triggerLocalSwingForNonEntityInteraction(player, hand);
             return;
         }
 
@@ -70,6 +71,15 @@ public final class IdlePunchAttackHook {
         IdlePunchAnimationComponent.startPredictedSwing(player, hand);
         var target = ((EntityHitResult) minecraft.hitResult).getEntity();
         PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
+    }
+
+    private static void triggerLocalSwingForNonEntityInteraction(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.OFF_HAND && player.swinging && player.swingingArm == InteractionHand.MAIN_HAND
+                && player.swingTime > 0) {
+            return;
+        }
+
+        IdlePunchAnimationComponent.startPredictedSwing(player, hand);
     }
 
     public static boolean consumeStartAttackSuppressionForCurrentClick(Player player) {
