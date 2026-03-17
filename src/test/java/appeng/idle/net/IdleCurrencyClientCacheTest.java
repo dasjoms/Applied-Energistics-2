@@ -20,6 +20,7 @@ class IdleCurrencyClientCacheTest {
     @AfterEach
     void resetCache() {
         IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
+        IdleCurrencyClientCache.clearCombatHudSnapshot();
     }
 
     @Test
@@ -109,6 +110,20 @@ class IdleCurrencyClientCacheTest {
         IdleCurrencyClientCache.applyHudSnapshot(Map.of());
 
         assertThat(IdleCurrencyClientCache.getHudValues()).isEmpty();
+    }
+
+    @Test
+    void combatHudSnapshotAccessorsStoreAndClearSnapshot() {
+        var snapshot = new IdleCombatHudState(123L, 5L, 7L, 10L, 12L, true);
+
+        IdleCurrencyClientCache.applyCombatHudSnapshot(snapshot);
+
+        assertThat(IdleCurrencyClientCache.getCombatHudSnapshot()).isEqualTo(snapshot);
+        assertThat(IdleCurrencyClientCache.getCombatHudState()).isEqualTo(snapshot);
+
+        IdleCurrencyClientCache.clearCombatHudSnapshot();
+
+        assertThat(IdleCurrencyClientCache.getCombatHudSnapshot()).isEqualTo(IdleCombatHudState.EMPTY);
     }
 
     private static CurrencyId currency(String path) {
