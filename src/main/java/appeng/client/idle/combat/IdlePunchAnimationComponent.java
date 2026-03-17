@@ -16,7 +16,6 @@ import appeng.idle.net.IdleCurrencyClientCache;
 public final class IdlePunchAnimationComponent {
     private enum SwingSource {
         NONE,
-        LOCAL,
         PREDICTED,
         SERVER_CONFIRMED
     }
@@ -34,27 +33,6 @@ public final class IdlePunchAnimationComponent {
     public static void update(Player player) {
         if (!isIdlePunchMode(player)) {
             reset();
-            return;
-        }
-
-        if (player.swinging) {
-            var swingingHand = player.swingingArm == null ? InteractionHand.MAIN_HAND : player.swingingArm;
-
-            if (!isAnimationActive(player)) {
-                activeHand = swingingHand;
-                swingStartTick = player.level().getGameTime();
-                swingDurationTicks = getSwingDurationTicks(player);
-                activeSwingSource = SwingSource.LOCAL;
-                sendDebugAnimationMessage(player, swingingHand, "local_start");
-                return;
-            }
-
-            if (player.swingTime == 0 && swingingHand == activeHand) {
-                swingStartTick = player.level().getGameTime();
-                swingDurationTicks = getSwingDurationTicks(player);
-                activeSwingSource = SwingSource.LOCAL;
-                sendDebugAnimationMessage(player, swingingHand, "local_restart");
-            }
             return;
         }
 
