@@ -1,10 +1,12 @@
 package appeng.client.idle.combat;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 
+import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
 import appeng.idle.net.IdleCurrencyClientCache;
 
@@ -43,6 +45,7 @@ public final class IdlePunchAnimationComponent {
                 swingStartTick = player.level().getGameTime();
                 swingDurationTicks = getSwingDurationTicks(player);
                 activeSwingSource = SwingSource.LOCAL;
+                sendDebugAnimationMessage(player, swingingHand, "local_start");
                 return;
             }
 
@@ -50,6 +53,7 @@ public final class IdlePunchAnimationComponent {
                 swingStartTick = player.level().getGameTime();
                 swingDurationTicks = getSwingDurationTicks(player);
                 activeSwingSource = SwingSource.LOCAL;
+                sendDebugAnimationMessage(player, swingingHand, "local_restart");
             }
             return;
         }
@@ -70,6 +74,7 @@ public final class IdlePunchAnimationComponent {
 
         if (predictedHand == hand && isAnimationActive(player) && activeHand == hand) {
             activeSwingSource = SwingSource.SERVER_CONFIRMED;
+            sendDebugAnimationMessage(player, hand, "server_confirmed_reuse");
             return;
         }
 
@@ -77,6 +82,7 @@ public final class IdlePunchAnimationComponent {
         swingStartTick = player.level().getGameTime();
         swingDurationTicks = getSwingDurationTicks(player);
         activeSwingSource = SwingSource.SERVER_CONFIRMED;
+        sendDebugAnimationMessage(player, hand, "server_confirmed_new");
     }
 
     public static void startPredictedSwing(Player player, InteractionHand hand) {
@@ -85,6 +91,16 @@ public final class IdlePunchAnimationComponent {
         swingStartTick = player.level().getGameTime();
         swingDurationTicks = getSwingDurationTicks(player);
         activeSwingSource = SwingSource.PREDICTED;
+        sendDebugAnimationMessage(player, hand, "predicted_start");
+    }
+
+    private static void sendDebugAnimationMessage(Player player, InteractionHand hand, String phase) {
+        if (!AEConfig.instance().isDebugToolsEnabled()) {
+            return;
+        }
+
+        player.displayClientMessage(Component.literal("[AE2 Debug] idle punch animation: phase=" + phase
+                + " hand=" + hand + " startTick=" + swingStartTick + " duration=" + swingDurationTicks), false);
     }
 
     public static void resetServerStateTracking() {

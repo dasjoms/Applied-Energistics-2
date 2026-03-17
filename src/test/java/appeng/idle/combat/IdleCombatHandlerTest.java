@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -31,6 +32,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
+import appeng.core.AEConfig;
 import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
@@ -276,6 +278,44 @@ class IdleCombatHandlerTest {
 
             verify(attackEvent, never()).setCanceled(true);
             verify(fixture.target(), never()).hurt(any(), anyFloat());
+        }
+    }
+
+    @Test
+    void sendsDebugChatMessageForExecutedCombat1PunchWhenDebugEnabled() {
+        var fixture = combatFixture();
+        var config = mock(AEConfig.class);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+            aeConfig.when(AEConfig::instance).thenReturn(config);
+            when(config.isDebugToolsEnabled()).thenReturn(true);
+
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.OFF_HAND);
+
+            verify(fixture.player())
+                    .sendSystemMessage(argThat(component -> component.getString().contains("combat_1 punch executed")
+                            && component.getString().contains("OFF_HAND")));
+        }
+    }
+
+    @Test
+    void doesNotSendDebugChatMessageForExecutedCombat1PunchWhenDebugDisabled() {
+        var fixture = combatFixture();
+        var config = mock(AEConfig.class);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+            aeConfig.when(AEConfig::instance).thenReturn(config);
+            when(config.isDebugToolsEnabled()).thenReturn(false);
+
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.MAIN_HAND);
+
+            verify(fixture.player(), never()).sendSystemMessage(any());
         }
     }
 

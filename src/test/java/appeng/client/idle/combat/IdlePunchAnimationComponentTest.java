@@ -1,11 +1,18 @@
 package appeng.client.idle.combat;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -14,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
+import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
 import appeng.idle.net.IdleCurrencyClientCache;
 
@@ -101,6 +109,41 @@ class IdlePunchAnimationComponentTest {
 
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
         assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(301L);
+    }
+
+    @Test
+    void sendsAnimationDebugMessageWhenDebugFlagIsEnabled() {
+        var fixture = createFixture();
+        var config = mock(AEConfig.class);
+        when(fixture.level.getGameTime()).thenReturn(42L);
+
+        try (MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+            aeConfig.when(AEConfig::instance).thenReturn(config);
+            when(config.isDebugToolsEnabled()).thenReturn(true);
+
+            IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
+
+            verify(fixture.player)
+                    .displayClientMessage(argThat(component -> component.getString().contains("idle punch animation")
+                            && component.getString().contains("predicted_start")
+                            && component.getString().contains("OFF_HAND")), anyBoolean());
+        }
+    }
+
+    @Test
+    void doesNotSendAnimationDebugMessageWhenDebugFlagIsDisabled() {
+        var fixture = createFixture();
+        var config = mock(AEConfig.class);
+        when(fixture.level.getGameTime()).thenReturn(43L);
+
+        try (MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+            aeConfig.when(AEConfig::instance).thenReturn(config);
+            when(config.isDebugToolsEnabled()).thenReturn(false);
+
+            IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
+
+            verify(fixture.player, never()).displayClientMessage(any(), anyBoolean());
+        }
     }
 
     @Test
