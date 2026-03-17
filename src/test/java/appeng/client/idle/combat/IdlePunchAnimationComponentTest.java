@@ -114,8 +114,8 @@ class IdlePunchAnimationComponentTest {
         IdlePunchAnimationComponent.update(fixture.player);
 
         assertThat(IdlePunchAnimationComponent.isAnimationActive(fixture.player)).isFalse();
-        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(Long.MIN_VALUE);
-        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(600L);
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
                 .isFalse();
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
