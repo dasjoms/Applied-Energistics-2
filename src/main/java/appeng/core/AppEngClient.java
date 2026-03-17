@@ -79,6 +79,7 @@ import appeng.client.Hotkeys;
 import appeng.client.commands.ClientCommands;
 import appeng.client.gui.me.common.PendingCraftingJobs;
 import appeng.client.gui.me.common.PinnedKeys;
+import appeng.client.gui.overlay.IdleCombatHudOverlayRenderer;
 import appeng.client.gui.overlay.IdleHudOverlayRenderer;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.guidebook.ConfigValueTagExtension;
@@ -139,6 +140,7 @@ public class AppEngClient extends AppEngBase {
     private static final Logger LOG = LoggerFactory.getLogger(AppEngClient.class);
 
     private static AppEngClient INSTANCE;
+    private final IdleCombatHudOverlayRenderer idleCombatHudOverlayRenderer = new IdleCombatHudOverlayRenderer();
     private final IdleHudOverlayRenderer idleHudOverlayRenderer = new IdleHudOverlayRenderer();
 
     /**
@@ -329,6 +331,7 @@ public class AppEngClient extends AppEngBase {
         NeoForge.EVENT_BUS.addListener(this::wheelEvent);
         NeoForge.EVENT_BUS.addListener(this::ctrlEvent);
         NeoForge.EVENT_BUS.addListener(idleHudOverlayRenderer::onRenderGui);
+        NeoForge.EVENT_BUS.addListener(idleCombatHudOverlayRenderer::onRenderGui);
         NeoForge.EVENT_BUS.register(OverlayManager.getInstance());
     }
 
