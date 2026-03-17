@@ -99,6 +99,29 @@ class IdlePunchAnimationComponentTest {
     }
 
     @Test
+    void confirmedOffHandSwingDoesNotRestartFromLocalMainHandAfterDurationElapses() {
+        var fixture = createFixture();
+        when(fixture.level.getGameTime()).thenReturn(600L, 601L, 607L, 608L);
+
+        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
+        IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.OFF_HAND, 12L);
+
+        fixture.player.swinging = true;
+        fixture.player.swingingArm = InteractionHand.MAIN_HAND;
+        fixture.player.swingTime = 1;
+
+        IdlePunchAnimationComponent.update(fixture.player);
+
+        assertThat(IdlePunchAnimationComponent.isAnimationActive(fixture.player)).isFalse();
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(Long.MIN_VALUE);
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
+        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
+                .isFalse();
+        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
+    }
+
+    @Test
     void resetServerStateTrackingClearsPendingPrediction() {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(300L, 301L, 302L);
