@@ -10,11 +10,18 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.InputEvent;
 
 import appeng.core.definitions.AEItems;
@@ -69,6 +76,35 @@ class IdlePunchAttackHookTest {
         when(event.isUseItem()).thenReturn(false);
 
         assertThat(invokeIdlePunchHand(event)).isEqualTo(InteractionHand.OFF_HAND);
+    }
+
+    @Test
+    void suppressesVanillaAttackSwingForEligibleEntityHitTakeover() {
+        var player = mock(Player.class);
+        var target = mock(Entity.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.distanceToSqr(target)).thenReturn(4.0D);
+        when(target.isAlive()).thenReturn(true);
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+
+        var hitResult = new EntityHitResult(target);
+
+        assertThat(IdlePunchAttackHook.shouldSuppressVanillaAttackSwing(player, hitResult)).isTrue();
+    }
+
+    @Test
+    void doesNotSuppressVanillaAttackSwingForNonEntityHit() {
+        var player = mock(Player.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+
+        HitResult blockHit = new BlockHitResult(Vec3.ZERO, Direction.UP, BlockPos.ZERO, false);
+
+        assertThat(IdlePunchAttackHook.shouldSuppressVanillaAttackSwing(player, blockHit)).isFalse();
     }
 
     @Test

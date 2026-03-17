@@ -45,6 +45,11 @@ public class ItemInHandRendererMixin {
             return;
         }
 
+        if (hand == InteractionHand.MAIN_HAND
+                && !IdlePunchAnimationComponent.isSwingActiveForHand(player, InteractionHand.MAIN_HAND)) {
+            return;
+        }
+
         if (!IdlePunchAnimationComponent.shouldRenderIdleHand(player, hand)) {
             return;
         }

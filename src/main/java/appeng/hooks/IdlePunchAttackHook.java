@@ -1,10 +1,13 @@
 package appeng.hooks;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -42,18 +45,23 @@ public final class IdlePunchAttackHook {
             return;
         }
 
-        if (!(minecraft.hitResult instanceof EntityHitResult entityHitResult)) {
-            return;
-        }
-
-        var target = entityHitResult.getEntity();
-        if (!target.isAlive() || player.distanceToSqr(target) > TARGET_PICK_RANGE * TARGET_PICK_RANGE) {
+        if (!shouldSuppressVanillaAttackSwing(player, minecraft.hitResult)) {
             return;
         }
 
         event.setCanceled(true);
         IdlePunchAnimationComponent.startPredictedSwing(player, hand);
+        var target = ((EntityHitResult) minecraft.hitResult).getEntity();
         PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
+    }
+
+    public static boolean shouldSuppressVanillaAttackSwing(Player player, @Nullable HitResult hitResult) {
+        if (!shouldTakeOverAttackInput(player) || !(hitResult instanceof EntityHitResult entityHitResult)) {
+            return false;
+        }
+
+        var target = entityHitResult.getEntity();
+        return target.isAlive() && player.distanceToSqr(target) <= TARGET_PICK_RANGE * TARGET_PICK_RANGE;
     }
 
     private static InteractionHand getIdlePunchHand(InputEvent.InteractionKeyMappingTriggered event) {
