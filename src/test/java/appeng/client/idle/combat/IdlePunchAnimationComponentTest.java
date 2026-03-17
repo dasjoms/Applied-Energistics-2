@@ -63,6 +63,29 @@ class IdlePunchAnimationComponentTest {
     }
 
     @Test
+    void predictedOffHandSwingIsNotOverwrittenByLocalMainHandState() {
+        var fixture = createFixture();
+        when(fixture.level.getGameTime()).thenReturn(500L, 501L, 502L);
+
+        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
+
+        fixture.player.swinging = true;
+        fixture.player.swingingArm = InteractionHand.MAIN_HAND;
+        fixture.player.swingTime = 1;
+
+        IdlePunchAnimationComponent.update(fixture.player);
+
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(500L);
+
+        IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.OFF_HAND, 11L);
+
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(500L);
+    }
+
+    @Test
     void resetServerStateTrackingClearsPendingPrediction() {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(300L, 301L, 302L);
