@@ -23,6 +23,7 @@ import net.minecraft.world.level.Level;
 
 import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
+import appeng.idle.net.IdleCombatHudState;
 import appeng.idle.net.IdleCurrencyClientCache;
 
 class IdlePunchAnimationComponentTest {
@@ -31,6 +32,7 @@ class IdlePunchAnimationComponentTest {
     void resetComponentState() {
         IdlePunchAnimationComponent.resetServerStateTracking();
         IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), false);
+        setIdleCombatMode(false);
     }
 
     @Test
@@ -75,7 +77,7 @@ class IdlePunchAnimationComponentTest {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(500L, 501L, 502L);
 
-        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        setIdleCombatMode(true);
         IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
 
         fixture.player.swinging = true;
@@ -103,7 +105,7 @@ class IdlePunchAnimationComponentTest {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(600L, 601L, 607L, 608L);
 
-        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        setIdleCombatMode(true);
         IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
         IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.OFF_HAND, 12L);
 
@@ -172,7 +174,7 @@ class IdlePunchAnimationComponentTest {
     @Test
     void rendersOffHandInIdlePunchModeWithoutActiveSwing() {
         var fixture = createFixture();
-        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        setIdleCombatMode(true);
 
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
@@ -184,7 +186,7 @@ class IdlePunchAnimationComponentTest {
         var fixture = createFixture();
         when(fixture.level.getGameTime()).thenReturn(700L);
 
-        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        setIdleCombatMode(true);
         IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
 
         assertThat(IdlePunchAnimationComponent.isSwingActiveForHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
@@ -195,23 +197,31 @@ class IdlePunchAnimationComponentTest {
     }
 
     @Test
-    void doesNotRenderOffHandWhenIdlePunchRequirementsFail() {
+    void doesNotRenderHandsOutsideIdlePunchMode() {
         var fixture = createFixture();
-        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        setIdleCombatMode(false);
+        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND))
+                .isFalse();
+        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
+                .isFalse();
+    }
+
+    @Test
+    void rendersHandsInIdlePunchModeRegardlessOfEquipment() {
+        var fixture = createFixture();
+        setIdleCombatMode(true);
 
         when(fixture.player.getOffhandItem()).thenReturn(new ItemStack(Items.STICK));
-        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND))
-                .isFalse();
-
-        when(fixture.player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
         when(fixture.player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(ItemStack.EMPTY);
-        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND))
-                .isFalse();
 
-        when(fixture.player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
-        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), false);
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND))
-                .isFalse();
+                .isTrue();
+        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
+                .isTrue();
+    }
+
+    private static void setIdleCombatMode(boolean enabled) {
+        IdleCurrencyClientCache.applyCombatHudState(new IdleCombatHudState(0L, 0L, 0L, 0L, 0L, enabled));
     }
 
     private static Fixture createFixture() {
