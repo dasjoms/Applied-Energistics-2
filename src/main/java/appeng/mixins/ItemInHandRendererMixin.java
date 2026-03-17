@@ -48,15 +48,6 @@ public class ItemInHandRendererMixin {
             return;
         }
 
-        var idlePunchMode = IdlePunchAnimationComponent.isIdlePunchMode(player);
-        if (hand == InteractionHand.MAIN_HAND
-                && idlePunchMode
-                && !IdlePunchAnimationComponent.isSwingActiveForHand(player, InteractionHand.MAIN_HAND)) {
-            debugVanillaSuppressed(player, hand, swingProgress, "main_hand_not_idle_active");
-            ci.cancel();
-            return;
-        }
-
         if (!IdlePunchAnimationComponent.shouldRenderIdleHand(player, hand)) {
             debugVanillaFallback(player, hand, swingProgress, "idle_hand_not_rendered");
             return;
