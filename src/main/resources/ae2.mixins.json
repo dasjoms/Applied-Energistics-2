@@ -23,7 +23,8 @@
     "PonderWorldMixin",
     "ModelBakeryMixin",
     "VariantDeserializerMixin",
-    "ItemInHandRendererMixin"
+    "ItemInHandRendererMixin",
+    "MinecraftMixin"
   ],
   "server": [],
   "injectors": {
