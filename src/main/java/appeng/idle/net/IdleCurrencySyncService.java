@@ -126,12 +126,16 @@ public final class IdleCurrencySyncService {
     }
 
     public static void sendCombatHudSnapshot(ServerPlayer player) {
+        sendCombatHudSnapshot(player, false);
+    }
+
+    public static void sendCombatHudSnapshot(ServerPlayer player, boolean force) {
         Objects.requireNonNull(player, "player");
 
         var snapshot = IdleCombatHandler.snapshotCombatHudState(player, player.serverLevel().getGameTime());
         var playerId = player.getUUID();
         var previousSnapshot = LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER.get(playerId);
-        if (previousSnapshot != null && previousSnapshot.equals(snapshot)) {
+        if (!force && previousSnapshot != null && previousSnapshot.equals(snapshot)) {
             return;
         }
 
@@ -141,13 +145,29 @@ public final class IdleCurrencySyncService {
 
     public static void sendEmptyHudSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
-        clearLastSentHudSnapshot(player);
+        clearLastSentHudSnapshotCache(player);
         PacketDistributor.sendToPlayer(player, new IdleCurrencyHudSnapshotPacket(Map.of()));
     }
 
+    public static void sendEmptyCombatHudSnapshot(ServerPlayer player) {
+        Objects.requireNonNull(player, "player");
+        clearLastSentCombatHudSnapshotCache(player);
+        PacketDistributor.sendToPlayer(player, new IdleCombatHudSnapshotPacket(IdleCombatHudState.EMPTY));
+        LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER.put(player.getUUID(), IdleCombatHudState.EMPTY);
+    }
+
     private static void clearLastSentHudSnapshot(ServerPlayer player) {
+        clearLastSentHudSnapshotCache(player);
+        clearLastSentCombatHudSnapshotCache(player);
+    }
+
+    private static void clearLastSentHudSnapshotCache(ServerPlayer player) {
         var playerId = player.getUUID();
         LAST_SENT_HUD_VALUES_BY_PLAYER.remove(playerId);
+    }
+
+    private static void clearLastSentCombatHudSnapshotCache(ServerPlayer player) {
+        var playerId = player.getUUID();
         LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER.remove(playerId);
     }
 
