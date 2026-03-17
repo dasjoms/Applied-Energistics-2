@@ -183,6 +183,31 @@ class IdlePunchAttackHookTest {
     }
 
     @Test
+    void leftClickTakeoverSuppressesMainHandSwingAnimationForCurrentClick() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(400L, 400L);
+
+        IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, true);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isTrue();
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
+    void leftClickTakeoverSuppressionDoesNotCarryToLaterTick() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(410L, 411L);
+
+        IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, true);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
     void rightClickMainHandPathDoesNotSetStartAttackSuppressionFlag() {
         var event = mock(InputEvent.InteractionKeyMappingTriggered.class);
         when(event.isAttack()).thenReturn(false);
