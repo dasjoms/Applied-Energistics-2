@@ -61,6 +61,7 @@ public final class IdlePunchAttackHook {
         }
 
         event.setCanceled(true);
+        markStartAttackSuppressionForTakeoverClick(player, event.isAttack());
         if (isHandCoolingDown(player, hand)) {
             return;
         }
@@ -69,7 +70,6 @@ public final class IdlePunchAttackHook {
         IdlePunchAnimationComponent.startPredictedSwing(player, hand);
         var target = ((EntityHitResult) minecraft.hitResult).getEntity();
         PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
-        markStartAttackSuppressionForCurrentClick(player);
     }
 
     public static boolean consumeStartAttackSuppressionForCurrentClick(Player player) {
@@ -106,6 +106,12 @@ public final class IdlePunchAttackHook {
     static void markStartAttackSuppressionForCurrentClick(Player player) {
         pendingStartAttackSuppression = true;
         pendingStartAttackSuppressionTick = player.level().getGameTime();
+    }
+
+    static void markStartAttackSuppressionForTakeoverClick(Player player, boolean attackInput) {
+        if (attackInput) {
+            markStartAttackSuppressionForCurrentClick(player);
+        }
     }
 
     private static void clearPendingStartAttackSuppression() {

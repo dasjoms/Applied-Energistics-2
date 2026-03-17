@@ -139,11 +139,32 @@ class IdlePunchAttackHookTest {
     }
 
     @Test
-    void attackClickWithoutQueuedPacketDoesNotSetStartAttackSuppressionFlag() {
+    void attackInputDuringCooldownStillSetsStartAttackSuppressionFlag() {
         var player = mock(Player.class);
         var level = mock(net.minecraft.world.level.Level.class);
         when(player.level()).thenReturn(level);
         when(level.getGameTime()).thenReturn(250L);
+
+        when(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED))
+                .thenReturn(4.0D);
+
+        IdlePunchAttackHook.markClientPunchStarted(player, InteractionHand.OFF_HAND);
+        assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.OFF_HAND)).isTrue();
+
+        IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, true);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isTrue();
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
+    void noSuppressionWhenTakeoverConditionsFail() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(260L);
+
+        IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, false);
 
         assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
     }
@@ -173,6 +194,8 @@ class IdlePunchAttackHookTest {
         var level = mock(net.minecraft.world.level.Level.class);
         when(player.level()).thenReturn(level);
         when(level.getGameTime()).thenReturn(350L);
+
+        IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, event.isAttack());
 
         assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
     }
