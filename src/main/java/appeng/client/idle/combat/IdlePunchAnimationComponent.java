@@ -12,11 +12,19 @@ import appeng.idle.net.IdleCurrencyClientCache;
  * Client-only idle combat animation state for unarmed idle punching.
  */
 public final class IdlePunchAnimationComponent {
+    private enum SwingSource {
+        NONE,
+        LOCAL,
+        PREDICTED,
+        SERVER_CONFIRMED
+    }
+
     private static InteractionHand activeHand = InteractionHand.MAIN_HAND;
     private static InteractionHand pendingPredictedHand;
     private static long swingStartTick = Long.MIN_VALUE;
     private static int swingDurationTicks;
     private static long lastConfirmedSequence = Long.MIN_VALUE;
+    private static SwingSource activeSwingSource = SwingSource.NONE;
 
     private IdlePunchAnimationComponent() {
     }
@@ -29,10 +37,19 @@ public final class IdlePunchAnimationComponent {
 
         if (player.swinging) {
             var swingingHand = player.swingingArm == null ? InteractionHand.MAIN_HAND : player.swingingArm;
-            if (!isAnimationActive(player) || player.swingTime == 0 || swingingHand != activeHand) {
+
+            if (!isAnimationActive(player)) {
                 activeHand = swingingHand;
                 swingStartTick = player.level().getGameTime();
                 swingDurationTicks = getSwingDurationTicks(player);
+                activeSwingSource = SwingSource.LOCAL;
+                return;
+            }
+
+            if (player.swingTime == 0 && swingingHand == activeHand) {
+                swingStartTick = player.level().getGameTime();
+                swingDurationTicks = getSwingDurationTicks(player);
+                activeSwingSource = SwingSource.LOCAL;
             }
             return;
         }
@@ -52,12 +69,14 @@ public final class IdlePunchAnimationComponent {
         pendingPredictedHand = null;
 
         if (predictedHand == hand && isAnimationActive(player) && activeHand == hand) {
+            activeSwingSource = SwingSource.SERVER_CONFIRMED;
             return;
         }
 
         activeHand = hand;
         swingStartTick = player.level().getGameTime();
         swingDurationTicks = getSwingDurationTicks(player);
+        activeSwingSource = SwingSource.SERVER_CONFIRMED;
     }
 
     public static void startPredictedSwing(Player player, InteractionHand hand) {
@@ -65,6 +84,7 @@ public final class IdlePunchAnimationComponent {
         activeHand = hand;
         swingStartTick = player.level().getGameTime();
         swingDurationTicks = getSwingDurationTicks(player);
+        activeSwingSource = SwingSource.PREDICTED;
     }
 
     public static void resetServerStateTracking() {
@@ -133,5 +153,6 @@ public final class IdlePunchAnimationComponent {
         swingStartTick = Long.MIN_VALUE;
         swingDurationTicks = 0;
         lastConfirmedSequence = Long.MIN_VALUE;
+        activeSwingSource = SwingSource.NONE;
     }
 }
