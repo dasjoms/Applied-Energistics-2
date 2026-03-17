@@ -101,7 +101,7 @@ public final class IdlePunchAnimationComponent {
             return false;
         }
 
-        return hand == InteractionHand.OFF_HAND || isSwingActiveForHand(player, hand);
+        return true;
     }
 
     public static InteractionHand getActiveHand() {
