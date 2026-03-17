@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import appeng.client.idle.IdleHudVisibility;
-import appeng.idle.net.IdleCombatHudState;
+import appeng.client.idle.combat.IdleCombatClientState;
 import appeng.idle.net.IdleCurrencyClientCache;
 
 public class IdleCombatHudOverlayRenderer {
@@ -23,7 +23,7 @@ public class IdleCombatHudOverlayRenderer {
         }
 
         var snapshot = IdleCurrencyClientCache.getCombatHudSnapshot();
-        if (snapshot == null || snapshot == IdleCombatHudState.EMPTY || !snapshot.inIdleCombatMode()) {
+        if (!IdleCombatClientState.isIdleCombatModeActive(snapshot)) {
             return;
         }
 

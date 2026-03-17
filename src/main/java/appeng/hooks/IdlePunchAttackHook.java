@@ -14,6 +14,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import appeng.client.idle.combat.IdleCombatClientState;
 import appeng.client.idle.combat.IdlePunchAnimationComponent;
 import appeng.core.network.serverbound.IdlePunchRequestPacket;
 import appeng.idle.net.IdleCurrencyClientCache;
@@ -156,6 +157,6 @@ public final class IdlePunchAttackHook {
     }
 
     static boolean shouldTakeOverAttackInput(Player player) {
-        return IdleCurrencyClientCache.getCombatHudState().inIdleCombatMode();
+        return IdleCombatClientState.isIdleCombatModeActive();
     }
 }
