@@ -139,6 +139,45 @@ class IdlePunchAttackHookTest {
     }
 
     @Test
+    void attackClickWithoutQueuedPacketDoesNotSetStartAttackSuppressionFlag() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(250L);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
+    void attackClickWithQueuedPacketSetsStartAttackSuppressionFlag() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(300L, 300L);
+
+        IdlePunchAttackHook.markStartAttackSuppressionForCurrentClick(player);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isTrue();
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
+    void rightClickMainHandPathDoesNotSetStartAttackSuppressionFlag() {
+        var event = mock(InputEvent.InteractionKeyMappingTriggered.class);
+        when(event.isAttack()).thenReturn(false);
+        when(event.isUseItem()).thenReturn(true);
+
+        assertThat(invokeIdlePunchHand(event)).isEqualTo(InteractionHand.MAIN_HAND);
+
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(350L);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
     void useInputMapsToMainHandPunchRequest() {
         var event = mock(InputEvent.InteractionKeyMappingTriggered.class);
         when(event.isAttack()).thenReturn(false);

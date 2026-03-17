@@ -29,6 +29,8 @@ public final class IdlePunchAttackHook {
     private static final double ATTACK_COOLDOWN_TICKS = 20.0D;
     private static long nextAllowedMainTick;
     private static long nextAllowedOffTick;
+    private static long pendingStartAttackSuppressionTick = Long.MIN_VALUE;
+    private static boolean pendingStartAttackSuppression;
 
     private IdlePunchAttackHook() {
     }
@@ -38,6 +40,10 @@ public final class IdlePunchAttackHook {
     }
 
     private static void onInteractionKeyMappingTriggered(InputEvent.InteractionKeyMappingTriggered event) {
+        if (event.isAttack()) {
+            clearPendingStartAttackSuppression();
+        }
+
         var hand = getIdlePunchHand(event);
         if (hand == null) {
             return;
@@ -63,6 +69,14 @@ public final class IdlePunchAttackHook {
         IdlePunchAnimationComponent.startPredictedSwing(player, hand);
         var target = ((EntityHitResult) minecraft.hitResult).getEntity();
         PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
+        markStartAttackSuppressionForCurrentClick(player);
+    }
+
+    public static boolean consumeStartAttackSuppressionForCurrentClick(Player player) {
+        var shouldSuppress = pendingStartAttackSuppression
+                && pendingStartAttackSuppressionTick == player.level().getGameTime();
+        clearPendingStartAttackSuppression();
+        return shouldSuppress;
     }
 
     public static boolean shouldSuppressVanillaAttackSwing(Player player, @Nullable HitResult hitResult) {
@@ -86,6 +100,17 @@ public final class IdlePunchAttackHook {
     static void resetClientCooldowns() {
         nextAllowedMainTick = 0L;
         nextAllowedOffTick = 0L;
+        clearPendingStartAttackSuppression();
+    }
+
+    static void markStartAttackSuppressionForCurrentClick(Player player) {
+        pendingStartAttackSuppression = true;
+        pendingStartAttackSuppressionTick = player.level().getGameTime();
+    }
+
+    private static void clearPendingStartAttackSuppression() {
+        pendingStartAttackSuppression = false;
+        pendingStartAttackSuppressionTick = Long.MIN_VALUE;
     }
 
     private static long getBaseUnarmedPunchIntervalTicks(Player player) {
