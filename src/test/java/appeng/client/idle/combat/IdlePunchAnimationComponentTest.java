@@ -89,7 +89,7 @@ class IdlePunchAnimationComponentTest {
         assertThat(IdlePunchAnimationComponent.isSwingActiveForHand(fixture.player, InteractionHand.MAIN_HAND))
                 .isFalse();
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
-                .isFalse();
+                .isTrue();
         assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(500L);
 
         IdlePunchAnimationComponent.applyServerConfirmedSwing(fixture.player, InteractionHand.OFF_HAND, 11L);
@@ -117,7 +117,7 @@ class IdlePunchAnimationComponentTest {
         assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(600L);
         assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
-                .isFalse();
+                .isTrue();
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
     }
 
@@ -176,7 +176,22 @@ class IdlePunchAnimationComponentTest {
 
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
         assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
+                .isTrue();
+    }
+
+    @Test
+    void mainHandRendersIdlePoseDuringOffHandPunchFlowWithoutMainHandSwing() {
+        var fixture = createFixture();
+        when(fixture.level.getGameTime()).thenReturn(700L);
+
+        IdleCurrencyClientCache.applySnapshot(java.util.Map.of(), java.util.Map.of(), true);
+        IdlePunchAnimationComponent.startPredictedSwing(fixture.player, InteractionHand.OFF_HAND);
+
+        assertThat(IdlePunchAnimationComponent.isSwingActiveForHand(fixture.player, InteractionHand.OFF_HAND)).isTrue();
+        assertThat(IdlePunchAnimationComponent.isSwingActiveForHand(fixture.player, InteractionHand.MAIN_HAND))
                 .isFalse();
+        assertThat(IdlePunchAnimationComponent.shouldRenderIdleHand(fixture.player, InteractionHand.MAIN_HAND))
+                .isTrue();
     }
 
     @Test
