@@ -16,7 +16,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.core.AEConfig;
+import appeng.idle.net.IdleCombatHudState;
 import appeng.idle.net.IdlePunchSwingPacket;
+import appeng.idle.player.PlayerIdleData;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
 
@@ -92,17 +94,25 @@ public final class IdleCombatHandler {
         PLAYER_COMBAT_STATES.remove(playerId);
     }
 
-    private static boolean tryPerformUnarmedPunch(ServerPlayer player, Entity target, InteractionHand requestedHand) {
-        if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
-            return false;
-        }
+    public static IdleCombatHudState snapshotCombatHudState(ServerPlayer player, long gameTime) {
+        var state = PLAYER_COMBAT_STATES.getOrDefault(player.getUUID(), CombatState.initial());
+        var intervalTicks = getPunchIntervalTicks(player);
+        return new IdleCombatHudState(
+                gameTime,
+                Math.max(0L, state.nextAllowedMainTick() - gameTime),
+                Math.max(0L, state.nextAllowedOffTick() - gameTime),
+                intervalTicks,
+                intervalTicks,
+                isInIdleCombatMode(player));
+    }
 
-        if (!player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty()) {
+    private static boolean tryPerformUnarmedPunch(ServerPlayer player, Entity target, InteractionHand requestedHand) {
+        if (!isInIdleCombatMode(player)) {
             return false;
         }
 
         var idleData = PlayerIdleDataManager.get(player);
-        if (!IdleUpgradeHooks.hasCombatUpgrade(idleData) || !IdleUpgradeHooks.isUnarmedDualPunchEnabled(idleData)) {
+        if (!IdleUpgradeHooks.isUnarmedDualPunchEnabled(idleData)) {
             return false;
         }
 
@@ -135,10 +145,30 @@ public final class IdleCombatHandler {
             PacketDistributor.sendToPlayer(player, new IdlePunchSwingPacket(player.getId(), hand, sequence));
         }
 
-        var baseIntervalTicks = getBaseUnarmedPunchIntervalTicks(player);
-        var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
+        var intervalTicks = getPunchIntervalTicks(player, idleData);
         PLAYER_COMBAT_STATES.put(player.getUUID(), state.withNextAllowedTick(hand, gameTime + intervalTicks));
         return true;
+    }
+
+    private static boolean isInIdleCombatMode(ServerPlayer player) {
+        if (!PlayerIdleDataManager.isActiveRewardEligibleNow(player)) {
+            return false;
+        }
+
+        if (!player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty()) {
+            return false;
+        }
+
+        return IdleUpgradeHooks.hasCombatUpgrade(PlayerIdleDataManager.get(player));
+    }
+
+    private static long getPunchIntervalTicks(ServerPlayer player) {
+        return getPunchIntervalTicks(player, PlayerIdleDataManager.get(player));
+    }
+
+    private static long getPunchIntervalTicks(ServerPlayer player, PlayerIdleData idleData) {
+        var baseIntervalTicks = getBaseUnarmedPunchIntervalTicks(player);
+        return IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
     }
 
     private static void sendDebugPunchMessage(ServerPlayer player, InteractionHand hand) {

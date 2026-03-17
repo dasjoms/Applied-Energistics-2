@@ -3,11 +3,9 @@ package appeng.client.idle.combat;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 
 import appeng.core.AEConfig;
-import appeng.core.definitions.AEItems;
 import appeng.idle.net.IdleCurrencyClientCache;
 
 /**
@@ -86,10 +84,7 @@ public final class IdlePunchAnimationComponent {
     }
 
     public static boolean isIdlePunchMode(Player player) {
-        return AEItems.IDLE_VISOR.is(player.getItemBySlot(EquipmentSlot.HEAD))
-                && player.getMainHandItem().isEmpty()
-                && player.getOffhandItem().isEmpty()
-                && IdleCurrencyClientCache.isIdlePunchEligible();
+        return IdleCurrencyClientCache.getCombatHudState().inIdleCombatMode();
     }
 
     public static boolean isSwingActiveForHand(Player player, InteractionHand hand) {

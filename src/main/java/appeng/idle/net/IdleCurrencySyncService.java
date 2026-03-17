@@ -18,6 +18,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
+import appeng.idle.combat.IdleCombatHandler;
 import appeng.idle.currency.CurrencyId;
 import appeng.idle.currency.IdleCurrencies;
 import appeng.idle.currency.IdleCurrencyManager;
@@ -34,6 +35,7 @@ public final class IdleCurrencySyncService {
     private static final int HEARTBEAT_INTERVAL_TICKS = 20 * 10;
     private static final int TICKS_PER_SECOND = 20;
     private static final Map<UUID, Map<CurrencyId, IdleCurrencyHudValue>> LAST_SENT_HUD_VALUES_BY_PLAYER = new HashMap<>();
+    private static final Map<UUID, IdleCombatHudState> LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER = new HashMap<>();
 
     private IdleCurrencySyncService() {
     }
@@ -76,6 +78,7 @@ public final class IdleCurrencySyncService {
             for (var player : event.getServer().getPlayerList().getPlayers()) {
                 if (shouldReceiveHudHeartbeat(player)) {
                     sendHudSnapshot(player);
+                    sendCombatHudSnapshot(player);
                 }
             }
         }
@@ -93,6 +96,7 @@ public final class IdleCurrencySyncService {
 
         if (shouldReceiveHudHeartbeat(player)) {
             sendHudSnapshot(player);
+            sendCombatHudSnapshot(player);
         }
     }
 
@@ -101,6 +105,7 @@ public final class IdleCurrencySyncService {
         PacketDistributor.sendToPlayer(player,
                 new IdleCurrencySnapshotPacket(snapshotBalances(player), snapshotRates(player),
                         isIdlePunchEligible(player)));
+        sendCombatHudSnapshot(player);
         if (shouldReceiveHudHeartbeat(player)) {
             sendHudSnapshot(player);
         }
@@ -120,6 +125,20 @@ public final class IdleCurrencySyncService {
         LAST_SENT_HUD_VALUES_BY_PLAYER.put(playerId, Map.copyOf(hudValues));
     }
 
+    public static void sendCombatHudSnapshot(ServerPlayer player) {
+        Objects.requireNonNull(player, "player");
+
+        var snapshot = IdleCombatHandler.snapshotCombatHudState(player, player.serverLevel().getGameTime());
+        var playerId = player.getUUID();
+        var previousSnapshot = LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER.get(playerId);
+        if (previousSnapshot != null && previousSnapshot.equals(snapshot)) {
+            return;
+        }
+
+        PacketDistributor.sendToPlayer(player, new IdleCombatHudSnapshotPacket(snapshot));
+        LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER.put(playerId, snapshot);
+    }
+
     public static void sendEmptyHudSnapshot(ServerPlayer player) {
         Objects.requireNonNull(player, "player");
         clearLastSentHudSnapshot(player);
@@ -127,7 +146,9 @@ public final class IdleCurrencySyncService {
     }
 
     private static void clearLastSentHudSnapshot(ServerPlayer player) {
-        LAST_SENT_HUD_VALUES_BY_PLAYER.remove(player.getUUID());
+        var playerId = player.getUUID();
+        LAST_SENT_HUD_VALUES_BY_PLAYER.remove(playerId);
+        LAST_SENT_COMBAT_HUD_STATE_BY_PLAYER.remove(playerId);
     }
 
     public static void sendDelta(ServerPlayer player, Map<CurrencyId, Long> changedBalances) {
