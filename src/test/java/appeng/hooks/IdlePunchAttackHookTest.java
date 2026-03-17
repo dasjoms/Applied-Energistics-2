@@ -24,17 +24,20 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.InputEvent;
 
+import appeng.client.idle.combat.IdlePunchAnimationComponent;
 import appeng.core.definitions.AEItems;
 import appeng.idle.net.IdleCurrencyClientCache;
 
 class IdlePunchAttackHookTest {
 
     private static final Method GET_IDLE_PUNCH_HAND = getIdlePunchHandMethod();
+    private static final Method TRIGGER_LOCAL_SWING_FOR_NON_ENTITY = getTriggerLocalSwingForNonEntityMethod();
 
     @AfterEach
     void resetIdlePunchEligibility() {
         IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
         IdlePunchAttackHook.resetClientCooldowns();
+        IdlePunchAnimationComponent.resetServerStateTracking();
     }
 
     @Test
@@ -208,6 +211,48 @@ class IdlePunchAttackHookTest {
     }
 
     @Test
+    void offHandSwingStartsForNonEntityAttackWhenVanillaMainHandSwingIsInactive() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(500L, 500L);
+
+        invokeTriggerLocalSwingForNonEntityInteraction(player, InteractionHand.OFF_HAND);
+
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.OFF_HAND);
+        assertThat(IdlePunchAnimationComponent.isAnimationActive(player)).isTrue();
+    }
+
+    @Test
+    void offHandSwingDoesNotRestartWhenVanillaMainHandSwingIsAlreadyActive() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+
+        player.swinging = true;
+        player.swingingArm = InteractionHand.MAIN_HAND;
+        player.swingTime = 1;
+
+        invokeTriggerLocalSwingForNonEntityInteraction(player, InteractionHand.OFF_HAND);
+
+        assertThat(IdlePunchAnimationComponent.isAnimationActive(player)).isFalse();
+        assertThat(IdlePunchAnimationComponent.getSwingStartTick()).isEqualTo(Long.MIN_VALUE);
+    }
+
+    @Test
+    void mainHandSwingStartsForNonEntityUseInteraction() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(520L, 520L);
+
+        invokeTriggerLocalSwingForNonEntityInteraction(player, InteractionHand.MAIN_HAND);
+
+        assertThat(IdlePunchAnimationComponent.getActiveHand()).isEqualTo(InteractionHand.MAIN_HAND);
+        assertThat(IdlePunchAnimationComponent.isAnimationActive(player)).isTrue();
+    }
+
+    @Test
     void rightClickMainHandPathDoesNotSetStartAttackSuppressionFlag() {
         var event = mock(InputEvent.InteractionKeyMappingTriggered.class);
         when(event.isAttack()).thenReturn(false);
@@ -232,6 +277,28 @@ class IdlePunchAttackHookTest {
         when(event.isUseItem()).thenReturn(true);
 
         assertThat(invokeIdlePunchHand(event)).isEqualTo(InteractionHand.MAIN_HAND);
+    }
+
+    private static Method getTriggerLocalSwingForNonEntityMethod() {
+        try {
+            var method = IdlePunchAttackHook.class.getDeclaredMethod("triggerLocalSwingForNonEntityInteraction",
+                    Player.class,
+                    InteractionHand.class);
+            method.setAccessible(true);
+            return method;
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Unable to access IdlePunchAttackHook#triggerLocalSwingForNonEntityInteraction",
+                    e);
+        }
+    }
+
+    private static void invokeTriggerLocalSwingForNonEntityInteraction(Player player, InteractionHand hand) {
+        try {
+            TRIGGER_LOCAL_SWING_FOR_NON_ENTITY.invoke(null, player, hand);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Failed to invoke IdlePunchAttackHook#triggerLocalSwingForNonEntityInteraction",
+                    e);
+        }
     }
 
     private static Method getIdlePunchHandMethod() {
