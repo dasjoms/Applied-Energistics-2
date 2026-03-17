@@ -195,6 +195,82 @@ class IdleCombatHandlerTest {
     }
 
     @Test
+    void snapshotCombatHudStateClampsExpiredCooldownsToZero() {
+        var fixture = combatFixture();
+        when(fixture.level().getGameTime()).thenReturn(100L, 120L, 125L);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.MAIN_HAND);
+            var snapshot = IdleCombatHandler.snapshotCombatHudState(fixture.player(), 125L);
+
+            assertThat(snapshot.mainRemainingTicks()).isZero();
+            assertThat(snapshot.offRemainingTicks()).isZero();
+        }
+    }
+
+    @Test
+    void snapshotCombatHudStateTracksPerHandRemainingAndSharedInterval() {
+        var fixture = combatFixture();
+        when(fixture.level().getGameTime()).thenReturn(100L, 101L, 103L);
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class);
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+            stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
+            var config = mock(AEConfig.class);
+            aeConfig.when(AEConfig::instance).thenReturn(config);
+            when(config.isDebugToolsEnabled()).thenReturn(false);
+
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.MAIN_HAND);
+            IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId(), InteractionHand.OFF_HAND);
+
+            var snapshot = IdleCombatHandler.snapshotCombatHudState(fixture.player(), 103L);
+
+            assertThat(snapshot.mainRemainingTicks()).isEqualTo(2L);
+            assertThat(snapshot.offRemainingTicks()).isEqualTo(3L);
+            assertThat(snapshot.mainIntervalTicks()).isEqualTo(5L);
+            assertThat(snapshot.offIntervalTicks()).isEqualTo(5L);
+        }
+    }
+
+    @Test
+    void snapshotCombatHudStateCombatModeFollowsVisorHandsAndUpgradeGates() {
+        var fixture = combatFixture();
+
+        try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
+            dataManager.when(() -> PlayerIdleDataManager.get(fixture.player())).thenReturn(new PlayerIdleData());
+            upgradeHooks.when(() -> IdleUpgradeHooks.getUnarmedPunchIntervalTicks(any(PlayerIdleData.class), anyLong()))
+                    .thenReturn(5L);
+
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(false);
+            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
+            assertThat(IdleCombatHandler.snapshotCombatHudState(fixture.player(), 100L).inIdleCombatMode()).isFalse();
+
+            dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(true);
+            when(fixture.player().getMainHandItem()).thenReturn(new ItemStack(Items.STICK));
+            assertThat(IdleCombatHandler.snapshotCombatHudState(fixture.player(), 100L).inIdleCombatMode()).isFalse();
+
+            when(fixture.player().getMainHandItem()).thenReturn(ItemStack.EMPTY);
+            when(fixture.player().getOffhandItem()).thenReturn(new ItemStack(Items.STICK));
+            assertThat(IdleCombatHandler.snapshotCombatHudState(fixture.player(), 100L).inIdleCombatMode()).isFalse();
+
+            when(fixture.player().getOffhandItem()).thenReturn(ItemStack.EMPTY);
+            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(false);
+            assertThat(IdleCombatHandler.snapshotCombatHudState(fixture.player(), 100L).inIdleCombatMode()).isFalse();
+
+            upgradeHooks.when(() -> IdleUpgradeHooks.hasCombatUpgrade(any(PlayerIdleData.class))).thenReturn(true);
+            assertThat(IdleCombatHandler.snapshotCombatHudState(fixture.player(), 100L).inIdleCombatMode()).isTrue();
+        }
+    }
+
+    @Test
     void sendsImmediateCombatHudSnapshotAfterSuccessfulPunch() {
         var fixture = combatFixture();
 
