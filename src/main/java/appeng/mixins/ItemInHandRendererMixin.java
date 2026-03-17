@@ -48,9 +48,12 @@ public class ItemInHandRendererMixin {
             return;
         }
 
+        var idlePunchMode = IdlePunchAnimationComponent.isIdlePunchMode(player);
         if (hand == InteractionHand.MAIN_HAND
+                && idlePunchMode
                 && !IdlePunchAnimationComponent.isSwingActiveForHand(player, InteractionHand.MAIN_HAND)) {
-            debugVanillaFallback(player, hand, swingProgress, "main_hand_not_idle_active");
+            debugVanillaSuppressed(player, hand, swingProgress, "main_hand_not_idle_active");
+            ci.cancel();
             return;
         }
 
@@ -78,6 +81,30 @@ public class ItemInHandRendererMixin {
         renderPlayerArmPose(poseStack, buffer, combinedLight, equipProgress, idleSwingProgress, humanoidArm, player);
         poseStack.popPose();
         ci.cancel();
+    }
+
+    private static void debugVanillaSuppressed(
+            AbstractClientPlayer player,
+            InteractionHand hand,
+            float swingProgress,
+            String reason) {
+        if (!AEConfig.instance().isDebugToolsEnabled()) {
+            return;
+        }
+
+        if (swingProgress <= 0.0F) {
+            return;
+        }
+
+        var clientPlayer = Minecraft.getInstance().player;
+        if (clientPlayer == null || clientPlayer != player) {
+            return;
+        }
+
+        clientPlayer.displayClientMessage(Component.literal(
+                "[AE2 Debug] idle punch vanilla arm suppressed: reason=" + reason + " hand=" + hand
+                        + " swingProgress=" + swingProgress + " tick=" + player.level().getGameTime()),
+                false);
     }
 
     private static void debugVanillaFallback(
