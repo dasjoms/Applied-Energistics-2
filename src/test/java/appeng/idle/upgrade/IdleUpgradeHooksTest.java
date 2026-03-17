@@ -101,7 +101,7 @@ class IdleUpgradeHooksTest {
 
         var cooldownMultiplier = IdleUpgradeHooks.getUnarmedPunchCooldownMultiplier(data);
 
-        assertThat(cooldownMultiplier).isEqualTo(0.81);
+        assertThat(cooldownMultiplier).isEqualTo(1.0);
     }
 
     @Test
@@ -114,7 +114,7 @@ class IdleUpgradeHooksTest {
 
         var cooldownMultiplier = IdleUpgradeHooks.getUnarmedPunchCooldownMultiplier(data);
 
-        assertThat(cooldownMultiplier).isCloseTo(0.59049, org.assertj.core.data.Offset.offset(1.0E-12));
+        assertThat(cooldownMultiplier).isEqualTo(1.0);
     }
 
     @Test
@@ -197,7 +197,7 @@ class IdleUpgradeHooksTest {
     }
 
     @Test
-    void unarmedPunchIntervalUsesCooldownMultiplierAndStaysBelowVanillaBaseline() {
+    void unarmedPunchIntervalMatchesVanillaDerivedBaselineForCombatUpgrade() {
         var data = new PlayerIdleData(
                 Map.of(),
                 0L,
@@ -208,7 +208,7 @@ class IdleUpgradeHooksTest {
 
         var interval = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(data, vanillaBaselineTicks);
 
-        assertThat(interval).isLessThan(vanillaBaselineTicks).isEqualTo(8);
+        assertThat(interval).isEqualTo(vanillaBaselineTicks);
     }
 
     @Test

@@ -34,6 +34,7 @@ class IdlePunchAttackHookTest {
     @AfterEach
     void resetIdlePunchEligibility() {
         IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), false);
+        IdlePunchAttackHook.resetClientCooldowns();
     }
 
     @Test
@@ -105,6 +106,36 @@ class IdlePunchAttackHookTest {
         HitResult blockHit = new BlockHitResult(Vec3.ZERO, Direction.UP, BlockPos.ZERO, false);
 
         assertThat(IdlePunchAttackHook.shouldSuppressVanillaAttackSwing(player, blockHit)).isFalse();
+    }
+
+    @Test
+    void sameHandStaysCoolingUntilBaselineIntervalElapses() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED))
+                .thenReturn(4.0D);
+        when(level.getGameTime()).thenReturn(100L, 109L, 110L);
+
+        IdlePunchAttackHook.markClientPunchStarted(player, InteractionHand.MAIN_HAND);
+
+        assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.MAIN_HAND)).isTrue();
+        assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.MAIN_HAND)).isFalse();
+    }
+
+    @Test
+    void handCooldownTrackingIsIndependentBetweenMainAndOffHand() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED))
+                .thenReturn(4.0D);
+        when(level.getGameTime()).thenReturn(200L, 201L);
+
+        IdlePunchAttackHook.markClientPunchStarted(player, InteractionHand.MAIN_HAND);
+
+        assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.MAIN_HAND)).isTrue();
+        assertThat(IdlePunchAttackHook.isHandCoolingDown(player, InteractionHand.OFF_HAND)).isFalse();
     }
 
     @Test
