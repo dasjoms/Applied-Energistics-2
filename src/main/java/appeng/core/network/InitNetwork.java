@@ -42,6 +42,7 @@ import appeng.core.network.serverbound.SelectKeyTypePacket;
 import appeng.core.network.serverbound.SwapSlotsPacket;
 import appeng.core.network.serverbound.SwitchGuisPacket;
 import appeng.core.network.serverbound.UpdateHoldingCtrlPacket;
+import appeng.idle.net.IdleCombatHudSnapshotPacket;
 import appeng.idle.net.IdleCurrencyDeltaPacket;
 import appeng.idle.net.IdleCurrencyHudSnapshotPacket;
 import appeng.idle.net.IdleCurrencySnapshotPacket;
@@ -73,6 +74,7 @@ public class InitNetwork {
         clientbound(registrar, IdleCurrencySnapshotPacket.TYPE, IdleCurrencySnapshotPacket.STREAM_CODEC);
         clientbound(registrar, IdleCurrencyDeltaPacket.TYPE, IdleCurrencyDeltaPacket.STREAM_CODEC);
         clientbound(registrar, IdleCurrencyHudSnapshotPacket.TYPE, IdleCurrencyHudSnapshotPacket.STREAM_CODEC);
+        clientbound(registrar, IdleCombatHudSnapshotPacket.TYPE, IdleCombatHudSnapshotPacket.STREAM_CODEC);
         clientbound(registrar, IdlePunchSwingPacket.TYPE, IdlePunchSwingPacket.STREAM_CODEC);
 
         // Serverbound
