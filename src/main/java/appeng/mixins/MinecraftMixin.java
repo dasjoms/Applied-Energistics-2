@@ -26,7 +26,7 @@ public class MinecraftMixin {
     @Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
     private void ae2$suppressVanillaMainHandSwingDuringIdlePunchTakeover(CallbackInfoReturnable<Boolean> cir) {
         var localPlayer = this.player;
-        if (localPlayer == null || !IdlePunchAttackHook.shouldSuppressVanillaAttackSwing(localPlayer, this.hitResult)) {
+        if (localPlayer == null || !IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(localPlayer)) {
             return;
         }
 
