@@ -7,6 +7,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
@@ -56,21 +57,35 @@ public final class IdlePunchAttackHook {
             return;
         }
 
-        if (!shouldSuppressVanillaAttackSwing(player, minecraft.hitResult)) {
+        var hitResult = minecraft.hitResult;
+        if (hitResult instanceof EntityHitResult entityHitResult) {
+            if (!shouldSuppressVanillaAttackSwing(player, entityHitResult)) {
+                return;
+            }
+
+            event.setCanceled(true);
+            markStartAttackSuppressionForTakeoverClick(player, event.isAttack());
+            if (isHandCoolingDown(player, hand)) {
+                return;
+            }
+
+            markClientPunchStarted(player, hand);
+            IdlePunchAnimationComponent.startPredictedSwing(player, hand);
+            var target = entityHitResult.getEntity();
+            PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
+            return;
+        }
+
+        if (hitResult instanceof BlockHitResult blockHitResult && blockHitResult.getType() == HitResult.Type.BLOCK) {
             triggerLocalSwingForNonEntityInteraction(player, hand);
             return;
         }
 
-        event.setCanceled(true);
-        markStartAttackSuppressionForTakeoverClick(player, event.isAttack());
-        if (isHandCoolingDown(player, hand)) {
-            return;
+        if (shouldSuppressTakeoverMissAttack(player, event.isAttack(), hitResult)) {
+            event.setCanceled(true);
+            markStartAttackSuppressionForTakeoverClick(player, true);
         }
-
-        markClientPunchStarted(player, hand);
-        IdlePunchAnimationComponent.startPredictedSwing(player, hand);
-        var target = ((EntityHitResult) minecraft.hitResult).getEntity();
-        PacketDistributor.sendToServer(new IdlePunchRequestPacket(target.getId(), hand));
+        triggerLocalSwingForNonEntityInteraction(player, hand);
     }
 
     private static void triggerLocalSwingForNonEntityInteraction(Player player, InteractionHand hand) {
@@ -96,6 +111,14 @@ public final class IdlePunchAttackHook {
 
         var target = entityHitResult.getEntity();
         return target.isAlive() && player.distanceToSqr(target) <= TARGET_PICK_RANGE * TARGET_PICK_RANGE;
+    }
+
+    static boolean shouldSuppressTakeoverMissAttack(Player player, boolean attackInput, @Nullable HitResult hitResult) {
+        if (!attackInput || !shouldTakeOverAttackInput(player)) {
+            return false;
+        }
+
+        return hitResult == null || hitResult.getType() == HitResult.Type.MISS;
     }
 
     static boolean isHandCoolingDown(Player player, InteractionHand hand) {

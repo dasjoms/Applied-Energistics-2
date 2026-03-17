@@ -21,6 +21,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.InputEvent;
 
@@ -109,6 +110,55 @@ class IdlePunchAttackHookTest {
         HitResult blockHit = new BlockHitResult(Vec3.ZERO, Direction.UP, BlockPos.ZERO, false);
 
         assertThat(IdlePunchAttackHook.shouldSuppressVanillaAttackSwing(player, blockHit)).isFalse();
+    }
+
+    @Test
+    void suppressesTakeoverMissAttackPathAndConsumesFlagOnCurrentClick() {
+        var player = mock(Player.class);
+        var level = mock(net.minecraft.world.level.Level.class);
+        when(player.level()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(600L, 600L, 600L);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+
+        var missHit = mock(HitResult.class);
+        when(missHit.getType()).thenReturn(Type.MISS);
+
+        assertThat(IdlePunchAttackHook.shouldSuppressTakeoverMissAttack(player, true, missHit)).isTrue();
+
+        IdlePunchAttackHook.markStartAttackSuppressionForTakeoverClick(player, true);
+
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isTrue();
+        assertThat(IdlePunchAttackHook.consumeStartAttackSuppressionForCurrentClick(player)).isFalse();
+    }
+
+    @Test
+    void doesNotSuppressTakeoverMissAttackForUseInput() {
+        var player = mock(Player.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+
+        var missHit = mock(HitResult.class);
+        when(missHit.getType()).thenReturn(Type.MISS);
+
+        assertThat(IdlePunchAttackHook.shouldSuppressTakeoverMissAttack(player, false, missHit)).isFalse();
+    }
+
+    @Test
+    void takeoverMissSuppressionGatingKeepsBlockHitsUnsuppressed() {
+        var player = mock(Player.class);
+        when(player.getItemBySlot(EquipmentSlot.HEAD)).thenReturn(AEItems.IDLE_VISOR.stack());
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        IdleCurrencyClientCache.applySnapshot(Map.of(), Map.of(), true);
+
+        HitResult blockHit = new BlockHitResult(Vec3.ZERO, Direction.UP, BlockPos.ZERO, false);
+
+        assertThat(IdlePunchAttackHook.shouldSuppressTakeoverMissAttack(player, true, blockHit)).isFalse();
     }
 
     @Test
