@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -14,6 +15,7 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import appeng.core.AEConfig;
 import appeng.idle.net.IdlePunchSwingPacket;
 import appeng.idle.player.PlayerIdleDataManager;
 import appeng.idle.upgrade.IdleUpgradeHooks;
@@ -127,6 +129,7 @@ public final class IdleCombatHandler {
         }
 
         player.swing(hand, true);
+        sendDebugPunchMessage(player, hand);
         if (player.connection != null) {
             var sequence = gameTime;
             PacketDistributor.sendToPlayer(player, new IdlePunchSwingPacket(player.getId(), hand, sequence));
@@ -136,6 +139,15 @@ public final class IdleCombatHandler {
         var intervalTicks = IdleUpgradeHooks.getUnarmedPunchIntervalTicks(idleData, baseIntervalTicks);
         PLAYER_COMBAT_STATES.put(player.getUUID(), state.withNextAllowedTick(hand, gameTime + intervalTicks));
         return true;
+    }
+
+    private static void sendDebugPunchMessage(ServerPlayer player, InteractionHand hand) {
+        if (!AEConfig.instance().isDebugToolsEnabled()) {
+            return;
+        }
+
+        player.sendSystemMessage(Component.literal(
+                "[AE2 Debug] combat_1 punch executed: hand=" + hand + " tick=" + player.serverLevel().getGameTime()));
     }
 
     private static long getBaseUnarmedPunchIntervalTicks(ServerPlayer player) {
