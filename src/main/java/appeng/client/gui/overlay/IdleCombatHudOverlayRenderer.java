@@ -35,8 +35,8 @@ public class IdleCombatHudOverlayRenderer {
         var barBottom = anchor.hotbarY() + 22;
         var barTop = barBottom - BAR_HEIGHT;
 
-        var leftBarX = anchor.hotbarLeft() - BAR_HORIZONTAL_OFFSET - BAR_WIDTH;
-        var rightBarX = anchor.hotbarRight() + BAR_HORIZONTAL_OFFSET;
+        var leftBarX = getLeftBarX(anchor);
+        var rightBarX = getRightBarX(anchor);
 
         var guiGraphics = event.getGuiGraphics();
         drawHandBar(guiGraphics, leftBarX, barTop, snapshot.mainRemainingTicks(), snapshot.mainIntervalTicks());
@@ -54,8 +54,20 @@ public class IdleCombatHudOverlayRenderer {
         }
 
         var fillTop = top + BAR_HEIGHT - fillHeight;
-        var fillColor = remainingTicks == 0 ? BAR_READY_COLOR : BAR_COOLDOWN_COLOR;
+        var fillColor = getFillColor(remainingTicks);
         guiGraphics.fill(x, fillTop, x + BAR_WIDTH, top + BAR_HEIGHT, fillColor);
+    }
+
+    static int getLeftBarX(HotbarAnchor anchor) {
+        return anchor.hotbarLeft() - BAR_HORIZONTAL_OFFSET - BAR_WIDTH;
+    }
+
+    static int getRightBarX(HotbarAnchor anchor) {
+        return anchor.hotbarRight() + BAR_HORIZONTAL_OFFSET;
+    }
+
+    static int getFillColor(long remainingTicks) {
+        return remainingTicks <= 0 ? BAR_READY_COLOR : BAR_COOLDOWN_COLOR;
     }
 
     static HotbarAnchor getHotbarAnchor(int screenWidth, int screenHeight) {
