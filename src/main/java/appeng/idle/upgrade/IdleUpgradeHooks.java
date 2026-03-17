@@ -127,11 +127,10 @@ public final class IdleUpgradeHooks {
     }
 
     /**
-     * Computes the unarmed punch interval from the vanilla baseline and owned upgrades.
+     * Computes the unarmed punch interval from the vanilla-derived baseline and owned upgrades.
      * <p>
-     * Baseline is the player's vanilla attack-speed cadence ({@code round(20 / attackSpeed)} ticks). Owning
-     * {@link IdleUpgrades#COMBAT_1} level 1 reduces the resulting interval below that vanilla baseline. The returned
-     * interval is always clamped to at least one tick.
+     * Baseline is {@code 2x round(20 / attackSpeed)} ticks (matching the idle punch policy baseline used by combat
+     * handling). Owned upgrade multipliers are then applied, with the resulting interval clamped to at least one tick.
      */
     public static long getUnarmedPunchIntervalTicks(PlayerIdleData data, long baseIntervalTicks) {
         if (baseIntervalTicks <= 0) {
