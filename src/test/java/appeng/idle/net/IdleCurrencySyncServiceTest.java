@@ -78,6 +78,7 @@ class IdleCurrencySyncServiceTest {
                 MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
             dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+            stubCombatHudSnapshotPreconditions(player, dataManager);
 
             IdleCurrencySyncService.sendSnapshot(player);
 
@@ -99,6 +100,7 @@ class IdleCurrencySyncServiceTest {
                 MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
             dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+            stubCombatHudSnapshotPreconditions(player, dataManager);
 
             IdleCurrencySyncService.sendSnapshot(player);
 
@@ -121,6 +123,7 @@ class IdleCurrencySyncServiceTest {
                 MockedStatic<PacketDistributor> packets = mockStatic(PacketDistributor.class)) {
             dataManager.when(() -> PlayerIdleDataManager.get(player)).thenReturn(data);
             dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(player)).thenReturn(false);
+            stubCombatHudSnapshotPreconditions(player, dataManager);
 
             IdleCurrencySyncService.sendSnapshot(player);
 
@@ -189,6 +192,7 @@ class IdleCurrencySyncServiceTest {
                         dataManager.when(() -> PlayerIdleDataManager.get(any())).thenReturn(data);
                         dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(any()))
                                 .thenReturn(true);
+                        stubCombatHudSnapshotPreconditions(visorPlayer, dataManager);
 
                         runServerTick(1, server);
                         runServerTick(2, server);
@@ -240,6 +244,7 @@ class IdleCurrencySyncServiceTest {
                         dataManager.when(() -> PlayerIdleDataManager.get(visorPlayer)).thenReturn(data);
                         dataManager.when(() -> PlayerIdleDataManager.isPassiveGenerationEnabled(visorPlayer))
                                 .thenReturn(true);
+                        stubCombatHudSnapshotPreconditions(visorPlayer, dataManager);
 
                         var snapshots = new java.util.ArrayList<IdleCurrencyHudSnapshotPacket>();
                         packets.when(() -> PacketDistributor.sendToPlayer(eq(visorPlayer), any()))
@@ -423,6 +428,16 @@ class IdleCurrencySyncServiceTest {
                                 argThat(packet -> packet instanceof IdleCurrencyHudSnapshotPacket)), times(2));
                     }
                 });
+    }
+
+    private static void stubCombatHudSnapshotPreconditions(ServerPlayer player,
+            MockedStatic<PlayerIdleDataManager> dataManager) {
+        var level = mock(net.minecraft.server.level.ServerLevel.class);
+        when(player.serverLevel()).thenReturn(level);
+        when(level.getGameTime()).thenReturn(0L);
+        when(player.getMainHandItem()).thenReturn(ItemStack.EMPTY);
+        when(player.getOffhandItem()).thenReturn(ItemStack.EMPTY);
+        dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(player)).thenReturn(false);
     }
 
     private static void runServerTick(int tickCount, MinecraftServer server) {

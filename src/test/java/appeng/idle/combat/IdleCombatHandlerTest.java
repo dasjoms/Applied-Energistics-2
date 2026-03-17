@@ -45,7 +45,8 @@ class IdleCombatHandlerTest {
         var fixture = combatFixture();
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
-                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class)) {
+                MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             dataManager.when(() -> PlayerIdleDataManager.isActiveRewardEligibleNow(fixture.player())).thenReturn(false);
             IdleCombatHandler.handlePunchRequest(fixture.player(), fixture.targetEntityId());
 
@@ -327,7 +328,8 @@ class IdleCombatHandlerTest {
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
-                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
             aeConfig.when(AEConfig::instance).thenReturn(config);
             when(config.isDebugToolsEnabled()).thenReturn(true);
@@ -347,7 +349,8 @@ class IdleCombatHandlerTest {
 
         try (MockedStatic<PlayerIdleDataManager> dataManager = Mockito.mockStatic(PlayerIdleDataManager.class);
                 MockedStatic<IdleUpgradeHooks> upgradeHooks = Mockito.mockStatic(IdleUpgradeHooks.class);
-                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class)) {
+                MockedStatic<AEConfig> aeConfig = Mockito.mockStatic(AEConfig.class);
+                MockedStatic<IdleCurrencySyncService> syncService = Mockito.mockStatic(IdleCurrencySyncService.class)) {
             stubCombatPrerequisites(dataManager, upgradeHooks, fixture.player());
             aeConfig.when(AEConfig::instance).thenReturn(config);
             when(config.isDebugToolsEnabled()).thenReturn(false);
