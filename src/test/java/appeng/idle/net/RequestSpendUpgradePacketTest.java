@@ -120,4 +120,21 @@ class RequestSpendUpgradePacketTest {
         assertThat(decoded.values().get(MATTER).secondsToNext()).isNull();
     }
 
+    @Test
+    void combatHudSnapshotPacketCodecRoundTripRetainsPerHandCooldownAndGatingState() {
+        var original = new IdleCombatHudSnapshotPacket(new IdleCombatHudState(1234L, 9L, 2L, 20L, 16L, true));
+
+        CodecTestUtil.testRoundtrip(IdleCombatHudSnapshotPacket.STREAM_CODEC, original);
+
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
+                RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
+        IdleCombatHudSnapshotPacket.STREAM_CODEC.encode(buffer, original);
+        var decoded = IdleCombatHudSnapshotPacket.STREAM_CODEC.decode(buffer);
+
+        assertThat(decoded.state()).isEqualTo(original.state());
+        assertThat(decoded.state().mainRemainingTicks()).isEqualTo(9L);
+        assertThat(decoded.state().offRemainingTicks()).isEqualTo(2L);
+        assertThat(decoded.state().inIdleCombatMode()).isTrue();
+    }
+
 }
